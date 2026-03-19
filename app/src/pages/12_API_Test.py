@@ -18,7 +18,7 @@ should not totally die.
 data = {} 
 try:
   data = requests.get('http://web-api:4000/data').json()
-except:
+except requests.exceptions.RequestException as e:
   st.write("**Important**: Could not connect to sample api, so using dummy data.")
   data = {"a":{"b": "123", "c": "hello"}, "z": {"b": "456", "c": "goodbye"}}
 
