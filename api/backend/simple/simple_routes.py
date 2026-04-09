@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, current_app, redirect, url_for
 from backend.simple.playlist import sample_playlist_data
-from backend.ml_models import model01
 
 # This blueprint handles basic routes useful for testing and demonstration
 simple_routes = Blueprint("simple_routes", __name__)
@@ -50,20 +49,3 @@ def get_data():
     current_app.logger.info("GET /data handler")
     data = {"a": {"b": "123", "c": "Help"}, "z": {"b": "456", "c": "me"}}
     return jsonify(data), 200
-
-
-@simple_routes.route("/prediction/<var_01>/<var_02>", methods=["GET"])
-def get_prediction(var_01, var_02):
-    current_app.logger.info("GET /prediction handler")
-
-    try:
-        prediction = model01.predict(var_01, var_02)
-        current_app.logger.info(f"prediction value returned is {prediction}")
-        return jsonify({
-            "prediction": prediction,
-            "input_variables": {"var01": var_01, "var02": var_02},
-        }), 200
-
-    except Exception as e:
-        current_app.logger.error(f"Prediction error: {e}")
-        return jsonify({"error": "Error processing prediction request"}), 500
