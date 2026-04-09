@@ -71,3 +71,12 @@ CREATE TABLE bill_assignments (
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 );
+
+INSERT INTO users (is_admin, is_analyst, account_status, first_name, last_name, email)
+VALUES
+(TRUE, FALSE, 'active', 'Alice', 'Morgan', 'alice.morgan@example.com'),
+(FALSE, TRUE,'active', 'Ben', 'Okafor', 'ben.okafor@example.com'),
+(FALSE, FALSE,'active','Clara', 'Reyes', 'clara.reyes@example.com'),
+(FALSE, FALSE,'active', 'Dan', 'Smith', 'dan.smith@example.com'),
+(FALSE, FALSE,'active', 'Michael', 'Reeves', 'michael.reeves@example.com'),
+(FALSE, FALSE,'active', 'Joe', 'Larson', 'joe.larson@example.com');
