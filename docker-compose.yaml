@@ -33,5 +33,15 @@ services:
     ports:
       - 3200:3306
 
+  seeder:
+    build: ./seeder
+    container_name: db-seeder
+    depends_on:
+      - db
+    env_file:
+      - ./api/.env
+    profiles:
+      - seed
+
 volumes:
   mysql_data:

@@ -1,5 +1,14 @@
-flask==2.3.3
-mysql-connector-python==8.4.0
+blinker==1.9.0
+cffi==2.0.0
+click==8.3.2
 cryptography==42.0.8
-python-dotenv==1.0.1
+Faker==40.13.0
+Flask==2.3.3
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+mysql-connector-python==8.4.0
 numpy==1.26.4
+pycparser==3.0
+python-dotenv==1.0.1
+Werkzeug==3.1.8

@@ -18,8 +18,8 @@ def get_user_profile(user_id: str):
     try:
         current_app.logger.info(f"GET /users/{user_id}")
 
-        query = "SELECT * FROM users WHERE user_id = %s" % user_id
-        cursor.execute(query)
+        query = "SELECT * FROM users WHERE user_id = %s"
+        cursor.execute(query, (user_id))
         user = cursor.fetchone()
 
         # ensure user exists
