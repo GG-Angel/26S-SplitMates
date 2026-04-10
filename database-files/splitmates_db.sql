@@ -10,7 +10,6 @@ CREATE TABLE users (
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(75) NOT NULL UNIQUE,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    account_status ENUM('active', 'inactive', 'suspended', 'pending') NOT NULL DEFAULT 'pending',
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     is_analyst BOOLEAN NOT NULL DEFAULT FALSE,
     INDEX idx_users_email (email)
@@ -71,12 +70,3 @@ CREATE TABLE bill_assignments (
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 );
-
-INSERT INTO users (is_admin, is_analyst, account_status, first_name, last_name, email)
-VALUES
-(TRUE, FALSE, 'active', 'Alice', 'Morgan', 'alice.morgan@example.com'),
-(FALSE, TRUE,'active', 'Ben', 'Okafor', 'ben.okafor@example.com'),
-(FALSE, FALSE,'active','Clara', 'Reyes', 'clara.reyes@example.com'),
-(FALSE, FALSE,'active', 'Dan', 'Smith', 'dan.smith@example.com'),
-(FALSE, FALSE,'active', 'Michael', 'Reeves', 'michael.reeves@example.com'),
-(FALSE, FALSE,'active', 'Joe', 'Larson', 'joe.larson@example.com');
