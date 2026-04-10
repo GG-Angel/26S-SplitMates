@@ -13,7 +13,7 @@ docker compose -f sandbox.yaml down db -v && docker compose -f sandbox.yaml up d
 If you are working with your team repository, do the following
 
 ```bash
-docker compose down db -v && docker compose up db
+docker compose down db -v && docker compose up db -d
 ```
 
 The `-v` flag will also delete the volume associated with MySQL, which is necessary to rerun the sql files. 

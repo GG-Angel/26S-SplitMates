@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 import os
 import logging
 
-from backend.mocks import init_mocks
 from backend.routes.group_routes import group_routes
 from backend.routes.user_routes import user_routes
 from backend.db_connection import init_app as init_db
@@ -32,10 +31,6 @@ def create_app():
     # Register the cleanup hook for the database connection.
     app.logger.info("create_app(): initializing database connection")
     init_db(app)
-
-    # Initialize mock data
-    app.logger.info("create_app(): initializing mocks")
-    init_mocks(app)
 
     # Register the routes from each Blueprint with the app object
     # and give a url prefix to each.
