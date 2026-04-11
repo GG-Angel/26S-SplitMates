@@ -70,3 +70,65 @@ CREATE TABLE bill_assignments (
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 );
+
+CREATE TABLE chores (
+    chore_id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    created_by INT NOT NULL,
+    title VARCHAR(128) NOT NULL,
+    effort ENUM('low', 'medium', 'high') NOT NULL DEFAULT 'medium',
+    due_at DATETIME,
+    completed_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users (user_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES `groups` (group_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+CREATE TABLE chore_assignments (
+    chore_id INT NOT NULL,
+    user_id INT NOT NULL,
+    PRIMARY KEY (chore_id, user_id),
+    FOREIGN KEY (chore_id) REFERENCES chores (chore_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+CREATE TABLE events (
+    event_id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    title VARCHAR(128) NOT NULL,
+    starts_at DATETIME NOT NULL,
+    ends_at DATETIME NOT NULL,
+    is_private BOOLEAN NOT NULL,
+    created_by INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES `groups` (group_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users (user_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+CREATE TABLE invitations (
+    invitation_id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    sent_to INT NOT NULL,
+    was_accepted BOOLEAN NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES `groups`(group_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (sent_to) REFERENCES users(user_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+-- TODO: add sysadmin and data-analyst related tables
