@@ -1,4 +1,4 @@
-from backend.db_connection import load_query
+from backend.db_connection import get_db, load_query
 from backend.repositories.base_repository import BaseRepository
 
 
@@ -31,3 +31,33 @@ class GroupRepository(BaseRepository):
                 "zip_code": data["zip_code"],
             },
         )
+
+    def create_bill(self, data: dict):
+        with get_db() as conn:
+            cursor = conn.cursor(dictionary=True)
+
+            # insert bill first
+            cursor.execute(
+                load_query("bills/insert_bill.sql"),
+                {
+                    "group_id": data["group_id"],
+                    "created_by": data["user_id"],
+                    "total_cost": data["total_cost"],
+                    "title": data["title"],
+                    "due_at": data["due_at"],
+                },
+            )
+            bill_id = cursor.lastrowid
+
+            # then add the assignments
+            for assignee in data["assignees"]:
+                cursor.execute(
+                    load_query("bills/insert_bill_assignment.sql"),
+                    {
+                        "bill_id": bill_id,
+                        "user_id": assignee["user_id"],
+                        "split_percentage": assignee["split_percentage"],
+                    },
+                )
+
+            conn.commit()
