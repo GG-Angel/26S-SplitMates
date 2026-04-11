@@ -99,3 +99,7 @@ CREATE TABLE chore_assignments (
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );
+
+-- TODO: add sysadmin and data-analyst related tables
+-- TODO: add invitations
+-- TODO: add events
