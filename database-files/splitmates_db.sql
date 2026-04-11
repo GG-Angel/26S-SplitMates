@@ -100,6 +100,22 @@ CREATE TABLE chore_assignments (
         ON DELETE CASCADE
 );
 
+CREATE TABLE events (
+    event_id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    title VARCHAR(128) NOT NULL,
+    starts_at DATETIME NOT NULL,
+    ends_at DATETIME NOT NULL,
+    is_private BOOLEAN NOT NULL,
+    created_by INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES `groups` (group_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users (user_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
 -- TODO: add sysadmin and data-analyst related tables
 -- TODO: add invitations
--- TODO: add events
