@@ -18,6 +18,8 @@ GROUP_ROWS = 10
 GROUP_MEMBER_ROWS = 150
 BILL_ROWS = 60
 BILL_ASSIGNMENT_ROWS = 180
+CHORE_ROWS = 120
+CHORE_ASSIGNMENT_ROWS = 80
 
 
 def generate_mock_users(count: int = USER_ROWS):
@@ -163,6 +165,35 @@ def generate_mock_bill_assignments(
     return assignments
 
 
+def generate_mock_chores(
+    group_to_members: dict[int, list[int]], count: int = CHORE_ROWS
+):
+    group_ids = list(group_to_members.keys())
+    chores: list[tuple[int, int, str, str, datetime, datetime, Optional[datetime]]] = []
+    i = 0
+
+    # cycle over each group and generate a chore until we hit the desired count
+    while len(chores) < count:
+        group_id = group_ids[i]
+        created_by = random.choice(group_to_members[group_id])
+        title = fake.sentence(nb_words=4).rstrip(".")
+        effort = random.choice(["low", "medium", "high"])
+        created_at = fake.date_time_between(start_date="-240d", end_date="now")
+        due_at = fake.date_time_between(start_date=created_at, end_date="+14d")
+        completed_at = random.choice(
+            [None, fake.date_time_between(start_date=created_at, end_date="now")]
+        )
+
+        # add chore
+        chore = (group_id, created_by, title, effort, created_at, due_at, completed_at)
+        chores.append(chore)
+
+        # cycle back to the start if we reach the last group
+        i = (i + 1) % len(group_ids)
+
+    return chores
+
+
 def seed_db():
     print("Connecting to the database...")
     conn = mysql.connector.connect(
@@ -207,9 +238,9 @@ def seed_db():
     cursor.executemany(group_memberships_query, group_memberships)
     conn.commit()
     print(f"  ✔ Seeded {len(group_memberships)} group memberships")
+    group_to_members = _build_group_to_members(group_memberships)
 
     # --- Bills ---
-    group_to_members = _build_group_to_members(group_memberships)
     bills = generate_mock_bills(group_to_members)
     bills_query = """
         INSERT INTO bills (group_id, total_cost, due_at, title, created_by, created_at)
@@ -230,6 +261,16 @@ def seed_db():
     cursor.executemany(assignments_query, assignments)
     conn.commit()
     print(f"  ✔ Seeded {len(assignments)} bill assignments")
+
+    # --- Chores ---
+    chores = generate_mock_chores(group_to_members)
+    chores_query = """
+        INSERT INTO chores (group_id, created_by, title, effort, created_at, due_at, completed_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    cursor.executemany(chores_query, chores)
+    conn.commit()
+    print(f"  ✔ Seeded {len(chores)} chores")
 
     cursor.close()
     conn.close()
