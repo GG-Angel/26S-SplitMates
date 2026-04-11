@@ -132,4 +132,3 @@ CREATE TABLE invitations (
 );
 
 -- TODO: add sysadmin and data-analyst related tables
--- TODO: add invitations
