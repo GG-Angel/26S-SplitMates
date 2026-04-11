@@ -133,14 +133,14 @@ def _split_percentages(n: int) -> list[Decimal]:
 
 
 def generate_mock_bill_assignments(
-    bill_rows: list[tuple[int, int]],
+    bill_and_group_ids: list[tuple[int, int]],
     group_to_members: dict[int, list[int]],
     count: int = BILL_ASSIGNMENT_ROWS,
 ):
     used_pairs: set[tuple[int, int]] = set()
     assignments: list[tuple[int, int, Decimal, Optional[datetime]]] = []
 
-    for bill_id, group_id in bill_rows:
+    for bill_id, group_id in bill_and_group_ids:
         members = group_to_members[group_id]
         assignees = random.sample(members, k=random.randint(2, min(6, len(members))))
         for user_id, split in zip(assignees, _split_percentages(len(assignees))):
@@ -155,7 +155,7 @@ def generate_mock_bill_assignments(
     attempts = 0
     while len(assignments) < count and attempts < 10000:
         attempts += 1
-        bill_id, group_id = random.choice(bill_rows)
+        bill_id, group_id = random.choice(bill_and_group_ids)
         user_id = random.choice(group_to_members[group_id])
         if (bill_id, user_id) in used_pairs:
             continue
@@ -192,6 +192,35 @@ def generate_mock_chores(
         i = (i + 1) % len(group_ids)
 
     return chores
+
+
+def generate_mock_chore_assignments(
+    chore_and_group_ids: list[tuple[int, int]],
+    group_to_members: dict[int, list[int]],
+    count: int = CHORE_ASSIGNMENT_ROWS,
+):
+    assignments: set[tuple[int, int]] = set()
+    i = 0
+
+    while len(assignments) < count:
+        chore_id, group_id = chore_and_group_ids[i]
+        members = group_to_members[group_id]
+
+        # pick k users from the group to assign this chore to
+        assignees = random.sample(members, k=random.randint(1, min(3, len(members))))
+
+        for assignee in assignees:
+            assignment = (chore_id, assignee)
+            # ensure assignments are unique
+            if assignment not in assignments:
+                assignments.add(assignment)
+                if len(assignments) >= count:
+                    break
+
+        # cycle back to the start if we reach the last chore
+        i = (i + 1) % len(chore_and_group_ids)
+
+    return list(assignments)
 
 
 def seed_db():
@@ -253,14 +282,14 @@ def seed_db():
     print(f"  ✔ Seeded {len(bill_rows)} bills")
 
     # --- Bill Assignments ---
-    assignments = generate_mock_bill_assignments(bill_rows, group_to_members)
-    assignments_query = """
+    bill_assignments = generate_mock_bill_assignments(bill_rows, group_to_members)
+    bill_assignments_query = """
         INSERT INTO bill_assignments (bill_id, user_id, split_percentage, paid_at)
         VALUES (%s, %s, %s, %s)
     """
-    cursor.executemany(assignments_query, assignments)
+    cursor.executemany(bill_assignments_query, bill_assignments)
     conn.commit()
-    print(f"  ✔ Seeded {len(assignments)} bill assignments")
+    print(f"  ✔ Seeded {len(bill_assignments)} bill assignments")
 
     # --- Chores ---
     chores = generate_mock_chores(group_to_members)
@@ -270,7 +299,19 @@ def seed_db():
     """
     cursor.executemany(chores_query, chores)
     conn.commit()
+    cursor.execute("SELECT chore_id, group_id FROM chores")
+    chore_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
     print(f"  ✔ Seeded {len(chores)} chores")
+
+    # --- Chore Assignments ---
+    chore_assignments = generate_mock_chore_assignments(chore_rows, group_to_members)
+    chore_assignments_query = """
+        INSERT INTO chore_assignments (chore_id, user_id)
+        VALUES (%s, %s)
+    """
+    cursor.executemany(chore_assignments_query, chore_assignments)
+    conn.commit()
+    print(f"  ✔ Seeded {len(chore_assignments)} chore assignments")
 
     cursor.close()
     conn.close()
