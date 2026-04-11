@@ -166,36 +166,6 @@ def generate_mock_bill_assignments(
     return assignments
 
 
-def generate_mock_chores(
-    group_to_members: dict[int, list[int]],
-    count: int = CHORE_ROWS,
-):
-    group_ids = list(group_to_members.keys())
-    chores: list[tuple[int, int, str, str, datetime, datetime, Optional[datetime]]] = []
-    i = 0
-
-    # cycle over each group and generate a chore until we hit the desired count
-    while len(chores) < count:
-        group_id = group_ids[i]
-        created_by = random.choice(group_to_members[group_id])
-        title = fake.sentence(nb_words=4).rstrip(".")
-        effort = random.choice(["low", "medium", "high"])
-        created_at = fake.date_time_between(start_date="-240d", end_date="now")
-        due_at = fake.date_time_between(start_date=created_at, end_date="+14d")
-        completed_at = random.choice(
-            [None, fake.date_time_between(start_date=created_at, end_date="now")]
-        )
-
-        # add chore
-        chore = (group_id, created_by, title, effort, created_at, due_at, completed_at)
-        chores.append(chore)
-
-        # cycle back to the start if we reach the last group
-        i = (i + 1) % len(group_ids)
-
-    return chores
-
-
 def generate_mock_chore_assignments(
     chore_and_group_ids: list[tuple[int, int]],
     group_to_members: dict[int, list[int]],
@@ -229,7 +199,19 @@ def generate_mock_title() -> str:
     return fake.sentence(nb_words=4).rstrip(".")
 
 
-def generate_mock_event(group_id: int, group_members: list[int]) -> tuple:
+def generate_mock_chore(group_id: int, group_members: list[int]):
+    created_by = random.choice(group_members)
+    title = fake.sentence(nb_words=4).rstrip(".")
+    effort = random.choice(["low", "medium", "high"])
+    created_at = fake.date_time_between(start_date="-240d", end_date="now")
+    due_at = fake.date_time_between(start_date=created_at, end_date="+14d")
+    completed_at = random.choice(
+        [None, fake.date_time_between(start_date=created_at, end_date="now")]
+    )
+    return (group_id, created_by, title, effort, created_at, due_at, completed_at)
+
+
+def generate_mock_event(group_id: int, group_members: list[int]):
     title = generate_mock_title()
     starts_at = fake.future_datetime()
     ends_at = starts_at + timedelta(hours=random.randint(1, 8))
@@ -327,7 +309,7 @@ def seed_db():
     print(f"  ✔ Seeded {len(bill_assignments)} bill assignments")
 
     # --- Chores ---
-    chores = generate_mock_chores(group_to_members)
+    chores = generate_group_items(generate_mock_chore, group_to_members, CHORE_ROWS)
     chores_query = """
         INSERT INTO chores (group_id, created_by, title, effort, created_at, due_at, completed_at)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
