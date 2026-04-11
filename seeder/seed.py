@@ -324,3 +324,5 @@ if __name__ == "__main__":
     print(f"Sleeping for {sleep_time} seconds...")
     time.sleep(sleep_time)
     seed_db()
+
+# TODO: add invitations mocks
