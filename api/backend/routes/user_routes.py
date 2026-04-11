@@ -1,6 +1,7 @@
 from flask import Blueprint, current_app, jsonify
 from mysql.connector import Error
 from backend.db_connection import get_db
+from backend.repositories.user_repository import UserRepository
 
 
 user_routes = Blueprint("users", __name__)
@@ -13,14 +14,12 @@ def get_root() -> str:
 
 
 @user_routes.route("/<user_id>", methods=["GET"])
-def get_user_profile(user_id: str):
+def get_user_profile(user_id: int):
     cursor = get_db().cursor(dictionary=True)
+    repository = UserRepository()
     try:
         current_app.logger.info(f"GET /users/{user_id}")
-
-        query = "SELECT * FROM users WHERE user_id = %s"
-        cursor.execute(query, (user_id))
-        user = cursor.fetchone()
+        user = repository.get_user(user_id)
 
         # ensure user exists
         if not user:
