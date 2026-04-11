@@ -117,5 +117,19 @@ CREATE TABLE events (
         ON DELETE CASCADE
 );
 
+CREATE TABLE invitations (
+    invitation_id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    sent_to INT NOT NULL,
+    was_accepted BOOLEAN NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES `groups`(group_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (sent_to) REFERENCES users(user_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
 -- TODO: add sysadmin and data-analyst related tables
 -- TODO: add invitations
