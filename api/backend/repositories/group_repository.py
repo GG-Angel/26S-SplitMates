@@ -18,3 +18,16 @@ class GroupRepository(BaseRepository):
             load_query("bills/get_group_bill.sql"),
             {"group_id": group_id, "bill_id": bill_id},
         )
+
+    def create_group(self, data: dict):
+        self.execute(
+            load_query("groups/insert_group.sql"),
+            {
+                "group_leader": data["user_id"],
+                "name": data["name"],
+                "address": data["address"],
+                "city": data["city"],
+                "state": data["state"],
+                "zip_code": data["zip_code"],
+            },
+        )
