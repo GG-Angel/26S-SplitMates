@@ -85,43 +85,6 @@ def _build_group_to_members(memberships: list[tuple[int, int]]) -> dict[int, lis
     return group_to_members
 
 
-def generate_mock_bills(group_to_members: dict[int, list[int]], count: int = BILL_ROWS):
-    group_ids = list(group_to_members.keys())
-    bills = []
-
-    # Ensure each group has at least one bill if count allows.
-    for group_id in group_ids[: min(len(group_ids), count)]:
-        creator = random.choice(group_to_members[group_id])
-        created_at = fake.date_time_between(start_date="-240d", end_date="now")
-        bills.append(
-            (
-                group_id,
-                Decimal(f"{random.uniform(40.0, 2000.0):.2f}"),
-                fake.date_time_between(start_date=created_at, end_date="+120d"),
-                fake.sentence(nb_words=4).rstrip("."),
-                creator,
-                created_at,
-            )
-        )
-
-    while len(bills) < count:
-        group_id = random.choice(group_ids)
-        creator = random.choice(group_to_members[group_id])
-        created_at = fake.date_time_between(start_date="-240d", end_date="now")
-        bills.append(
-            (
-                group_id,
-                Decimal(f"{random.uniform(40.0, 2000.0):.2f}"),
-                fake.date_time_between(start_date=created_at, end_date="+120d"),
-                fake.sentence(nb_words=4).rstrip("."),
-                creator,
-                created_at,
-            )
-        )
-
-    return bills
-
-
 def _split_percentages(n: int) -> list[Decimal]:
     # Produce n positive values that sum to exactly 1.000.
     cuts = sorted(random.sample(range(1, 1000), n - 1))
@@ -199,16 +162,25 @@ def generate_mock_title() -> str:
     return fake.sentence(nb_words=4).rstrip(".")
 
 
-def generate_mock_chore(group_id: int, group_members: list[int]):
+def generate_mock_bill(group_id: int, group_members: list[int]):
+    title = generate_mock_title()
+    total_cost = Decimal(f"{random.uniform(40.0, 2000.0):.2f}")
+    created_at = fake.past_datetime("-60d")
+    due_at = fake.date_time_between(start_date=created_at, end_date="+14d")
     created_by = random.choice(group_members)
-    title = fake.sentence(nb_words=4).rstrip(".")
+    return (group_id, title, total_cost, due_at, created_by, created_at)
+
+
+def generate_mock_chore(group_id: int, group_members: list[int]):
+    title = generate_mock_title()
     effort = random.choice(["low", "medium", "high"])
+    created_by = random.choice(group_members)
     created_at = fake.date_time_between(start_date="-240d", end_date="now")
     due_at = fake.date_time_between(start_date=created_at, end_date="+14d")
     completed_at = random.choice(
         [None, fake.date_time_between(start_date=created_at, end_date="now")]
     )
-    return (group_id, created_by, title, effort, created_at, due_at, completed_at)
+    return (group_id, title, effort, created_by, created_at, due_at, completed_at)
 
 
 def generate_mock_event(group_id: int, group_members: list[int]):
@@ -287,9 +259,9 @@ def seed_db():
     group_to_members = _build_group_to_members(group_memberships)
 
     # --- Bills ---
-    bills = generate_mock_bills(group_to_members)
+    bills = generate_group_items(generate_mock_bill, group_to_members, BILL_ROWS)
     bills_query = """
-        INSERT INTO bills (group_id, total_cost, due_at, title, created_by, created_at)
+        INSERT INTO bills (group_id, title, total_cost, due_at, created_by, created_at)
         VALUES (%s, %s, %s, %s, %s, %s)
     """
     cursor.executemany(bills_query, bills)
@@ -311,7 +283,7 @@ def seed_db():
     # --- Chores ---
     chores = generate_group_items(generate_mock_chore, group_to_members, CHORE_ROWS)
     chores_query = """
-        INSERT INTO chores (group_id, created_by, title, effort, created_at, due_at, completed_at)
+        INSERT INTO chores (group_id, title, effort, created_by, created_at, due_at, completed_at)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
     cursor.executemany(chores_query, chores)
