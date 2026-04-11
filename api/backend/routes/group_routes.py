@@ -22,3 +22,15 @@ def get_group(group_id: int):
     except Error as e:
         current_app.logger.error(f"Database error in {get_group.__name__}(): {e}")
         return jsonify({"error": "Unexpected error"}), 500
+
+
+@group_routes.route("/<group_id>/bills", methods=["GET"])
+def get_group_bills(group_id: int):
+    repository = GroupRepository()
+    try:
+        current_app.logger.info(f"GET /groups/{group_id}/bills")
+        bills = repository.get_group_bills(group_id)
+        return jsonify(bills), 200
+    except Error as e:
+        current_app.logger.error(f"Database error in {get_group_bills.__name__}(): {e}")
+        return jsonify({"error": "Unexpected error"}), 500
