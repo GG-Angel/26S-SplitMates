@@ -34,9 +34,8 @@ class GroupRepository(BaseRepository):
 
     def create_bill(self, data: dict):
         with get_db() as conn:
-            cursor = conn.cursor(dictionary=True)
-
             # insert bill first
+            cursor = conn.cursor(dictionary=True)
             cursor.execute(
                 load_query("bills/insert_bill.sql"),
                 {
@@ -47,9 +46,8 @@ class GroupRepository(BaseRepository):
                     "due_at": data["due_at"],
                 },
             )
-            bill_id = cursor.lastrowid
-
             # then add the assignments
+            bill_id = cursor.lastrowid
             for assignee in data["assignees"]:
                 cursor.execute(
                     load_query("bills/insert_bill_assignment.sql"),
@@ -59,5 +57,4 @@ class GroupRepository(BaseRepository):
                         "split_percentage": assignee["split_percentage"],
                     },
                 )
-
             conn.commit()

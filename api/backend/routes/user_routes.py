@@ -7,13 +7,13 @@ user_routes = Blueprint("users", __name__)
 
 
 @user_routes.route("/")
-def get_root() -> str:
+def handle_users() -> str:
     current_app.logger.info("GET /users/ handler")
     return "<h1>Users route</h1>"
 
 
 @user_routes.route("/<user_id>", methods=["GET"])
-def get_user(user_id: int):
+def handle_user(user_id: int):
     repository = UserRepository()
     try:
         current_app.logger.info(f"GET /users/{user_id}")
@@ -27,5 +27,5 @@ def get_user(user_id: int):
         return jsonify(user), 200
 
     except Error as e:
-        current_app.logger.error(f"Database error in {get_user.__name__}(): {e}")
+        current_app.logger.error(f"Database error in {handle_user.__name__}(): {e}")
         return jsonify({"error": "Unexpected error"}), 500
