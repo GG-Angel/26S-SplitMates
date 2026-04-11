@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import random
 import time
 from decimal import Decimal
-from typing import Optional, cast
+from typing import Callable, Optional, cast
 from faker import Faker
 import mysql.connector
 
@@ -20,6 +20,7 @@ BILL_ROWS = 60
 BILL_ASSIGNMENT_ROWS = 180
 CHORE_ROWS = 120
 CHORE_ASSIGNMENT_ROWS = 80
+EVENT_ROWS = 32
 
 
 def generate_mock_users(count: int = USER_ROWS):
@@ -166,7 +167,8 @@ def generate_mock_bill_assignments(
 
 
 def generate_mock_chores(
-    group_to_members: dict[int, list[int]], count: int = CHORE_ROWS
+    group_to_members: dict[int, list[int]],
+    count: int = CHORE_ROWS,
 ):
     group_ids = list(group_to_members.keys())
     chores: list[tuple[int, int, str, str, datetime, datetime, Optional[datetime]]] = []
@@ -221,6 +223,39 @@ def generate_mock_chore_assignments(
         i = (i + 1) % len(chore_and_group_ids)
 
     return list(assignments)
+
+
+def generate_mock_title() -> str:
+    return fake.sentence(nb_words=4).rstrip(".")
+
+
+def generate_mock_event(group_id: int, group_members: list[int]) -> tuple:
+    title = generate_mock_title()
+    starts_at = fake.future_datetime()
+    ends_at = starts_at + timedelta(hours=random.randint(1, 8))
+    is_private = fake.boolean(chance_of_getting_true=75)
+    created_by = random.choice(group_members)
+    created_at = fake.past_datetime("-7d")
+    return (group_id, title, starts_at, ends_at, is_private, created_by, created_at)
+
+
+def generate_group_items(
+    generator: Callable[[int, list[int]], tuple],
+    group_to_members: dict[int, list[int]],
+    count: int,
+) -> list[tuple]:
+    group_ids = list(group_to_members.keys())
+    items = []
+    i = 0
+
+    while len(items) < count:
+        group_id = group_ids[i]
+        group_members = group_to_members[group_id]
+        item = generator(group_id, group_members)
+        items.append(item)
+        i = (i + 1) % len(group_ids)
+
+    return items
 
 
 def seed_db():
@@ -312,6 +347,18 @@ def seed_db():
     cursor.executemany(chore_assignments_query, chore_assignments)
     conn.commit()
     print(f"  ✔ Seeded {len(chore_assignments)} chore assignments")
+
+    # --- Events ---
+    events = generate_group_items(generate_mock_event, group_to_members, EVENT_ROWS)
+    events_query = """
+        INSERT INTO events (group_id, title, starts_at, ends_at, is_private, created_by, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    cursor.executemany(events_query, events)
+    conn.commit()
+    # cursor.execute("SELECT event_id, group_id FROM chores")
+    # event_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
+    print(f"  ✔ Seeded {len(events)} events")
 
     cursor.close()
     conn.close()
