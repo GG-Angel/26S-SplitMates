@@ -24,17 +24,18 @@ EVENT_ROWS = 32
 
 
 def generate_mock_users(count: int = USER_ROWS):
-    return [
-        (
-            fake.first_name(),
-            fake.last_name(),
-            fake.unique.email(),
-            False,  # is_admin
-            False,  # is_analyst
-            fake.past_datetime(),  # created_at
-        )
-        for _ in range(count)
-    ]
+    users = []
+    for _ in range(count):
+        first_name = fake.unique.first_name()
+        last_name = fake.unique.last_name()
+        email = f"{first_name}.{last_name}@{fake.free_email_domain()}"
+        is_admin = False
+        is_analyst = False
+        created_at = fake.past_datetime("-90d")
+
+        user = (first_name, last_name, email, is_admin, is_analyst, created_at)
+        users.append(user)
+    return users
 
 
 def generate_mock_groups(user_ids: list, count: int = GROUP_ROWS):
