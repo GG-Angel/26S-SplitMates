@@ -58,3 +58,50 @@ class GroupRepository(BaseRepository):
                     },
                 )
             conn.commit()
+
+    def get_group_chores(self, group_id: int):
+        return self.fetch_all(
+            load_query("chores/get_group_chores.sql"), {"group_id": group_id}
+        )
+
+    def create_chore(self, group_id: int, data: dict):
+        with get_db() as conn:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(
+                load_query("chores/insert_chore.sql"),
+                {
+                    "group_id": group_id,
+                    "created_by": data["user_id"],
+                    "title": data["title"],
+                    "effort": data["effort"],
+                    "due_at": data.get("due_at"),
+                },
+            )
+            chore_id = cursor.lastrowid
+            for user_id in data.get("assignees", []):
+                cursor.execute(
+                    load_query("chores/insert_chore_assignment.sql"),
+                    {"chore_id": chore_id, "user_id": user_id},
+                )
+            conn.commit()
+
+    def complete_chore(self, chore_id: int):
+        self.execute(
+            load_query("chores/complete_chore.sql"), {"chore_id": chore_id}
+        )
+
+    def update_chore(self, chore_id: int, data: dict):
+        self.execute(
+            load_query("chores/update_chore.sql"),
+            {
+                "chore_id": chore_id,
+                "title": data["title"],
+                "effort": data["effort"],
+                "due_at": data.get("due_at"),
+            },
+        )
+
+    def delete_chore(self, chore_id: int):
+        self.execute(
+            load_query("chores/delete_chore.sql"), {"chore_id": chore_id}
+        )
