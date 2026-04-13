@@ -87,6 +87,7 @@ with right_col:
     if pending_invites:
         with st.container(border=True, height=400):
             for invite in pending_invites:
+                invite_id = invite["invitation_id"]
                 with st.container(
                     border=True,
                     horizontal=True,
@@ -102,9 +103,11 @@ with right_col:
                         st.write(sent_at_display)
 
                     if st.button(
-                        label="Cancel", width="content", key=f"cancel-inv-{invite}"
+                        label="Cancel",
+                        width="content",
+                        key=f"cancel-inv-{invite_id}",
                     ):
-                        client.delete(f"/groups/{group_id}/invites/{invite}")
+                        client.delete(f"/groups/{group_id}/invites/{invite_id}")
                         st.rerun()
     else:
         st.write(highlight_color("gray", "No pending invites."))
