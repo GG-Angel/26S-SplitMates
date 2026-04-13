@@ -29,7 +29,14 @@ group_bills: list[dict] = client.get(f"/groups/{group_id}/bills")
 bills_created = [b for b in group_bills if b["created_by"] == user_id]
 amount_to_be_paid = sum([float(b["amount_remaining"]) for b in bills_created])
 
+
 # --- Content ---
+
+
+@st.dialog("Bill Details")
+def bill_details_modal(bill: dict):
+    st.write(bill)
+
 
 st.title("Your Bills")
 
@@ -64,19 +71,21 @@ with left_col:
                     "gray", f"Assigned by {assigned_by['first_name']}"
                 )
 
-                with st.container(
-                    horizontal=True,
-                    vertical_alignment="bottom",
-                    horizontal_alignment="distribute",
-                ):
-                    with st.container(gap="xsmall"):
-                        st.write(f"##### {bill['title']}")
-                        st.write(cost_date_display)
-                        st.write(assigned_by_display)
-                    with st.container(width="content"):
-                        if st.button(label="Mark as Paid"):
-                            client.put(f"/users/{user_id}/bills/{bill['bill_id']}/pay")
-                            st.rerun()
+                with st.container(gap="xsmall"):
+                    st.write(f"##### {bill['title']}")
+                    st.write(cost_date_display)
+                    st.write(assigned_by_display)
+                with st.container(horizontal=True):
+                    if st.button(
+                        label="Mark as Paid",
+                        key=f"pay_{bill['bill_id']}",
+                        type="primary",
+                    ):
+                        client.put(f"/users/{user_id}/bills/{bill['bill_id']}/pay")
+                        st.rerun()
+                    if st.button(label="View Details", key=f"view_{bill['bill_id']}"):
+                        bill_details_modal(bill)
+
     else:
         st.write(highlight_color("green", "You have no bills to pay. Good job!"))
 
@@ -84,7 +93,7 @@ with right_col:
     st.subheader("Bills You Created")
     with st.container(border=True):
         for bill in bills_created:
-            cost = bill["total_cost"]
+            cost = bill["amount_remaining"]
             due_date = parse_mysql_datetime(bill["due_at"])
             cost_date_info = f"${cost}, due {time_relative(due_date).lower()}"
             cost_date_display = (
@@ -93,17 +102,15 @@ with right_col:
                 else cost_date_info
             )
 
-            assigned_to = (
-                f"Assigned to {', '.join([a['first_name'] for a in bill['assignees']])}"
-            )
+            assigned_to = f"Awaiting Payments from {', '.join([a['first_name'] for a in bill['assignees'] if not a['paid_at']])}"
             assigned_to_display = highlight_color("gray", assigned_to)
 
-            with st.container(
-                horizontal=True,
-                vertical_alignment="bottom",
-                horizontal_alignment="distribute",
-            ):
-                with st.container(gap="xsmall"):
-                    st.write(f"##### {bill['title']}")
-                    st.write(cost_date_display)
-                    st.write(assigned_to_display)
+            with st.container(gap="xsmall"):
+                st.write(f"##### {bill['title']}")
+                st.write(cost_date_display)
+                st.write(assigned_to_display)
+            with st.container(width="content"):
+                if st.button(
+                    label="View Details", key=f"view_created_{bill['bill_id']}"
+                ):
+                    bill_details_modal(bill)
