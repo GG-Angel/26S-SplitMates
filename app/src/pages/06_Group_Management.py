@@ -1,15 +1,8 @@
 import logging
-from datetime import date, time, datetime
 from requests import HTTPError
 import streamlit as st
 from api.client import client
 from modules.nav import SideBarLinks
-from utils import (
-    highlight_color,
-    is_past_date,
-    parse_mysql_datetime,
-    time_relative,
-)
 
 
 logger = logging.getLogger(__name__)
@@ -26,27 +19,27 @@ members.sort(key=lambda m: m["first_name"] + m["last_name"])
 
 # --- Content ---
 
-left_col, right_col = st.columns(2, gap="medium")
-
+left_col, right_col = st.columns([4, 3], gap="medium")
 with left_col:
     st.subheader("Your Roommates")
-    for member in members:
-        # skip group leader
-        member_id = member["user_id"]
-        if member_id == user_id:
-            continue
+    with st.container(border=True, height=350):
+        for member in members:
+            # skip group leader
+            member_id = member["user_id"]
+            if member_id == user_id:
+                continue
 
-        with st.container(
-            border=True,
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            name = f"{member['first_name']} {member['last_name']}"
-            st.write(f"**{name}**")
-            if st.button(label="Kick", width="content", key=f"kick-{member_id}"):
-                # TODO: implement kicking a roommate
-                st.rerun()
+            with st.container(
+                border=True,
+                horizontal=True,
+                horizontal_alignment="distribute",
+                vertical_alignment="center",
+            ):
+                name = f"{member['first_name']} {member['last_name']}"
+                st.write(f"**{name}**")
+                if st.button(label="Kick", width="content", key=f"kick-{member_id}"):
+                    # TODO: implement kicking a roommate
+                    st.rerun()
 
 with right_col:
     st.subheader("Invite a Roommate")
@@ -72,3 +65,30 @@ with right_col:
                 st.error(f"User with email '{invite_email}' does not exist")
 
     st.subheader("Pending Invites")
+    with st.container(
+        border=True,
+        height=250,
+    ):
+        for invite in [1, 2, 3]:
+            with st.container(
+                border=True,
+                horizontal=True,
+                horizontal_alignment="distribute",
+                vertical_alignment="center",
+            ):
+                name = "some name"
+                st.write(f"**{name}**")
+                if st.button(
+                    label="Cancel", width="content", key=f"cancel-inv-{invite}"
+                ):
+                    client.delete(f"/groups/{group_id}/invites/{invite}")
+                    st.rerun()
+
+with st.container(horizontal=True, width="stretch", horizontal_alignment="left"):
+    # TODO: make functional
+    if st.button("Transfer Ownership"):
+        st.switch_page("pages/02_Group_Dashboard.py")
+
+    if st.button("Delete Group"):
+        del st.session_state["group"]
+        st.switch_page("pages/00_User_Dashboard.py")
