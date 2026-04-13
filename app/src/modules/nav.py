@@ -1,21 +1,26 @@
 # Idea borrowed from https://github.com/fsmosca/sample-streamlit-authenticator
-
 # This file has functions to add links to the left sidebar based on the user's role.
 
 import streamlit as st
 
 
-# ---- General ----------------------------------------------------------------
+def my_groups_nav():
+    if st.sidebar.button(label="Your Groups", icon="🏠"):
+        if "group" in st.session_state:
+            del st.session_state["group"]
+        st.switch_page("pages/00_User_Dashboard.py")
 
 
-def home_nav():
-    st.sidebar.page_link("Home.py", label="Home", icon="🏠")
+def group_navs():
+    group = st.session_state["group"]
+    st.sidebar.write(f"### {group['name']}")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Dashboard", icon="📊")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Bills", icon="💰")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Chores", icon="🧹")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Events", icon="📅")
 
 
-# ---- Sidebar assembly -------------------------------------------------------
-
-
-def SideBarLinks(show_home=False):
+def SideBarLinks():
     """
     Renders sidebar navigation links based on the logged-in user's role.
     The role is stored in st.session_state when the user logs in on Home.py.
@@ -30,15 +35,21 @@ def SideBarLinks(show_home=False):
         st.session_state.authenticated = False
         st.switch_page("Home.py")
 
-    if show_home:
-        home_nav()
-
     if st.session_state["authenticated"]:
-        # TODO: display other buttons once user is logged in
-        pass
+        my_groups_nav()
+        st.sidebar.divider()
+
+    # TODO: display other buttons when the user is looking in a group
+    # TODO: display other buttons based on role (sysadmin, data analyst)
+
+    if "group" in st.session_state and st.session_state["group"]:
+        group_navs()
+        st.sidebar.divider()
 
     if st.session_state["authenticated"]:
         if st.sidebar.button("Logout"):
-            del st.session_state["user"]
-            del st.session_state["authenticated"]
+            if "user" in st.session_state:
+                del st.session_state["user"]
+            if "authenticated" in st.session_state:
+                del st.session_state["authenticated"]
             st.switch_page("Home.py")

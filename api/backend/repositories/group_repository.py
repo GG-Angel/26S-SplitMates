@@ -20,17 +20,25 @@ class GroupRepository(BaseRepository):
         )
 
     def create_group(self, data: dict):
-        self.execute(
-            load_query("groups/insert_group.sql"),
-            {
-                "group_leader": data["user_id"],
-                "name": data["name"],
-                "address": data["address"],
-                "city": data["city"],
-                "state": data["state"],
-                "zip_code": data["zip_code"],
-            },
-        )
+        with get_db() as conn:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(
+                load_query("groups/insert_group.sql"),
+                {
+                    "group_leader": data["user_id"],
+                    "name": data["name"],
+                    "address": data["address"],
+                    "city": data["city"],
+                    "state": data["state"],
+                    "zip_code": data["zip_code"],
+                },
+            )
+            group_id = cursor.lastrowid
+            cursor.execute(
+                "INSERT INTO group_members (user_id, group_id) VALUES (%s, %s)",
+                (data["user_id"], group_id),
+            )
+            conn.commit()
 
     def create_bill(self, data: dict):
         with get_db() as conn:

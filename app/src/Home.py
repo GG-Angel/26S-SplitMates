@@ -9,7 +9,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 st.set_page_config(layout="wide")
-SideBarLinks(show_home=True)
+SideBarLinks()
 
 # if a user is at this page, we assume they are not authenticated
 st.session_state["authenticated"] = False
