@@ -3,6 +3,7 @@ from requests import HTTPError
 import streamlit as st
 from api.client import client
 from modules.nav import SideBarLinks
+from utils import highlight_color, parse_mysql_datetime, time_relative
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,11 @@ group_id = group["group_id"]
 members = client.get(f"/groups/{group_id}/members")
 members.sort(key=lambda m: m["first_name"] + m["last_name"])
 
+pending_invites = client.get(f"/groups/{group_id}/invites")
+
 # --- Invite User ---
+
+st.write(members)
 
 st.subheader("Invite a Roommate")
 with st.container(border=True):
@@ -69,15 +74,21 @@ with left_col:
 with right_col:
     st.subheader("Pending Invites")
     with st.container(border=True, height=400):
-        for invite in [1, 2, 3]:
+        for invite in pending_invites:
             with st.container(
                 border=True,
                 horizontal=True,
                 horizontal_alignment="distribute",
                 vertical_alignment="center",
             ):
-                name = "some name"
-                st.write(f"**{name}**")
+                name = f"{invite['first_name']} {invite['last_name']}"
+                sent_at = time_relative(parse_mysql_datetime(invite["created_at"]))
+                sent_at_display = highlight_color("gray", f"Sent {sent_at.lower()}")
+
+                with st.container(border=False, gap="xxsmall"):
+                    st.write(f"**{name}**")
+                    st.write(sent_at_display)
+
                 if st.button(
                     label="Cancel", width="content", key=f"cancel-inv-{invite}"
                 ):

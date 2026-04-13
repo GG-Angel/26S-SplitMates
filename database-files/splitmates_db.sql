@@ -31,6 +31,7 @@ CREATE TABLE `groups` (
 CREATE TABLE group_members (
     user_id INT NOT NULL,
     group_id INT NOT NULL,
+    joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, group_id),
     FOREIGN KEY (user_id) REFERENCES users (user_id)
         ON UPDATE CASCADE
