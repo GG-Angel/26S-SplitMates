@@ -1,5 +1,6 @@
 SELECT 
-    g.group_id, 
+    g.group_id,
+    g.group_leader,
     g.name,
     g.city,
     g.state,
