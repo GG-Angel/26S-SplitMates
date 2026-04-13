@@ -89,7 +89,7 @@ def bill_details_modal(bill: dict):
 def create_bill_modal():
     # Title
     group_members: list[dict] = client.get(f"/groups/{group_id}/members")
-    title = st.text_input("Title", placeholder="e.g. Electricity Bill")
+    title = st.text_input("Title", placeholder="e.g. Electricity Bill", max_chars=128)
 
     # Cost and Due Date
     col_cost, col_date, col_time = st.columns(3)
