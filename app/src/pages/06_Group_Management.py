@@ -22,8 +22,6 @@ pending_invites = client.get(f"/groups/{group_id}/invites")
 
 # --- Invite User ---
 
-st.write(members)
-
 st.subheader("Invite a Roommate")
 with st.container(border=True):
     with st.container(
@@ -53,55 +51,63 @@ left_col, right_col = st.columns(2, gap="medium")
 
 with left_col:
     st.subheader("Your Roommates")
-    with st.container(border=True, height=400):
-        for member in members:
-            member_id = member["user_id"]
-            if member_id == user_id:
-                continue
+    if members:
+        with st.container(border=True, height=400):
+            for member in members:
+                member_id = member["user_id"]
+                if member_id == user_id:
+                    continue
 
-            with st.container(
-                border=True,
-                horizontal=True,
-                horizontal_alignment="distribute",
-                vertical_alignment="center",
-            ):
-                name = f"{member['first_name']} {member['last_name']}"
-                joined_at = time_relative(parse_mysql_datetime(member["joined_at"]))
-                joined_at_display = highlight_color(
-                    "gray", f"Joined {joined_at.lower()}"
-                )
+                with st.container(
+                    border=True,
+                    horizontal=True,
+                    horizontal_alignment="distribute",
+                    vertical_alignment="center",
+                ):
+                    name = f"{member['first_name']} {member['last_name']}"
+                    joined_at = time_relative(parse_mysql_datetime(member["joined_at"]))
+                    joined_at_display = highlight_color(
+                        "gray", f"Joined {joined_at.lower()}"
+                    )
 
-                with st.container(border=False, gap="xxsmall"):
-                    st.write(f"**{name}**")
-                    st.write(joined_at_display)
+                    with st.container(border=False, gap="xxsmall"):
+                        st.write(f"**{name}**")
+                        st.write(joined_at_display)
 
-                if st.button(label="Kick", width="content", key=f"kick-{member_id}"):
-                    # TODO: implement kicking a roommate
-                    st.rerun()
+                    if st.button(
+                        label="Kick", width="content", key=f"kick-{member_id}"
+                    ):
+                        # TODO: implement kicking a roommate
+                        st.rerun()
+    else:
+        st.write(highlight_color("gray", "No roommates."))
 
 with right_col:
     st.subheader("Pending Invites")
-    with st.container(border=True, height=400):
-        for invite in pending_invites:
-            with st.container(
-                border=True,
-                horizontal=True,
-                horizontal_alignment="distribute",
-                vertical_alignment="center",
-            ):
-                name = f"{invite['first_name']} {invite['last_name']}"
-                sent_at = time_relative(parse_mysql_datetime(invite["created_at"]))
-                sent_at_display = highlight_color("gray", f"Sent {sent_at.lower()}")
-
-                with st.container(border=False, gap="xxsmall"):
-                    st.write(f"**{name}**")
-                    st.write(sent_at_display)
-
-                if st.button(
-                    label="Cancel", width="content", key=f"cancel-inv-{invite}"
+    if pending_invites:
+        with st.container(border=True, height=400):
+            for invite in pending_invites:
+                with st.container(
+                    border=True,
+                    horizontal=True,
+                    horizontal_alignment="distribute",
+                    vertical_alignment="center",
                 ):
-                    client.delete(f"/groups/{group_id}/invites/{invite}")
-                    st.rerun()
+                    name = f"{invite['first_name']} {invite['last_name']}"
+                    sent_at = time_relative(parse_mysql_datetime(invite["created_at"]))
+                    sent_at_display = highlight_color("gray", f"Sent {sent_at.lower()}")
+
+                    with st.container(border=False, gap="xxsmall"):
+                        st.write(f"**{name}**")
+                        st.write(sent_at_display)
+
+                    if st.button(
+                        label="Cancel", width="content", key=f"cancel-inv-{invite}"
+                    ):
+                        client.delete(f"/groups/{group_id}/invites/{invite}")
+                        st.rerun()
+    else:
+        st.write(highlight_color("gray", "No pending invites."))
 
 # --- Bottom actions ---
 
