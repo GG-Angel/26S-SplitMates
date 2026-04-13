@@ -15,4 +15,4 @@ SELECT
 FROM bills b
 JOIN users u ON b.created_by = u.user_id
 WHERE b.group_id = %(group_id)s
-ORDER BY b.due_at ASC;;
+ORDER BY b.due_at ASC;

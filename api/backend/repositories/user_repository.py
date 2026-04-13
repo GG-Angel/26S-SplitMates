@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from backend.db_connection import load_query
 from backend.repositories.base_repository import BaseRepository
 
@@ -16,18 +16,6 @@ class UserRepository(BaseRepository):
     def get_user_groups(self, user_id: int):
         return self.fetch_all(
             load_query("groups/get_user_groups.sql"), {"user_id": user_id}
-        )
-
-    def get_user_bills(
-        self,
-        user_id: int,
-        *,
-        group_id: Optional[int] = None,
-        unpaid_only: Optional[bool] = False,
-    ):
-        return self.fetch_all(
-            load_query("bills/get_user_bills.sql"),
-            {"user_id": user_id, "group_id": group_id, "unpaid_only": unpaid_only},
         )
 
     def get_user_chores(self, user_id: int):

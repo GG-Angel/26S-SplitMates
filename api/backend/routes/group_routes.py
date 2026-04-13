@@ -40,6 +40,21 @@ def handle_group_members(group_id: int):
     return jsonify(members), 200
 
 
+@group_routes.route("/<group_id>/members/<user_id>/bills", methods=["GET"])
+@handle_db_errors
+def handle_group_member_bills(group_id: int, user_id: int):
+    repository = GroupRepository()
+    current_app.logger.info(f"GET /groups/{group_id}/members/{user_id}/bills")
+    unpaid_only = "unpaid_only" in request.args
+    bills = repository.get_group_member_bills(group_id, user_id, unpaid_only)
+    for bill in bills:
+        bill["assignees"] = repository.get_group_bill_assignees(
+            group_id,
+            bill["bill_id"],
+        )
+    return jsonify(bills), 200
+
+
 @group_routes.route("/<group_id>/bills", methods=["GET", "POST"])
 @handle_db_errors
 def handle_group_bills(group_id: int):

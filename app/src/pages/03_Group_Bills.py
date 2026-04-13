@@ -21,8 +21,8 @@ user_id = user["user_id"]
 group_id = group["group_id"]
 
 bills_assigned: list[dict] = client.get(
-    f"/users/{user_id}/bills",
-    params={"group_id": group_id, "unpaid": True},
+    f"/groups/{group_id}/members/{user_id}/bills",
+    params={"unpaid_only": True},
 )
 amount_to_pay = sum([float(b["user_cost"]) for b in bills_assigned])
 
@@ -233,6 +233,10 @@ with left_col:
                     ):
                         client.put(f"/users/{user_id}/bills/{bill['bill_id']}/pay")
                         st.rerun()
+                    if st.button(
+                        label="View Details", key=f"view_created_{bill['bill_id']}"
+                    ):
+                        bill_details_modal(bill)
 
     else:
         st.write(highlight_color("green", "You have no bills to pay. Good job!"))

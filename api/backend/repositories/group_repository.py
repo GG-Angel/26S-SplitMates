@@ -1,3 +1,4 @@
+from typing import Optional
 from backend.db_connection import get_db, load_query
 from backend.repositories.base_repository import BaseRepository
 
@@ -16,6 +17,14 @@ class GroupRepository(BaseRepository):
     def get_group_bills(self, group_id: int):
         return self.fetch_all(
             load_query("bills/get_group_bills.sql"), {"group_id": group_id}
+        )
+
+    def get_group_member_bills(
+        self, group_id: int, user_id: int, unpaid_only: Optional[bool] = False
+    ):
+        return self.fetch_all(
+            load_query("bills/get_group_member_bills.sql"),
+            {"group_id": group_id, "user_id": user_id, "unpaid_only": unpaid_only},
         )
 
     def get_group_bill(self, group_id: int, bill_id: int):
