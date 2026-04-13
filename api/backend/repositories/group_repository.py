@@ -138,3 +138,21 @@ class GroupRepository(BaseRepository):
 
     def delete_chore(self, chore_id: int):
         self.execute(load_query("chores/delete_chore.sql"), {"chore_id": chore_id})
+
+    def get_group_events(self, group_id: int):
+        return self.fetch_all(
+            load_query("events/get_group_events.sql"), {"group_id": group_id}
+        )
+
+    def create_event(self, group_id: int, data: dict):
+        self.execute(
+            load_query("events/insert_event.sql"),
+            {
+                "group_id": group_id,
+                "created_by": data["user_id"],
+                "title": data["title"],
+                "starts_at": data["starts_at"],
+                "ends_at": data["ends_at"],
+                "is_private": data["is_private"],
+            },
+        )
