@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, jsonify
+from flask import Blueprint, current_app, jsonify, request
 from mysql.connector import Error
 from backend.repositories.user_repository import UserRepository
 
@@ -50,7 +50,8 @@ def handle_user_bills(user_id: int):
     repository = UserRepository()
     try:
         current_app.logger.info(f"GET /users/{user_id}/bills")
-        bills = repository.get_user_bills(user_id)
+        group_id = request.args.get("group_id", type=int)
+        bills = repository.get_user_bills(user_id, group_id=group_id)
         return jsonify(bills), 200
     except Error as e:
         current_app.logger.error(

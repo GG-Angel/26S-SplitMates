@@ -94,9 +94,7 @@ class GroupRepository(BaseRepository):
             conn.commit()
 
     def complete_chore(self, chore_id: int):
-        self.execute(
-            load_query("chores/complete_chore.sql"), {"chore_id": chore_id}
-        )
+        self.execute(load_query("chores/complete_chore.sql"), {"chore_id": chore_id})
 
     def update_chore(self, chore_id: int, data: dict):
         self.execute(
@@ -110,6 +108,4 @@ class GroupRepository(BaseRepository):
         )
 
     def delete_chore(self, chore_id: int):
-        self.execute(
-            load_query("chores/delete_chore.sql"), {"chore_id": chore_id}
-        )
+        self.execute(load_query("chores/delete_chore.sql"), {"chore_id": chore_id})
