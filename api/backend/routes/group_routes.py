@@ -114,23 +114,18 @@ def complete_chore(chore_id: int):
 
 
 @group_routes.route("/<group_id>/events", methods=["GET", "POST"])
+@handle_db_errors
 def handle_group_events(group_id: int):
     repository = GroupRepository()
-    try:
-        if request.method == "GET":
-            current_app.logger.info(f"GET /groups/{group_id}/events")
-            events = repository.get_group_events(group_id)
-            return jsonify(events), 200
-        else:
-            data = request.get_json()
-            current_app.logger.info(f"POST /groups/{group_id}/events")
-            repository.create_event(group_id, data)
-            return jsonify({"message": "Event created"}), 201
-    except Error as e:
-        current_app.logger.error(
-            f"Database error in {handle_group_events.__name__}(): {e}"
-        )
-        return jsonify({"error": "Unexpected error"}), 500
+    if request.method == "GET":
+        current_app.logger.info(f"GET /groups/{group_id}/events")
+        events = repository.get_group_events(group_id)
+        return jsonify(events), 200
+    else:
+        data = request.get_json()
+        current_app.logger.info(f"POST /groups/{group_id}/events")
+        repository.create_event(group_id, data)
+        return jsonify({"message": "Event created"}), 201
 
 
 @group_routes.route("/chores/<chore_id>", methods=["PUT", "DELETE"])
