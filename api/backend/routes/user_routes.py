@@ -51,7 +51,11 @@ def handle_user_bills(user_id: int):
     try:
         current_app.logger.info(f"GET /users/{user_id}/bills")
         group_id = request.args.get("group_id", type=int)
-        bills = repository.get_user_bills(user_id, group_id=group_id)
+        unpaid_only = "unpaid" in request.args
+        current_app.logger.info(f"UNPAID ONLY: {unpaid_only}")
+        bills = repository.get_user_bills(
+            user_id, group_id=group_id, unpaid_only=unpaid_only
+        )
         return jsonify(bills), 200
     except Error as e:
         current_app.logger.error(
