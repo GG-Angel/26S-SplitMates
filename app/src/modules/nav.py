@@ -53,4 +53,6 @@ def SideBarLinks():
                 del st.session_state["user"]
             if "authenticated" in st.session_state:
                 del st.session_state["authenticated"]
+            if "group" in st.session_state:
+                del st.session_state["group"]
             st.switch_page("Home.py")
