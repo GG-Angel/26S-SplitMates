@@ -19,6 +19,18 @@ class GroupRepository(BaseRepository):
             {"group_id": group_id, "bill_id": bill_id},
         )
 
+    def get_group_bill_assignees(self, group_id: int, bill_id: int):
+        return self.fetch_all(
+            load_query("bills/get_bill_assignees.sql"),
+            {"group_id": group_id, "bill_id": bill_id},
+        )
+
+    def get_all_group_bill_assignees(self, group_id: int):
+        return self.fetch_all(
+            load_query("bills/get_group_bill_assignees.sql"),
+            {"group_id": group_id},
+        )
+
     def create_group(self, data: dict):
         with get_db() as conn:
             cursor = conn.cursor(dictionary=True)

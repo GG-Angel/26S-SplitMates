@@ -38,6 +38,11 @@ def handle_group_bills(group_id: int):
     if request.method == "GET":
         current_app.logger.info(f"GET /groups/{group_id}/bills")
         bills = repository.get_group_bills(group_id)
+        for bill in bills:
+            bill["assignees"] = repository.get_group_bill_assignees(
+                group_id,
+                bill["bill_id"],
+            )
         return jsonify(bills), 200
     else:
         data = request.get_json()
@@ -50,8 +55,9 @@ def handle_group_bills(group_id: int):
 def handle_group_bill(group_id: int, bill_id: int):
     repository = GroupRepository()
     current_app.logger.info(f"GET /groups/{group_id}/bills/<bill_id>")
-    bills = repository.get_group_bill(group_id, bill_id)
-    return jsonify(bills), 200
+    bill = repository.get_group_bill(group_id, bill_id)
+    assignees = repository.get_group_bill_assignees(group_id, bill_id)
+    return jsonify({"bill": bill, "assignees": assignees}), 200
 
 
 @group_routes.route("/<group_id>/chores", methods=["GET", "POST"])

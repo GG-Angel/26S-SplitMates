@@ -19,14 +19,14 @@ group = st.session_state["group"]
 user_id = user["user_id"]
 group_id = group["group_id"]
 
-bills_assigned = client.get(
+bills_assigned: list[dict] = client.get(
     f"/users/{user_id}/bills",
     params={"group_id": group_id, "unpaid": True},
 )
-group_bills = client.get(f"/groups/{group_id}/bills")
-bills_created = [b for b in group_bills if b["created_by"] == user_id]
-
 amount_to_pay = sum([float(b["user_cost"]) for b in bills_assigned])
+
+group_bills: list[dict] = client.get(f"/groups/{group_id}/bills")
+bills_created = [b for b in group_bills if b["created_by"] == user_id]
 amount_to_be_paid = sum([float(b["amount_remaining"]) for b in bills_created])
 
 # --- Content ---
@@ -51,19 +51,20 @@ with left_col:
                 # cost and due date
                 cost = bill["user_cost"]
                 due_date = parse_mysql_datetime(bill["due_at"])
-                cost_date_info = f"${cost}, {time_relative(due_date).lower()}"
+                cost_date_info = f"${cost}, due {time_relative(due_date).lower()}"
                 cost_date_display = (
-                    highlight_color("red", cost_date_info)
+                    highlight_color("red", f"{cost_date_info} (overdue)")
                     if is_past_date(due_date)
                     else cost_date_info
                 )
 
                 # show who assigned this bill
                 assigned_by = client.get(f"/users/{bill['created_by']}")
-                assigned_by_display = f"Assigned by {assigned_by['first_name']}"
+                assigned_by_display = highlight_color(
+                    "gray", f"Assigned by {assigned_by['first_name']}"
+                )
 
                 with st.container(
-                    border=True,
                     horizontal=True,
                     vertical_alignment="bottom",
                     horizontal_alignment="distribute",
@@ -83,5 +84,26 @@ with right_col:
     st.subheader("Bills You Created")
     with st.container(border=True):
         for bill in bills_created:
-            with st.container(border=True):
-                st.write(bill)
+            cost = bill["total_cost"]
+            due_date = parse_mysql_datetime(bill["due_at"])
+            cost_date_info = f"${cost}, due {time_relative(due_date).lower()}"
+            cost_date_display = (
+                highlight_color("red", f"{cost_date_info} (overdue)")
+                if is_past_date(due_date)
+                else cost_date_info
+            )
+
+            assigned_to = (
+                f"Assigned to {', '.join([a['first_name'] for a in bill['assignees']])}"
+            )
+            assigned_to_display = highlight_color("gray", assigned_to)
+
+            with st.container(
+                horizontal=True,
+                vertical_alignment="bottom",
+                horizontal_alignment="distribute",
+            ):
+                with st.container(gap="xsmall"):
+                    st.write(f"##### {bill['title']}")
+                    st.write(cost_date_display)
+                    st.write(assigned_to_display)
