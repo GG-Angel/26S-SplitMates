@@ -13,7 +13,8 @@ SELECT
         WHERE ba2.bill_id = b.bill_id AND ba2.paid_at IS NULL
     ), 0), 2) AS amount_due,
     ba.split_percentage,
-    ROUND(ba.split_percentage * b.total_cost, 2) AS user_cost
+    ROUND(ba.split_percentage * b.total_cost, 2) AS user_cost,
+    ba.paid_at
 FROM bills b
 JOIN users u ON b.created_by = u.user_id
 JOIN bill_assignments ba ON b.bill_id = ba.bill_id

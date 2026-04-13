@@ -10,8 +10,10 @@ SideBarLinks()
 
 user = st.session_state["user"]
 user_id = user["user_id"]
+group = st.session_state["group"]
+group_id = group["group_id"]
 
-bills = client.get(f"users/{user_id}/bills")
+bills = client.get(f"groups/{group_id}/members/{user_id}/bills")
 chores = client.get(f"users/{user_id}/chores")
 
 
