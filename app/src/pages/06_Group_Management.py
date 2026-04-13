@@ -66,7 +66,15 @@ with left_col:
                 vertical_alignment="center",
             ):
                 name = f"{member['first_name']} {member['last_name']}"
-                st.write(f"**{name}**")
+                joined_at = time_relative(parse_mysql_datetime(member["joined_at"]))
+                joined_at_display = highlight_color(
+                    "gray", f"Joined {joined_at.lower()}"
+                )
+
+                with st.container(border=False, gap="xxsmall"):
+                    st.write(f"**{name}**")
+                    st.write(joined_at_display)
+
                 if st.button(label="Kick", width="content", key=f"kick-{member_id}"):
                     # TODO: implement kicking a roommate
                     st.rerun()
