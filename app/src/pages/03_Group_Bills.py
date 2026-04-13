@@ -45,36 +45,39 @@ with top_right_col:
 left_col, right_col = st.columns(2)
 with left_col:
     st.subheader("Bills to Pay")
-    with st.container(border=True):
-        for bill in bills_assigned:
-            # cost and due date
-            cost = bill["user_cost"]
-            due_date = parse_mysql_datetime(bill["due_at"])
-            cost_date_info = f"${cost}, {time_relative(due_date).lower()}"
-            cost_date_display = (
-                highlight_color("red", cost_date_info)
-                if is_past_date(due_date)
-                else cost_date_info
-            )
+    if bills_assigned:
+        with st.container(border=True):
+            for bill in bills_assigned:
+                # cost and due date
+                cost = bill["user_cost"]
+                due_date = parse_mysql_datetime(bill["due_at"])
+                cost_date_info = f"${cost}, {time_relative(due_date).lower()}"
+                cost_date_display = (
+                    highlight_color("red", cost_date_info)
+                    if is_past_date(due_date)
+                    else cost_date_info
+                )
 
-            # show who assigned this bill
-            assigned_by = client.get(f"/users/{bill['created_by']}")
-            assigned_by_display = f"Assigned by {assigned_by['first_name']}"
+                # show who assigned this bill
+                assigned_by = client.get(f"/users/{bill['created_by']}")
+                assigned_by_display = f"Assigned by {assigned_by['first_name']}"
 
-            with st.container(
-                border=True,
-                horizontal=True,
-                vertical_alignment="top",
-                horizontal_alignment="distribute",
-            ):
-                with st.container(gap="xsmall"):
-                    st.write(f"##### {bill['title']}")
-                    st.write(cost_date_display)
-                    st.write(assigned_by_display)
-                with st.container(width="content"):
-                    if st.button(label="Mark as Paid"):
-                        client.delete("/")
-                        pass
+                with st.container(
+                    border=True,
+                    horizontal=True,
+                    vertical_alignment="bottom",
+                    horizontal_alignment="distribute",
+                ):
+                    with st.container(gap="xsmall"):
+                        st.write(f"##### {bill['title']}")
+                        st.write(cost_date_display)
+                        st.write(assigned_by_display)
+                    with st.container(width="content"):
+                        if st.button(label="Mark as Paid"):
+                            client.put(f"/users/{user_id}/bills/{bill['bill_id']}/pay")
+                            st.rerun()
+    else:
+        st.write(highlight_color("green", "You have no bills to pay. Good job!"))
 
 with right_col:
     st.subheader("Bills You Created")
