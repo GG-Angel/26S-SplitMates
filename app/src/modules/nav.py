@@ -4,8 +4,20 @@
 import streamlit as st
 
 
-def user_dashboard_nav():
-    st.sidebar.page_link("pages/00_User_Dashboard.py", label="Home", icon="🏠")
+def my_groups_nav():
+    if st.sidebar.button(label="Your Groups", icon="🏠"):
+        if "group" in st.session_state:
+            del st.session_state["group"]
+        st.switch_page("pages/00_User_Dashboard.py")
+
+
+def group_navs():
+    group = st.session_state["group"]
+    st.sidebar.write(f"### {group['name']}")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Dashboard", icon="📊")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Bills", icon="💰")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Chores", icon="🧹")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Events", icon="📅")
 
 
 def SideBarLinks():
@@ -24,13 +36,20 @@ def SideBarLinks():
         st.switch_page("Home.py")
 
     if st.session_state["authenticated"]:
-        user_dashboard_nav()
+        my_groups_nav()
+        st.sidebar.divider()
 
-        # TODO: display other buttons when the user is looking in a group
-        # TODO: display other buttons based on role (sysadmin, data analyst)
+    # TODO: display other buttons when the user is looking in a group
+    # TODO: display other buttons based on role (sysadmin, data analyst)
+
+    if "group" in st.session_state and st.session_state["group"]:
+        group_navs()
+        st.sidebar.divider()
 
     if st.session_state["authenticated"]:
         if st.sidebar.button("Logout"):
-            del st.session_state["user"]
-            del st.session_state["authenticated"]
+            if "user" in st.session_state:
+                del st.session_state["user"]
+            if "authenticated" in st.session_state:
+                del st.session_state["authenticated"]
             st.switch_page("Home.py")

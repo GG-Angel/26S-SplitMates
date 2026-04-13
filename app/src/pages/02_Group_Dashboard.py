@@ -1,37 +1,22 @@
 import logging
-import requests
 from datetime import datetime
 import streamlit as st
+from api.client import client
 from modules.nav import SideBarLinks
 
 logger = logging.getLogger(__name__)
 st.set_page_config(layout="wide")
 SideBarLinks()
 
-API_BASE_URL = "http://web-api:4000"
-user_id = st.session_state["user"]["user_id"]
+user = st.session_state["user"]
+user_id = user["user_id"]
+
+bills = client.get(f"users/{user_id}/bills")
+chores = client.get(f"users/{user_id}/chores")
+
 
 st.title("Your Dashboard")
 
-if st.button("make-group-placeholder"):
-    st.switch_page("pages/01_Group_Creation.py")
-
-# Fetch bills and chores assigned to this user
-try:
-    bills_resp = requests.get(f"{API_BASE_URL}/users/{user_id}/bills", timeout=5)
-    bills_resp.raise_for_status()
-    bills = bills_resp.json()
-except requests.exceptions.RequestException as e:
-    st.error(f"Could not load bills: {e}")
-    bills = []
-
-try:
-    chores_resp = requests.get(f"{API_BASE_URL}/users/{user_id}/chores", timeout=5)
-    chores_resp.raise_for_status()
-    chores = chores_resp.json()
-except requests.exceptions.RequestException as e:
-    st.error(f"Could not load chores: {e}")
-    chores = []
 
 # Summary totals
 unpaid = [b for b in bills if not b["paid_at"]]
