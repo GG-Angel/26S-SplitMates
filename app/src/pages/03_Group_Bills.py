@@ -1,4 +1,5 @@
 import logging
+from datetime import date, time, datetime
 import streamlit as st
 from api.client import client
 from modules.nav import SideBarLinks
@@ -38,6 +39,105 @@ def bill_details_modal(bill: dict):
     st.write(bill)
 
 
+@st.dialog("Create Bill")
+def create_bill_modal():
+    # Title
+    group_members: list[dict] = client.get(f"/groups/{group_id}/members")
+    title = st.text_input("Title", placeholder="e.g. Electricity Bill")
+
+    # Cost and Due Date
+    col_cost, col_date, col_time = st.columns(3)
+    with col_cost:
+        total_cost = st.number_input(
+            "Total Amount ($)", min_value=0.01, step=0.01, format="%.2f", value=0.01
+        )
+    with col_date:
+        due_date = st.date_input("Due Date", min_value=date.today())
+    with col_time:
+        due_time = st.time_input("Due Time", value=time(0, 0), step=3600)
+
+    st.divider()
+
+    header_col, split_col = st.columns([3, 2])
+    with header_col:
+        st.write("**Assign to Members**")
+    with split_col:
+        split_btn = st.button("Split Equally", use_container_width=True)
+
+    # Update percentage session state before rendering inputs
+    if split_btn:
+        checked_ids = [
+            m["user_id"]
+            for m in group_members
+            if st.session_state.get(f"member_{m['user_id']}", False)
+        ]
+        if checked_ids:
+            n = len(checked_ids)
+            base = round(100.0 / n, 1)
+            remainder = round(100.0 - base * (n - 1), 1)
+            for i, mid in enumerate(checked_ids):
+                st.session_state[f"pct_{mid}"] = remainder if i == 0 else base
+
+    selected_members: dict[int, float] = {}
+    for member in group_members:
+        mid = member["user_id"]
+        name = f"{member['first_name']} {member['last_name']}"
+        col_name, col_pct = st.columns([3, 2])
+        with col_name:
+            checked = st.checkbox(name, key=f"member_{mid}")
+        with col_pct:
+            if checked:
+                pct = st.number_input(
+                    "split %",
+                    min_value=0.1,
+                    max_value=100.0,
+                    step=0.1,
+                    format="%.1f",
+                    key=f"pct_{mid}",
+                    label_visibility="collapsed",
+                )
+                selected_members[mid] = pct
+
+    total_pct = sum(selected_members.values())
+    if selected_members:
+        if total_pct == 100.0:
+            st.success(f"Total: {total_pct:.1f}%")
+        else:
+            st.warning(f"Total: {total_pct:.1f}% (must equal 100%)")
+
+    if st.button("Create Bill", type="primary"):
+        errors = []
+        if not title.strip():
+            errors.append("Title is required.")
+        if not selected_members:
+            errors.append("Assign the bill to at least one person.")
+        elif abs(total_pct - 100.0) > 0.1:
+            errors.append(f"Percentages must sum to 100% (currently {total_pct:.1f}%).")
+
+        for err in errors:
+            st.error(err)
+
+        if not errors:
+            assignees = [
+                {"user_id": uid, "split_percentage": round(pct / 100, 4)}
+                for uid, pct in selected_members.items()
+            ]
+            client.post(
+                f"/groups/{group_id}/bills",
+                json={
+                    "group_id": group_id,
+                    "user_id": user_id,
+                    "title": title.strip(),
+                    "total_cost": total_cost,
+                    "due_at": datetime.combine(due_date, due_time).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                    "assignees": assignees,
+                },
+            )
+            st.rerun()
+
+
 st.title("Your Bills")
 
 top_left_col, top_right_col = st.columns([3, 5])
@@ -47,7 +147,8 @@ with top_left_col:
 with top_right_col:
     with st.container(border=True, horizontal=True, vertical_alignment="center"):
         st.metric("You are owed", f"${amount_to_be_paid:,.2f}")
-        st.button(label="Create Bill", type="primary")
+        if st.button(label="Create Bill", type="primary"):
+            create_bill_modal()
 
 left_col, right_col = st.columns(2)
 with left_col:
@@ -91,20 +192,20 @@ with left_col:
 
 with right_col:
     st.subheader("Bills You Created")
-    with st.container(border=True):
-        for bill in bills_created:
-            cost = bill["amount_remaining"]
-            due_date = parse_mysql_datetime(bill["due_at"])
-            cost_date_info = f"${cost}, due {time_relative(due_date).lower()}"
-            cost_date_display = (
-                highlight_color("red", f"{cost_date_info} (overdue)")
-                if is_past_date(due_date)
-                else cost_date_info
-            )
+    for bill in bills_created:
+        cost = bill["amount_remaining"]
+        due_date = parse_mysql_datetime(bill["due_at"])
+        cost_date_info = f"${cost}, due {time_relative(due_date).lower()}"
+        cost_date_display = (
+            highlight_color("red", f"{cost_date_info} (overdue)")
+            if is_past_date(due_date)
+            else cost_date_info
+        )
 
-            assigned_to = f"Awaiting Payments from {', '.join([a['first_name'] for a in bill['assignees'] if not a['paid_at']])}"
-            assigned_to_display = highlight_color("gray", assigned_to)
+        assigned_to = f"Awaiting Payments from {', '.join([a['first_name'] for a in bill['assignees'] if not a['paid_at']])}"
+        assigned_to_display = highlight_color("gray", assigned_to)
 
+        with st.container(border=True):
             with st.container(gap="xsmall"):
                 st.write(f"##### {bill['title']}")
                 st.write(cost_date_display)

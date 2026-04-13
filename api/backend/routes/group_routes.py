@@ -31,6 +31,15 @@ def handle_group(group_id: int):
     return jsonify(group), 200
 
 
+@group_routes.route("/<group_id>/members", methods=["GET"])
+@handle_db_errors
+def handle_group_members(group_id: int):
+    repository = GroupRepository()
+    current_app.logger.info(f"GET /groups/{group_id}/members")
+    members = repository.get_group_members(group_id)
+    return jsonify(members), 200
+
+
 @group_routes.route("/<group_id>/bills", methods=["GET", "POST"])
 @handle_db_errors
 def handle_group_bills(group_id: int):

@@ -14,4 +14,5 @@ SELECT
     ), 0), 2) AS amount_remaining
 FROM bills b
 JOIN users u ON b.created_by = u.user_id
-WHERE b.group_id = %(group_id)s;
+WHERE b.group_id = %(group_id)s
+ORDER BY b.due_at ASC;;
