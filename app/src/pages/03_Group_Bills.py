@@ -31,15 +31,60 @@ bills_created = [b for b in group_bills if b["created_by"] == user_id]
 amount_to_be_paid = sum([float(b["amount_remaining"]) for b in bills_created])
 
 
-# --- Content ---
+# --- Modals ---
 
 
-@st.dialog("Bill Details")
+@st.dialog("Bill Details", width="medium")
 def bill_details_modal(bill: dict):
-    st.write(bill)
+    is_creator = bill["created_by"] == user_id
+    creator = "You" if is_creator else bill["creator_name"]
+
+    st.subheader(bill["title"])
+    st.write(f"Created by {creator}")
+
+    created_at = parse_mysql_datetime(bill["created_at"])
+    due_at = parse_mysql_datetime(bill["due_at"])
+    total_cost = float(bill["total_cost"])
+    amount_due = float(bill["amount_remaining"])
+
+    cost_col_left, cost_col_right = st.columns(2)
+    with cost_col_left:
+        st.metric("Total Cost", f"${total_cost:,.2f}", border=True)
+    with cost_col_right:
+        st.metric("Amount Due", f"${amount_due:,.2f}", border=True)
+
+    date_col_left, date_col_right = st.columns(2)
+    with date_col_left:
+        st.metric("Created", created_at.strftime("%b %d, %Y"), border=True)
+    with date_col_right:
+        due_label = (
+            highlight_color("red", "Due (overdue)") if is_past_date(due_at) else "Due"
+        )
+        st.metric(due_label, due_at.strftime("%b %d, %Y"), border=True)
+
+    st.write("**Assignees**")
+
+    rows = []
+    for a in bill["assignees"]:
+        amount = float(a["split_percentage"]) * total_cost
+        paid_at = parse_mysql_datetime(a["paid_at"]) if a["paid_at"] else None
+        rows.append(
+            {
+                "Name": a["first_name"],
+                "Amount": f"${amount:,.2f}",
+                "Status": f"Paid {paid_at.strftime('%b %d, %Y')}"
+                if paid_at
+                else "No payment  ❌",
+            }
+        )
+    st.dataframe(rows, use_container_width=True, hide_index=True)
+
+    if is_creator:
+        if st.button(label="Delete Bill"):
+            st.rerun()
 
 
-@st.dialog("Create Bill")
+@st.dialog("Create Bill", width="medium")
 def create_bill_modal():
     # Title
     group_members: list[dict] = client.get(f"/groups/{group_id}/members")
@@ -138,6 +183,9 @@ def create_bill_modal():
             st.rerun()
 
 
+# --- Content ---
+
+
 st.title("Your Bills")
 
 top_left_col, top_right_col = st.columns([3, 5])
@@ -184,8 +232,6 @@ with left_col:
                     ):
                         client.put(f"/users/{user_id}/bills/{bill['bill_id']}/pay")
                         st.rerun()
-                    if st.button(label="View Details", key=f"view_{bill['bill_id']}"):
-                        bill_details_modal(bill)
 
     else:
         st.write(highlight_color("green", "You have no bills to pay. Good job!"))
