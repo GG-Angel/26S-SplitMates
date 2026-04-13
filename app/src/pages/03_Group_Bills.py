@@ -28,7 +28,7 @@ amount_to_pay = sum([float(b["user_cost"]) for b in bills_assigned])
 
 group_bills: list[dict] = client.get(f"/groups/{group_id}/bills")
 bills_created = [b for b in group_bills if b["created_by"] == user_id]
-amount_to_be_paid = sum([float(b["amount_remaining"]) for b in bills_created])
+amount_to_be_paid = sum([float(b["amount_due"]) for b in bills_created])
 
 
 # --- Modals ---
@@ -45,7 +45,7 @@ def bill_details_modal(bill: dict):
     created_at = parse_mysql_datetime(bill["created_at"])
     due_at = parse_mysql_datetime(bill["due_at"])
     total_cost = float(bill["total_cost"])
-    amount_due = float(bill["amount_remaining"])
+    amount_due = float(bill["amount_due"])
 
     cost_col_left, cost_col_right = st.columns(2)
     with cost_col_left:
@@ -81,6 +81,7 @@ def bill_details_modal(bill: dict):
 
     if is_creator:
         if st.button(label="Delete Bill"):
+            client.delete(f"/groups/{group_id}/bills/{bill['bill_id']}")
             st.rerun()
 
 
@@ -198,7 +199,7 @@ with top_right_col:
         if st.button(label="Create Bill", type="primary"):
             create_bill_modal()
 
-left_col, right_col = st.columns(2)
+left_col, right_col = st.columns(2, gap="medium")
 with left_col:
     st.subheader("Bills to Pay")
     if bills_assigned:
@@ -238,26 +239,29 @@ with left_col:
 
 with right_col:
     st.subheader("Bills You Created")
-    for bill in bills_created:
-        cost = bill["amount_remaining"]
-        due_date = parse_mysql_datetime(bill["due_at"])
-        cost_date_info = f"${cost}, due {time_relative(due_date).lower()}"
-        cost_date_display = (
-            highlight_color("red", f"{cost_date_info} (overdue)")
-            if is_past_date(due_date)
-            else cost_date_info
-        )
+    if bills_created:
+        for bill in bills_created:
+            cost = bill["amount_due"]
+            due_date = parse_mysql_datetime(bill["due_at"])
+            cost_date_info = f"${cost}, due {time_relative(due_date).lower()}"
+            cost_date_display = (
+                highlight_color("red", f"{cost_date_info} (overdue)")
+                if is_past_date(due_date)
+                else cost_date_info
+            )
 
-        assigned_to = f"Awaiting Payments from {', '.join([a['first_name'] for a in bill['assignees'] if not a['paid_at']])}"
-        assigned_to_display = highlight_color("gray", assigned_to)
+            assigned_to = f"Awaiting Payments from {', '.join([a['first_name'] for a in bill['assignees'] if not a['paid_at']])}"
+            assigned_to_display = highlight_color("gray", assigned_to)
 
-        with st.container(border=True):
-            with st.container(gap="xsmall"):
-                st.write(f"##### {bill['title']}")
-                st.write(cost_date_display)
-                st.write(assigned_to_display)
-            with st.container(width="content"):
-                if st.button(
-                    label="View Details", key=f"view_created_{bill['bill_id']}"
-                ):
-                    bill_details_modal(bill)
+            with st.container(border=True):
+                with st.container(gap="xsmall"):
+                    st.write(f"##### {bill['title']}")
+                    st.write(cost_date_display)
+                    st.write(assigned_to_display)
+                with st.container(width="content"):
+                    if st.button(
+                        label="View Details", key=f"view_created_{bill['bill_id']}"
+                    ):
+                        bill_details_modal(bill)
+    else:
+        st.write(highlight_color("gray", "You have not created any bills."))

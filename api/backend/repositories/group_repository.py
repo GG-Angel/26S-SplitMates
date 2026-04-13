@@ -84,6 +84,9 @@ class GroupRepository(BaseRepository):
                 )
             conn.commit()
 
+    def delete_bill(self, bill_id: int):
+        self.execute(load_query("bills/delete_bill.sql"), {"bill_id": bill_id})
+
     def get_group_chores(self, group_id: int):
         return self.fetch_all(
             load_query("chores/get_group_chores.sql"), {"group_id": group_id}

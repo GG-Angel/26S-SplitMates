@@ -59,14 +59,19 @@ def handle_group_bills(group_id: int):
         return jsonify({"message": "Bill created"}), 201
 
 
-@group_routes.route("/<group_id>/bills/<bill_id>", methods=["GET"])
+@group_routes.route("/<group_id>/bills/<bill_id>", methods=["GET", "DELETE"])
 @handle_db_errors
 def handle_group_bill(group_id: int, bill_id: int):
     repository = GroupRepository()
-    current_app.logger.info(f"GET /groups/{group_id}/bills/<bill_id>")
-    bill = repository.get_group_bill(group_id, bill_id)
-    assignees = repository.get_group_bill_assignees(group_id, bill_id)
-    return jsonify({"bill": bill, "assignees": assignees}), 200
+    if request.method == "GET":
+        current_app.logger.info(f"GET /groups/{group_id}/bills/{bill_id}")
+        bill = repository.get_group_bill(group_id, bill_id)
+        assignees = repository.get_group_bill_assignees(group_id, bill_id)
+        return jsonify({"bill": bill, "assignees": assignees}), 200
+    else:
+        current_app.logger.info(f"DELETE /groups/{group_id}/bills/{bill_id}")
+        repository.delete_bill(bill_id)
+        return jsonify({"message": "Bill deleted"}), 201
 
 
 @group_routes.route("/<group_id>/chores", methods=["GET", "POST"])
