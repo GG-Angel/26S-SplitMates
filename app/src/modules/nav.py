@@ -3,6 +3,7 @@
 
 import streamlit as st
 
+
 # icon="🏠"
 def my_groups_nav():
     if st.sidebar.button(label="Your Groups"):
@@ -16,7 +17,7 @@ def group_navs():
     group = st.session_state["group"]
     st.sidebar.write(f"### {group['name']}")
     st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Dashboard", icon="📊")
-    st.sidebar.page_link("pages/03_Group_Bills.py", label="Bills", icon="💰")
+    st.sidebar.page_link("pages/05_Group_Bills.py", label="Bills", icon="💰")
     st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Chores", icon="🧹")
     st.sidebar.page_link("pages/03_Group_Events.py", label="Events", icon="📅")
 
