@@ -11,7 +11,7 @@ CREATE TABLE users (
     email VARCHAR(75) NOT NULL UNIQUE,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-    is_analyst BOOLEAN NOT NULL DEFAULT FALSE,
+    is_analyst BOOLEAN NOT NULL DEFAULT FALSE
     INDEX idx_users_email (email)
 );
 

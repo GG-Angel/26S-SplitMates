@@ -3,21 +3,22 @@
 
 import streamlit as st
 
-
+# icon="🏠"
 def my_groups_nav():
-    if st.sidebar.button(label="Your Groups", icon="🏠"):
+    if st.sidebar.button(label="Your Groups"):
         if "group" in st.session_state:
             del st.session_state["group"]
         st.switch_page("pages/00_User_Dashboard.py")
 
 
+# icon="📊", icon="💰, icon="🧹",  icon="📅"
 def group_navs():
     group = st.session_state["group"]
     st.sidebar.write(f"### {group['name']}")
-    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Dashboard", icon="📊")
-    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Bills", icon="💰")
-    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Chores", icon="🧹")
-    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Events", icon="📅")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Dashboard",)
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Bills",)
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Chores",)
+    st.sidebar.page_link("pages/03_Group_Events.py", label="Events",)
 
 
 def SideBarLinks():
