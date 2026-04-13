@@ -128,6 +128,34 @@ def handle_group_events(group_id: int):
         return jsonify({"message": "Event created"}), 201
 
 
+@group_routes.route("/<group_id>/invites", methods=["GET", "POST"])
+@handle_db_errors
+def handle_group_invites(group_id: int):
+    repository = GroupRepository()
+    if request.method == "GET":
+        current_app.logger.info(f"GET /groups/{group_id}/invites")
+        pending_only = "pending" in request.args
+        invites = repository.get_group_invites(group_id, pending_only)
+        return jsonify(invites), 200
+    else:
+        data = request.get_json()
+        current_app.logger.info(f"POST /groups/{group_id}/invites")
+        user = repository.get_user_by_email(data["email"])
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        repository.create_invitation(group_id, {"sent_to": user["user_id"]})
+        return jsonify({"message": "Invitation sent"}), 201
+
+
+@group_routes.route("/<group_id>/invites/<invitation_id>", methods=["DELETE"])
+@handle_db_errors
+def handle_group_invitation(group_id: int, invitation_id: int):
+    repository = GroupRepository()
+    current_app.logger.info(f"DELETE /groups/{group_id}/invites/{invitation_id}")
+    repository.delete_invitation(invitation_id)
+    return jsonify({"message": "Invitation deleted"}), 200
+
+
 @group_routes.route("/chores/<chore_id>", methods=["PUT", "DELETE"])
 @handle_db_errors
 def handle_chore(chore_id: int):

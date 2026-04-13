@@ -156,3 +156,26 @@ class GroupRepository(BaseRepository):
                 "is_private": data["is_private"],
             },
         )
+
+    def get_group_invites(self, group_id: int, pending_only: bool = False):
+        return self.fetch_all(
+            load_query("invitations/get_group_invites.sql"),
+            {"group_id": group_id, "pending_only": pending_only},
+        )
+
+    def get_user_by_email(self, email: str):
+        return self.fetch_one(
+            load_query("users/get_user_by_email.sql"), {"email": email}
+        )
+
+    def create_invitation(self, group_id: int, data: dict):
+        self.execute(
+            load_query("invitations/insert_invitation.sql"),
+            {"group_id": group_id, "sent_to": data["sent_to"]},
+        )
+
+    def delete_invitation(self, invitation_id: int):
+        self.execute(
+            load_query("invitations/delete_invitation.sql"),
+            {"invitation_id": invitation_id},
+        )

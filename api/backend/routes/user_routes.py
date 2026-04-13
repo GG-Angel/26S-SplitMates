@@ -46,3 +46,13 @@ def handle_user_chores(user_id: int):
     current_app.logger.info(f"GET /users/{user_id}/chores")
     chores = repository.get_user_chores(user_id)
     return jsonify(chores), 200
+
+
+@user_routes.route("/<user_id>/invites", methods=["GET"])
+@handle_db_errors
+def handle_user_invites(user_id: int):
+    repository = UserRepository()
+    current_app.logger.info(f"GET /users/{user_id}/invites")
+    pending_only = "pending" in request.args
+    invites = repository.get_user_invites(user_id, pending_only)
+    return jsonify(invites), 200

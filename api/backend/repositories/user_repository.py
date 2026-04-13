@@ -23,6 +23,12 @@ class UserRepository(BaseRepository):
             load_query("chores/get_user_chores.sql"), {"user_id": user_id}
         )
 
+    def get_user_invitations(self, user_id: int, pending_only: bool = False):
+        return self.fetch_all(
+            load_query("invitations/get_user_invitations.sql"),
+            {"user_id": user_id, "pending_only": pending_only},
+        )
+
     def pay_bill(self, user_id: int, bill_id: int):
         self.execute(
             load_query("bills/pay_bill.sql"),
