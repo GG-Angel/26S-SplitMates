@@ -1,5 +1,9 @@
-SELECT g.group_id, g.name
+SELECT 
+    g.group_id, 
+    g.name,
+    g.city,
+    g.state,
+    (SELECT COUNT(*) FROM group_members WHERE group_id = g.group_id) AS member_count
 FROM `groups` g
-JOIN group_members gm 
-    ON gm.group_id = g.group_id 
-    AND gm.user_id = %(user_id)s;
+JOIN group_members gm ON g.group_id = gm.group_id
+WHERE gm.user_id = %(user_id)s;
