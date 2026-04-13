@@ -3,8 +3,6 @@ import streamlit as st
 from api.client import client
 from modules.nav import SideBarLinks
 from utils import (
-    format_date,
-    format_time,
     highlight_color,
     is_past_date,
     parse_mysql_datetime,
