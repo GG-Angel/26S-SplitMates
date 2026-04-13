@@ -17,7 +17,7 @@ group_id = group["group_id"]
 members = client.get(f"/groups/{group_id}/members")
 members.sort(key=lambda m: m["first_name"] + m["last_name"])
 
-# --- Invite User (full width) ---
+# --- Invite User ---
 
 st.subheader("Invite a Roommate")
 with st.container(border=True):
@@ -41,7 +41,8 @@ with st.container(border=True):
         except HTTPError:
             st.error(f"User with email '{invite_email}' does not exist")
 
-# --- Two columns: Roommates | Pending Invites ---
+
+# --- Roommates | Pending Invites ---
 
 left_col, right_col = st.columns(2, gap="medium")
 
