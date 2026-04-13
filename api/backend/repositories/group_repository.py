@@ -1,3 +1,4 @@
+from typing import Optional
 from backend.db_connection import get_db, load_query
 from backend.repositories.base_repository import BaseRepository
 
@@ -8,15 +9,40 @@ class GroupRepository(BaseRepository):
             load_query("groups/get_group.sql"), {"group_id": group_id}
         )
 
+    def get_group_members(self, group_id: int):
+        return self.fetch_all(
+            load_query("groups/get_group_members.sql"), {"group_id": group_id}
+        )
+
     def get_group_bills(self, group_id: int):
         return self.fetch_all(
             load_query("bills/get_group_bills.sql"), {"group_id": group_id}
+        )
+
+    def get_group_member_bills(
+        self, group_id: int, user_id: int, unpaid_only: Optional[bool] = False
+    ):
+        return self.fetch_all(
+            load_query("bills/get_group_member_bills.sql"),
+            {"group_id": group_id, "user_id": user_id, "unpaid_only": unpaid_only},
         )
 
     def get_group_bill(self, group_id: int, bill_id: int):
         return self.fetch_one(
             load_query("bills/get_group_bill.sql"),
             {"group_id": group_id, "bill_id": bill_id},
+        )
+
+    def get_group_bill_assignees(self, group_id: int, bill_id: int):
+        return self.fetch_all(
+            load_query("bills/get_bill_assignees.sql"),
+            {"group_id": group_id, "bill_id": bill_id},
+        )
+
+    def get_all_group_bill_assignees(self, group_id: int):
+        return self.fetch_all(
+            load_query("bills/get_group_bill_assignees.sql"),
+            {"group_id": group_id},
         )
 
     def create_group(self, data: dict):
@@ -67,6 +93,9 @@ class GroupRepository(BaseRepository):
                 )
             conn.commit()
 
+    def delete_bill(self, bill_id: int):
+        self.execute(load_query("bills/delete_bill.sql"), {"bill_id": bill_id})
+
     def get_group_chores(self, group_id: int):
         return self.fetch_all(
             load_query("chores/get_group_chores.sql"), {"group_id": group_id}
@@ -94,9 +123,7 @@ class GroupRepository(BaseRepository):
             conn.commit()
 
     def complete_chore(self, chore_id: int):
-        self.execute(
-            load_query("chores/complete_chore.sql"), {"chore_id": chore_id}
-        )
+        self.execute(load_query("chores/complete_chore.sql"), {"chore_id": chore_id})
 
     def update_chore(self, chore_id: int, data: dict):
         self.execute(
@@ -110,9 +137,7 @@ class GroupRepository(BaseRepository):
         )
 
     def delete_chore(self, chore_id: int):
-        self.execute(
-            load_query("chores/delete_chore.sql"), {"chore_id": chore_id}
-        )
+        self.execute(load_query("chores/delete_chore.sql"), {"chore_id": chore_id})
 
     def get_group_events(self, group_id: int):
         return self.fetch_all(

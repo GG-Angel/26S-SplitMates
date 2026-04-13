@@ -18,12 +18,13 @@ class UserRepository(BaseRepository):
             load_query("groups/get_user_groups.sql"), {"user_id": user_id}
         )
 
-    def get_user_bills(self, user_id: int):
-        return self.fetch_all(
-            load_query("bills/get_user_bills.sql"), {"user_id": user_id}
-        )
-
     def get_user_chores(self, user_id: int):
         return self.fetch_all(
             load_query("chores/get_user_chores.sql"), {"user_id": user_id}
+        )
+
+    def pay_bill(self, user_id: int, bill_id: int):
+        self.execute(
+            load_query("bills/pay_bill.sql"),
+            {"bill_id": bill_id, "user_id": user_id},
         )
