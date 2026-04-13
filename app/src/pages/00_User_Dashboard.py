@@ -29,7 +29,7 @@ else:
 
                 if st.button("View Group", key=f"group_{group['group_id']}"):
                     st.session_state["group"] = group
-                    st.switch_page("pages/01_Group_Dashboard.py")
+                    st.switch_page("pages/02_Group_Dashboard.py")
 
 if st.button("Create a Group", key="create_group", type="primary"):
     st.switch_page("pages/01_Group_Creation.py")
