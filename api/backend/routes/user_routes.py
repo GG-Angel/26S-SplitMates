@@ -44,6 +44,15 @@ def handle_user_bills(user_id: int):
     return jsonify(bills), 200
 
 
+@user_routes.route("/<user_id>/bills/<bill_id>/pay", methods=["PUT"])
+@handle_db_errors
+def handle_bill_payment(user_id: int, bill_id: int):
+    repository = UserRepository()
+    current_app.logger.info(f"PUT /users/{user_id}/bills/{bill_id}/pay")
+    repository.pay_bill(user_id, bill_id)
+    return jsonify({"message": "Bill paid"}), 200
+
+
 @user_routes.route("/<user_id>/chores", methods=["GET"])
 @handle_db_errors
 def handle_user_chores(user_id: int):
