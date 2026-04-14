@@ -58,6 +58,15 @@ def handle_group_members(group_id: int):
     return jsonify(members), 200
 
 
+@group_routes.route("/<group_id>/members/<user_id>", methods=["DELETE"])
+@handle_db_errors
+def handle_group_member(group_id: int, user_id: int):
+    repository = GroupRepository()
+    current_app.logger.info(f"DELETE /groups/{group_id}/members/{user_id}")
+    repository.remove_group_member(group_id, user_id)
+    return jsonify({"message": "Member successfully removed"}), 200
+
+
 @group_routes.route("/<group_id>/members/<user_id>/bills", methods=["GET"])
 @handle_db_errors
 def handle_group_member_bills(group_id: int, user_id: int):
