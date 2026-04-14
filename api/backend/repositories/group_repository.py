@@ -224,3 +224,9 @@ class GroupRepository(BaseRepository):
             load_query("groups/remove_group_member.sql"),
             {"group_id": group_id, "user_id": user_id},
         )
+
+    def rename_group(self, group_id: int, name: str):
+        self.execute(
+            load_query("groups/rename_group.sql"),
+            {"group_id": group_id, "name": name},
+        )
