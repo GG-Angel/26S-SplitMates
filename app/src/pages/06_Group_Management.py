@@ -84,9 +84,13 @@ with st.container(border=True):
     if send_invite_btn:
         try:
             client.post(f"/groups/{group_id}/invites", json={"email": invite_email})
-            st.rerun()
-        except HTTPError:
-            st.error(f"User with email '{invite_email}' does not exist")
+            pending_invites = client.get(f"/groups/{group_id}/invites")  # refresh
+            st.success("Invite sent!")
+        except HTTPError as e:
+            if e.response is not None:
+                st.error(e.response.json()["error"])
+            else:
+                st.error("Failed to send invite. Please try again.")
 
 
 # Roommates | Pending Invites

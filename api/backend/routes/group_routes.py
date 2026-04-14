@@ -36,7 +36,7 @@ def handle_group(group_id: int):
 
 @group_routes.route("/<group_id>/owner", methods=["PUT"])
 @handle_db_errors
-def transfer_group_ownership(group_id: int):
+def handle_group_owner(group_id: int):
     repository = GroupRepository()
     current_app.logger.info(f"PUT /groups/{group_id}/owner")
     data = request.get_json()
@@ -170,6 +170,10 @@ def handle_group_invites(group_id: int):
         user = repository.get_user_by_email(data["email"])
         if not user:
             return jsonify({"error": "User not found"}), 404
+        if repository.is_group_member(group_id, user["user_id"]):
+            return jsonify({"error": "User is already a member of this group"}), 409
+        if repository.get_pending_invite(group_id, user["user_id"]):
+            return jsonify({"error": "Invite already sent to this user"}), 409
         repository.create_invitation(group_id, {"sent_to": user["user_id"]})
         return jsonify({"message": "Invitation sent"}), 201
 

@@ -168,6 +168,18 @@ class GroupRepository(BaseRepository):
             load_query("users/get_user_by_email.sql"), {"email": email}
         )
 
+    def get_pending_invite(self, group_id: int, user_id: int):
+        return self.fetch_one(
+            load_query("invitations/get_pending_invite.sql"),
+            {"group_id": group_id, "user_id": user_id},
+        )
+
+    def is_group_member(self, group_id: int, user_id: int):
+        return self.fetch_one(
+            load_query("groups/is_group_member.sql"),
+            {"group_id": group_id, "user_id": user_id},
+        )
+
     def create_invitation(self, group_id: int, data: dict):
         self.execute(
             load_query("invitations/insert_invitation.sql"),
