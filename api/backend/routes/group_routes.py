@@ -23,7 +23,6 @@ def handle_group(group_id: int):
     current_app.logger.info(f"{request.method} /groups/{group_id}")
 
     group = repository.get_group(group_id)
-
     # ensure group exists
     if not group:
         return jsonify({"error": "Not found"}), 404

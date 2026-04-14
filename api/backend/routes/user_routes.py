@@ -54,5 +54,5 @@ def handle_user_invites(user_id: int):
     repository = UserRepository()
     current_app.logger.info(f"GET /users/{user_id}/invites")
     pending_only = "pending" in request.args
-    invites = repository.get_user_invites(user_id, pending_only)
+    invites = repository.get_user_invitations(user_id, pending_only)
     return jsonify(invites), 200
