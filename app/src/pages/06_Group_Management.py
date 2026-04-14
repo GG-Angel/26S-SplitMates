@@ -95,7 +95,7 @@ left_col, right_col = st.columns(2, gap="medium")
 
 with left_col:
     st.subheader("Your Roommates")
-    if members:
+    if members and len(members) > 1:  # > 1 to account for current user
         with st.container(border=True, height=400):
             for member in members:
                 member_id = member["user_id"]
@@ -161,7 +161,7 @@ with right_col:
 st.divider()
 
 with st.container(horizontal=True, width="stretch", horizontal_alignment="left"):
-    if st.button("Transfer Ownership"):
+    if st.button("Transfer Ownership", disabled=len(members) <= 1):
         transfer_ownership_modal()
 
     if st.button("Delete Group"):
