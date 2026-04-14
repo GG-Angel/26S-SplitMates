@@ -156,3 +156,53 @@ class GroupRepository(BaseRepository):
                 "is_private": data["is_private"],
             },
         )
+
+    def get_group_invites(self, group_id: int, pending_only: bool = False):
+        return self.fetch_all(
+            load_query("invitations/get_group_invites.sql"),
+            {"group_id": group_id, "pending_only": pending_only},
+        )
+
+    def get_user_by_email(self, email: str):
+        return self.fetch_one(
+            load_query("users/get_user_by_email.sql"), {"email": email}
+        )
+
+    def get_pending_invite(self, group_id: int, user_id: int):
+        return self.fetch_one(
+            load_query("invitations/get_pending_invite.sql"),
+            {"group_id": group_id, "user_id": user_id},
+        )
+
+    def is_group_member(self, group_id: int, user_id: int):
+        return self.fetch_one(
+            load_query("groups/is_group_member.sql"),
+            {"group_id": group_id, "user_id": user_id},
+        )
+
+    def create_invitation(self, group_id: int, data: dict):
+        self.execute(
+            load_query("invitations/insert_invitation.sql"),
+            {"group_id": group_id, "sent_to": data["sent_to"]},
+        )
+
+    def delete_invitation(self, invitation_id: int):
+        self.execute(
+            load_query("invitations/delete_invitation.sql"),
+            {"invitation_id": invitation_id},
+        )
+
+    def transfer_group_ownership(self, group_id: int, user_id: int):
+        self.execute(
+            load_query("groups/transfer_group_ownership.sql"),
+            {"group_id": group_id, "user_id": user_id},
+        )
+
+    def delete_group(self, group_id: int):
+        self.execute(load_query("groups/delete_group.sql"), {"group_id": group_id})
+
+    def remove_group_member(self, group_id: int, user_id: int):
+        self.execute_script(
+            load_query("groups/remove_group_member.sql"),
+            {"group_id": group_id, "user_id": user_id},
+        )

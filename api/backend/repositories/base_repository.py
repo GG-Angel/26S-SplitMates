@@ -34,6 +34,20 @@ class BaseRepository:
             cursor.execute(query)
         conn.commit()
 
+    def execute_script(
+        self, query: str, params: Optional[Dict[str, Any]] = None
+    ) -> None:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        if params is not None:
+            results = cursor.execute(query, params, multi=True)
+        else:
+            results = cursor.execute(query, multi=True)
+        if results is not None:
+            for _ in results:
+                pass
+        conn.commit()
+
     def execute_many(self, query: str, params: List[Dict[str, Any]]) -> None:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
