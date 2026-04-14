@@ -124,6 +124,8 @@ def handle_group_chores(group_id: int):
         current_app.logger.info(f"GET /groups/{group_id}/chores")
         incomplete_only = "incomplete_only" in request.args
         chores = repository.get_group_chores(group_id, incomplete_only)
+        for chore in chores:
+            chore["assignees"] = repository.get_chore_assignees(chore["chore_id"])
         return jsonify(chores), 200
     else:
         data = request.get_json()
@@ -186,6 +188,25 @@ def handle_group_invitation(group_id: int, invitation_id: int):
     current_app.logger.info(f"DELETE /groups/{group_id}/invites/{invitation_id}")
     repository.delete_invitation(invitation_id)
     return jsonify({"message": "Invitation deleted"}), 200
+
+
+@group_routes.route("/chores/<chore_id>/assignments", methods=["POST"])
+@handle_db_errors
+def assign_chore(chore_id: int):
+    repository = GroupRepository()
+    data = request.get_json()
+    current_app.logger.info(f"POST /groups/chores/{chore_id}/assignments")
+    repository.assign_user_to_chore(chore_id, data["user_id"])
+    return jsonify({"message": "Assigned to chore"}), 201
+
+
+@group_routes.route("/chores/<chore_id>/assignments/<user_id>", methods=["DELETE"])
+@handle_db_errors
+def unassign_chore(chore_id: int, user_id: int):
+    repository = GroupRepository()
+    current_app.logger.info(f"DELETE /groups/chores/{chore_id}/assignments/{user_id}")
+    repository.unassign_user_from_chore(chore_id, user_id)
+    return jsonify({"message": "Unassigned from chore"}), 200
 
 
 @group_routes.route("/chores/<chore_id>", methods=["PUT", "DELETE"])

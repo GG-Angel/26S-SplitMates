@@ -102,6 +102,23 @@ class GroupRepository(BaseRepository):
             {"group_id": group_id, "incomplete_only": incomplete_only},
         )
 
+    def get_chore_assignees(self, chore_id: int):
+        return self.fetch_all(
+            load_query("chores/get_chore_assignees.sql"), {"chore_id": chore_id}
+        )
+
+    def assign_user_to_chore(self, chore_id: int, user_id: int):
+        self.execute(
+            load_query("chores/insert_chore_assignment.sql"),
+            {"chore_id": chore_id, "user_id": user_id},
+        )
+
+    def unassign_user_from_chore(self, chore_id: int, user_id: int):
+        self.execute(
+            load_query("chores/delete_chore_assignment.sql"),
+            {"chore_id": chore_id, "user_id": user_id},
+        )
+
     def create_chore(self, group_id: int, data: dict):
         with get_db() as conn:
             cursor = conn.cursor(dictionary=True)

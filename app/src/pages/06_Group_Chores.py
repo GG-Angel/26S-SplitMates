@@ -24,6 +24,15 @@ chores: list[dict] = client.get(
 )
 members: list[dict] = client.get(f"/groups/{group_id}/members")
 
+my_chores = [
+    c for c in chores if any(a["user_id"] == user_id for a in c.get("assignees", []))
+]
+available_chores = [
+    c
+    for c in chores
+    if not any(a["user_id"] == user_id for a in c.get("assignees", []))
+]
+
 
 # --- Modals ---
 
@@ -158,66 +167,96 @@ st.title("Household Chores")
 
 with st.container(border=True, horizontal=True, vertical_alignment="center"):
     st.metric("Pending Chores", len(chores))
+    st.metric("My Chores", len(my_chores))
+    st.metric("Available", len(available_chores))
     if st.button("Create Chore", type="primary"):
         create_chore_modal()
 
 st.divider()
 
-if chores:
-    effort_colors = {"low": "green", "medium": "orange", "high": "red"}
-    cols = st.columns(3)
-    for i, chore in enumerate(chores):
-        is_creator = chore["created_by"] == user_id
-        completed_at = chore.get("completed_at")
-        due_at = parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
-        effort = chore["effort"]
+effort_colors = {"low": "green", "medium": "orange", "high": "red"}
 
-        with cols[i % 3]:
-            with st.container(border=True):
-                with st.container(gap="xsmall"):
-                    st.write(f"##### {chore['title']}")
-                    st.write(
-                        highlight_color(
-                            effort_colors.get(effort, "gray"),
-                            f"Effort: {effort.capitalize()}",
-                        )
-                    )
-                    created_by_name = (
-                        "You"
-                        if chore["created_by"] == user_id
-                        else chore["first_name"] + " " + chore["last_name"]
-                    )
-                    created_by = f"Created by {created_by_name}"
-                    created_by_display = highlight_color("gray", created_by)
-                    st.write(created_by_display)
-                    if due_at:
-                        due_display = (
-                            highlight_color(
-                                "red", f"Due {time_relative(due_at).lower()} (overdue)"
-                            )
-                            if is_past_date(due_at) and not completed_at
-                            else f"Due {time_relative(due_at).lower()}"
-                        )
-                        st.write(due_display)
-                    if completed_at:
-                        st.write(highlight_color("green", "✓ Completed"))
 
-                with st.container(horizontal=True):
-                    if not completed_at:
-                        if st.button(
-                            "Complete",
-                            key=f"complete_{chore['chore_id']}",
-                            type="primary",
-                        ):
-                            client.put(f"/groups/chores/{chore['chore_id']}/complete")
-                            st.rerun()
-                    if st.button("View", key=f"view_{chore['chore_id']}"):
-                        chore_details_modal(chore)
-                    if is_creator:
-                        if st.button("Edit", key=f"edit_{chore['chore_id']}"):
-                            edit_chore_modal(chore)
-                        if st.button("Delete", key=f"delete_{chore['chore_id']}"):
-                            client.delete(f"/groups/chores/{chore['chore_id']}")
-                            st.rerun()
-else:
-    st.write(highlight_color("gray", "No chores in this group yet."))
+def render_chore_card(chore: dict, col_key_prefix: str, action: str | None = None):
+    is_creator = chore["created_by"] == user_id
+    due_at = parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
+    effort = chore["effort"]
+    assignees = chore.get("assignees", [])
+    chore_id = chore["chore_id"]
+
+    with st.container(border=True):
+        with st.container(gap="xsmall"):
+            st.write(f"##### {chore['title']}")
+            st.write(
+                highlight_color(
+                    effort_colors.get(effort, "gray"),
+                    f"Effort: {effort.capitalize()}",
+                )
+            )
+            if due_at:
+                due_display = (
+                    highlight_color(
+                        "red", f"Due {time_relative(due_at).lower()} (overdue)"
+                    )
+                    if is_past_date(due_at)
+                    else f"Due {time_relative(due_at).lower()}"
+                )
+                st.write(due_display)
+
+            created_by_name = (
+                "You" if chore["created_by"] == user_id else chore["first_name"]
+            )
+            st.write(highlight_color("gray", f"Created by {created_by_name}"))
+
+            if assignees:
+                names = ", ".join(
+                    "You" if a["user_id"] == user_id else a["first_name"]
+                    for a in assignees
+                )
+                st.write(highlight_color("gray", f"Assigned: {names}"))
+
+        with st.container(horizontal=True):
+            is_assigned = any(a["user_id"] == user_id for a in assignees)
+            if is_assigned and st.button(
+                "Complete", key=f"{col_key_prefix}_complete_{chore_id}", type="primary"
+            ):
+                client.put(f"/groups/chores/{chore_id}/complete")
+                st.rerun()
+            if st.button("View", key=f"{col_key_prefix}_view_{chore_id}"):
+                chore_details_modal(chore)
+            if is_creator:
+                if st.button("Edit", key=f"{col_key_prefix}_edit_{chore_id}"):
+                    edit_chore_modal(chore)
+                if st.button("Delete", key=f"{col_key_prefix}_delete_{chore_id}"):
+                    client.delete(f"/groups/chores/{chore_id}")
+                    st.rerun()
+            if action == "drop":
+                if st.button("Drop It", key=f"drop_{chore_id}"):
+                    client.delete(f"/groups/chores/{chore_id}/assignments/{user_id}")
+                    st.rerun()
+            elif action == "take":
+                if st.button("Take It", key=f"take_{chore_id}", type="primary"):
+                    client.post(
+                        f"/groups/chores/{chore_id}/assignments",
+                        json={"user_id": user_id},
+                    )
+                    st.rerun()
+
+
+left_col, right_col = st.columns(2, gap="large")
+
+with left_col:
+    st.subheader("Assigned Chores")
+    if my_chores:
+        for chore in my_chores:
+            render_chore_card(chore, "mine", action="drop")
+    else:
+        st.write(highlight_color("gray", "You haven't taken any chores yet."))
+
+with right_col:
+    st.subheader("Up for Grabs")
+    if available_chores:
+        for chore in available_chores:
+            render_chore_card(chore, "avail", action="take")
+    else:
+        st.write(highlight_color("gray", "No available chores — all taken!"))
