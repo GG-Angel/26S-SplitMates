@@ -31,6 +31,21 @@ def handle_group(group_id: int):
     return jsonify(group), 200
 
 
+@group_routes.route("/<group_id>/owner", methods=["PUT"])
+@handle_db_errors
+def transfer_group_ownership(group_id: int):
+    repository = GroupRepository()
+    current_app.logger.info(f"PUT /groups/{group_id}/owner")
+    data = request.get_json()
+    new_owner_id = data.get("new_owner_id")
+
+    if not new_owner_id:
+        return jsonify({"error": "new_owner_id is required"}), 400
+
+    repository.transfer_group_ownership(group_id, new_owner_id)
+    return jsonify({"message": "Group ownership transferred successfully"}), 200
+
+
 @group_routes.route("/<group_id>/members", methods=["GET"])
 @handle_db_errors
 def handle_group_members(group_id: int):

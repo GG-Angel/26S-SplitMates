@@ -179,3 +179,9 @@ class GroupRepository(BaseRepository):
             load_query("invitations/delete_invitation.sql"),
             {"invitation_id": invitation_id},
         )
+
+    def transfer_group_ownership(self, group_id: int, user_id: int):
+        self.execute(
+            load_query("groups/transfer_group_ownership.sql"),
+            {"group_id": group_id, "user_id": user_id},
+        )
