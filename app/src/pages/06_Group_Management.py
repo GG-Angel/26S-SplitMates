@@ -20,7 +20,28 @@ members.sort(key=lambda m: m["first_name"] + m["last_name"])
 
 pending_invites = client.get(f"/groups/{group_id}/invites")
 
-# --- Invite User ---
+# --- Modals ---
+
+
+@st.dialog("Confirm Deletion", width="small")
+def delete_group_modal():
+    st.write("Are you sure? This action is **not reversable.**")
+    st.write(
+        highlight_color(
+            "gray",
+            "You can transfer ownership instead if your roommates still need this group.",
+        )
+    )
+
+    if st.button(label="Yes, Delete the Group", type="primary", width="stretch"):
+        client.delete(f"/groups/{group_id}")
+        del st.session_state["group"]
+        st.switch_page("pages/00_User_Dashboard.py")
+
+
+# --- Content ---
+
+# Invite User
 
 st.subheader("Invite a Roommate")
 with st.container(border=True):
@@ -45,7 +66,7 @@ with st.container(border=True):
             st.error(f"User with email '{invite_email}' does not exist")
 
 
-# --- Roommates | Pending Invites ---
+# Roommates | Pending Invites
 
 left_col, right_col = st.columns(2, gap="medium")
 
@@ -112,15 +133,13 @@ with right_col:
     else:
         st.write(highlight_color("gray", "No pending invites."))
 
-# --- Bottom actions ---
+# Bottom actions
 
 st.divider()
 
 with st.container(horizontal=True, width="stretch", horizontal_alignment="left"):
-    # TODO: make functional
     if st.button("Transfer Ownership"):
         st.switch_page("pages/02_Group_Dashboard.py")
 
     if st.button("Delete Group"):
-        del st.session_state["group"]
-        st.switch_page("pages/00_User_Dashboard.py")
+        delete_group_modal()
