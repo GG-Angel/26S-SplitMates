@@ -37,15 +37,27 @@ def chore_details_modal(chore: dict):
 
     effort_colors = {"low": "green", "medium": "orange", "high": "red"}
     effort = chore["effort"]
-    st.write(highlight_color(effort_colors.get(effort, "gray"), f"Effort: {effort.capitalize()}"))
+    st.write(
+        highlight_color(
+            effort_colors.get(effort, "gray"), f"Effort: {effort.capitalize()}"
+        )
+    )
 
     due_at = parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
-    completed_at = parse_mysql_datetime(chore["completed_at"]) if chore.get("completed_at") else None
+    completed_at = (
+        parse_mysql_datetime(chore["completed_at"])
+        if chore.get("completed_at")
+        else None
+    )
 
     col_left, col_right = st.columns(2)
     with col_left:
         if due_at:
-            due_label = highlight_color("red", "Due (overdue)") if is_past_date(due_at) and not completed_at else "Due"
+            due_label = (
+                highlight_color("red", "Due (overdue)")
+                if is_past_date(due_at) and not completed_at
+                else "Due"
+            )
             st.metric(due_label, due_at.strftime("%b %d, %Y"), border=True)
         else:
             st.metric("Due", "No due date", border=True)
@@ -55,7 +67,11 @@ def chore_details_modal(chore: dict):
         else:
             st.metric("Status", highlight_color("orange", "Incomplete"), border=True)
 
-    st.write(highlight_color("gray", f"Created by {chore['first_name']} {chore['last_name']}"))
+    st.write(
+        highlight_color(
+            "gray", f"Created by {chore['first_name']} {chore['last_name']}"
+        )
+    )
 
     st.divider()
 
@@ -94,7 +110,9 @@ def create_chore_modal():
                     "user_id": user_id,
                     "title": title.strip(),
                     "effort": effort,
-                    "due_at": datetime.combine(due_date, due_time).strftime("%Y-%m-%d %H:%M:%S"),
+                    "due_at": datetime.combine(due_date, due_time).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
                     "assignees": [],
                 },
             )
@@ -104,14 +122,22 @@ def create_chore_modal():
 @st.dialog("Edit Chore", width="medium")
 def edit_chore_modal(chore: dict):
     title = st.text_input("Title", value=chore["title"])
-    effort = st.selectbox("Effort", ["low", "medium", "high"], index=["low", "medium", "high"].index(chore["effort"]))
+    effort = st.selectbox(
+        "Effort",
+        ["low", "medium", "high"],
+        index=["low", "medium", "high"].index(chore["effort"]),
+    )
 
     due_at = parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
     col_date, col_time = st.columns(2)
     with col_date:
-        due_date = st.date_input("Due Date", value=due_at.date() if due_at else date.today())
+        due_date = st.date_input(
+            "Due Date", value=due_at.date() if due_at else date.today()
+        )
     with col_time:
-        due_time = st.time_input("Due Time", value=due_at.time() if due_at else time(0, 0), step=3600)
+        due_time = st.time_input(
+            "Due Time", value=due_at.time() if due_at else time(0, 0), step=3600
+        )
 
     if st.button("Save Changes", type="primary"):
         if not title.strip():
@@ -122,7 +148,9 @@ def edit_chore_modal(chore: dict):
                 json={
                     "title": title.strip(),
                     "effort": effort,
-                    "due_at": datetime.combine(due_date, due_time).strftime("%Y-%m-%d %H:%M:%S"),
+                    "due_at": datetime.combine(due_date, due_time).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
                 },
             )
             st.rerun()
@@ -151,17 +179,26 @@ with left_col:
     if my_chores:
         for chore in my_chores:
             completed_at = chore.get("completed_at")
-            due_at = parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
+            due_at = (
+                parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
+            )
             effort = chore["effort"]
             effort_colors = {"low": "green", "medium": "orange", "high": "red"}
 
             with st.container(border=True):
                 with st.container(gap="xsmall"):
                     st.write(f"##### {chore['title']}")
-                    st.write(highlight_color(effort_colors.get(effort, "gray"), f"Effort: {effort.capitalize()}"))
+                    st.write(
+                        highlight_color(
+                            effort_colors.get(effort, "gray"),
+                            f"Effort: {effort.capitalize()}",
+                        )
+                    )
                     if due_at:
                         due_display = (
-                            highlight_color("red", f"Due {time_relative(due_at).lower()} (overdue)")
+                            highlight_color(
+                                "red", f"Due {time_relative(due_at).lower()} (overdue)"
+                            )
                             if is_past_date(due_at) and not completed_at
                             else f"Due {time_relative(due_at).lower()}"
                         )
@@ -171,7 +208,11 @@ with left_col:
 
                 with st.container(horizontal=True):
                     if not completed_at:
-                        if st.button("Mark Complete", key=f"complete_{chore['chore_id']}", type="primary"):
+                        if st.button(
+                            "Mark Complete",
+                            key=f"complete_{chore['chore_id']}",
+                            type="primary",
+                        ):
                             client.put(f"/groups/chores/{chore['chore_id']}/complete")
                             st.rerun()
                     if st.button("View", key=f"view_my_{chore['chore_id']}"):
@@ -186,18 +227,29 @@ with right_col:
     if other_chores:
         for chore in other_chores:
             completed_at = chore.get("completed_at")
-            due_at = parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
+            due_at = (
+                parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
+            )
             effort = chore["effort"]
             effort_colors = {"low": "green", "medium": "orange", "high": "red"}
 
             with st.container(border=True):
                 with st.container(gap="xsmall"):
                     st.write(f"##### {chore['title']}")
-                    st.write(highlight_color(effort_colors.get(effort, "gray"), f"Effort: {effort.capitalize()}"))
-                    st.write(highlight_color("gray", f"Created by {chore['first_name']}"))
+                    st.write(
+                        highlight_color(
+                            effort_colors.get(effort, "gray"),
+                            f"Effort: {effort.capitalize()}",
+                        )
+                    )
+                    st.write(
+                        highlight_color("gray", f"Created by {chore['first_name']}")
+                    )
                     if due_at:
                         due_display = (
-                            highlight_color("red", f"Due {time_relative(due_at).lower()} (overdue)")
+                            highlight_color(
+                                "red", f"Due {time_relative(due_at).lower()} (overdue)"
+                            )
                             if is_past_date(due_at) and not completed_at
                             else f"Due {time_relative(due_at).lower()}"
                         )
