@@ -190,7 +190,7 @@ class GroupRepository(BaseRepository):
         self.execute(load_query("groups/delete_group.sql"), {"group_id": group_id})
 
     def remove_group_member(self, group_id: int, user_id: int):
-        self.execute(
+        self.execute_script(
             load_query("groups/remove_group_member.sql"),
             {"group_id": group_id, "user_id": user_id},
         )

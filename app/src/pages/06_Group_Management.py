@@ -98,7 +98,7 @@ with left_col:
                     if st.button(
                         label="Kick", width="content", key=f"kick-{member_id}"
                     ):
-                        # TODO: implement kicking a roommate
+                        client.delete(f"/groups/{group_id}/members/{member_id}")
                         st.rerun()
     else:
         st.write(highlight_color("gray", "No roommates."))
