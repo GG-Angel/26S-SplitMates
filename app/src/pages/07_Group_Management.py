@@ -39,7 +39,7 @@ def delete_group_modal():
         st.switch_page("pages/00_User_Dashboard.py")
 
 
-@st.dialog("Transfer Ownership", width="medium")
+@st.dialog("Transfer Ownership", width="small")
 def transfer_ownership_modal():
     other_members = [m for m in members if m["user_id"] != user_id]
 
