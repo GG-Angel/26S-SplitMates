@@ -185,3 +185,6 @@ class GroupRepository(BaseRepository):
             load_query("groups/transfer_group_ownership.sql"),
             {"group_id": group_id, "user_id": user_id},
         )
+
+    def delete_group(self, group_id: int):
+        self.execute(load_query("groups/delete_group.sql"), {"group_id": group_id})

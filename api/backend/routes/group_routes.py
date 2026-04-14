@@ -16,19 +16,23 @@ def handle_groups():
     return jsonify({"message": "Group created"}), 201
 
 
-@group_routes.route("/<group_id>", methods=["GET"])
+@group_routes.route("/<group_id>", methods=["GET", "DELETE"])
 @handle_db_errors
 def handle_group(group_id: int):
     repository = GroupRepository()
-    current_app.logger.info(f"GET /groups/{group_id}")
+    current_app.logger.info(f"{request.method} /groups/{group_id}")
+
     group = repository.get_group(group_id)
 
     # ensure group exists
     if not group:
         return jsonify({"error": "Not found"}), 404
 
-    current_app.logger.info(f"Retrieved group {group_id}")
-    return jsonify(group), 200
+    if request.method == "GET":
+        return jsonify(group), 200
+    else:
+        repository.delete_group(group_id)
+        return jsonify({"message": "Group deleted successfully"}), 200
 
 
 @group_routes.route("/<group_id>/owner", methods=["PUT"])
