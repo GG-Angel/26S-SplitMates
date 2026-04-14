@@ -3,6 +3,8 @@
 
 import streamlit as st
 
+from utils import highlight_color
+
 
 def my_groups_nav():
     if st.sidebar.button(label="Your Groups", icon="🏠", width="stretch"):
@@ -40,6 +42,7 @@ def SideBarLinks():
         st.switch_page("Home.py")
 
     if st.session_state["authenticated"]:
+        st.sidebar.header(f"*{highlight_color('red', 'SplitMates')}*")
         my_groups_nav()
         st.sidebar.divider()
 
