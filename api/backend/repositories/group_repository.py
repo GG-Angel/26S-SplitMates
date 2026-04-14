@@ -96,9 +96,10 @@ class GroupRepository(BaseRepository):
     def delete_bill(self, bill_id: int):
         self.execute(load_query("bills/delete_bill.sql"), {"bill_id": bill_id})
 
-    def get_group_chores(self, group_id: int):
+    def get_group_chores(self, group_id: int, incomplete_only: Optional[bool] = False):
         return self.fetch_all(
-            load_query("chores/get_group_chores.sql"), {"group_id": group_id}
+            load_query("chores/get_group_chores.sql"),
+            {"group_id": group_id, "incomplete_only": incomplete_only},
         )
 
     def create_chore(self, group_id: int, data: dict):

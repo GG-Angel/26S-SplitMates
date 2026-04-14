@@ -122,7 +122,8 @@ def handle_group_chores(group_id: int):
     repository = GroupRepository()
     if request.method == "GET":
         current_app.logger.info(f"GET /groups/{group_id}/chores")
-        chores = repository.get_group_chores(group_id)
+        incomplete_only = "incomplete_only" in request.args
+        chores = repository.get_group_chores(group_id, incomplete_only)
         return jsonify(chores), 200
     else:
         data = request.get_json()

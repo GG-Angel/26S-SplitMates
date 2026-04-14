@@ -19,11 +19,10 @@ group = st.session_state["group"]
 user_id = user["user_id"]
 group_id = group["group_id"]
 
-chores: list[dict] = client.get(f"/groups/{group_id}/chores")
+chores: list[dict] = client.get(
+    f"/groups/{group_id}/chores", params={"incomplete_only": True}
+)
 members: list[dict] = client.get(f"/groups/{group_id}/members")
-
-my_chores = [c for c in chores if c["created_by"] == user_id]
-other_chores = [c for c in chores if c["created_by"] != user_id]
 
 
 # --- Modals ---
@@ -31,8 +30,6 @@ other_chores = [c for c in chores if c["created_by"] != user_id]
 
 @st.dialog("Chore Details", width="medium")
 def chore_details_modal(chore: dict):
-    is_creator = chore["created_by"] == user_id
-
     st.subheader(chore["title"])
 
     effort_colors = {"low": "green", "medium": "orange", "high": "red"}
@@ -67,25 +64,21 @@ def chore_details_modal(chore: dict):
         else:
             st.metric("Status", highlight_color("orange", "Incomplete"), border=True)
 
-    st.write(
-        highlight_color(
-            "gray", f"Created by {chore['first_name']} {chore['last_name']}"
-        )
+    created_by_name = (
+        "You"
+        if chore["created_by"] == user_id
+        else chore["first_name"] + " " + chore["last_name"]
     )
+    created_by = f"Created by {created_by_name}"
+    created_by_display = highlight_color("gray", created_by)
+    st.write(created_by_display)
 
     st.divider()
 
-    col_complete, col_delete = st.columns(2)
-    with col_complete:
-        if not completed_at:
-            if st.button("Mark as Complete", type="primary", use_container_width=True):
-                client.put(f"/groups/chores/{chore['chore_id']}/complete")
-                st.rerun()
-    with col_delete:
-        if is_creator:
-            if st.button("Delete Chore", use_container_width=True):
-                client.delete(f"/groups/chores/{chore['chore_id']}")
-                st.rerun()
+    if not completed_at:
+        if st.button("Mark as Complete", type="primary", use_container_width=True):
+            client.put(f"/groups/chores/{chore['chore_id']}/complete")
+            st.rerun()
 
 
 @st.dialog("Create Chore", width="medium")
@@ -101,14 +94,15 @@ def create_chore_modal():
         due_time = st.time_input("Due Time", value=time(0, 0), step=3600)
 
     if st.button("Create Chore", type="primary"):
-        if not title.strip():
+        cleaned_title = (title or "").strip()
+        if not cleaned_title:
             st.error("Title is required.")
         else:
             client.post(
                 f"/groups/{group_id}/chores",
                 json={
                     "user_id": user_id,
-                    "title": title.strip(),
+                    "title": cleaned_title,
                     "effort": effort,
                     "due_at": datetime.combine(due_date, due_time).strftime(
                         "%Y-%m-%d %H:%M:%S"
@@ -140,13 +134,14 @@ def edit_chore_modal(chore: dict):
         )
 
     if st.button("Save Changes", type="primary"):
-        if not title.strip():
+        cleaned_title = (title or "").strip()
+        if not cleaned_title:
             st.error("Title is required.")
         else:
             client.put(
                 f"/groups/chores/{chore['chore_id']}",
                 json={
-                    "title": title.strip(),
+                    "title": cleaned_title,
                     "effort": effort,
                     "due_at": datetime.combine(due_date, due_time).strftime(
                         "%Y-%m-%d %H:%M:%S"
@@ -162,29 +157,22 @@ def edit_chore_modal(chore: dict):
 st.title("Household Chores")
 
 with st.container(border=True, horizontal=True, vertical_alignment="center"):
-    total = len(chores)
-    completed = len([c for c in chores if c.get("completed_at")])
-    st.metric("Total Chores", total)
-    st.metric("Completed", completed)
-    st.metric("Remaining", total - completed)
+    st.metric("Pending Chores", len(chores))
     if st.button("Create Chore", type="primary"):
         create_chore_modal()
 
 st.divider()
 
-left_col, right_col = st.columns(2, gap="medium")
+if chores:
+    effort_colors = {"low": "green", "medium": "orange", "high": "red"}
+    cols = st.columns(3)
+    for i, chore in enumerate(chores):
+        is_creator = chore["created_by"] == user_id
+        completed_at = chore.get("completed_at")
+        due_at = parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
+        effort = chore["effort"]
 
-with left_col:
-    st.subheader("My Chores")
-    if my_chores:
-        for chore in my_chores:
-            completed_at = chore.get("completed_at")
-            due_at = (
-                parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
-            )
-            effort = chore["effort"]
-            effort_colors = {"low": "green", "medium": "orange", "high": "red"}
-
+        with cols[i % 3]:
             with st.container(border=True):
                 with st.container(gap="xsmall"):
                     st.write(f"##### {chore['title']}")
@@ -194,6 +182,14 @@ with left_col:
                             f"Effort: {effort.capitalize()}",
                         )
                     )
+                    created_by_name = (
+                        "You"
+                        if chore["created_by"] == user_id
+                        else chore["first_name"] + " " + chore["last_name"]
+                    )
+                    created_by = f"Created by {created_by_name}"
+                    created_by_display = highlight_color("gray", created_by)
+                    st.write(created_by_display)
                     if due_at:
                         due_display = (
                             highlight_color(
@@ -209,56 +205,19 @@ with left_col:
                 with st.container(horizontal=True):
                     if not completed_at:
                         if st.button(
-                            "Mark Complete",
+                            "Complete",
                             key=f"complete_{chore['chore_id']}",
                             type="primary",
                         ):
                             client.put(f"/groups/chores/{chore['chore_id']}/complete")
                             st.rerun()
-                    if st.button("View", key=f"view_my_{chore['chore_id']}"):
+                    if st.button("View", key=f"view_{chore['chore_id']}"):
                         chore_details_modal(chore)
-                    if st.button("Edit", key=f"edit_my_{chore['chore_id']}"):
-                        edit_chore_modal(chore)
-    else:
-        st.write(highlight_color("gray", "You have not created any chores."))
-
-with right_col:
-    st.subheader("Group Chores")
-    if other_chores:
-        for chore in other_chores:
-            completed_at = chore.get("completed_at")
-            due_at = (
-                parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
-            )
-            effort = chore["effort"]
-            effort_colors = {"low": "green", "medium": "orange", "high": "red"}
-
-            with st.container(border=True):
-                with st.container(gap="xsmall"):
-                    st.write(f"##### {chore['title']}")
-                    st.write(
-                        highlight_color(
-                            effort_colors.get(effort, "gray"),
-                            f"Effort: {effort.capitalize()}",
-                        )
-                    )
-                    st.write(
-                        highlight_color("gray", f"Created by {chore['first_name']}")
-                    )
-                    if due_at:
-                        due_display = (
-                            highlight_color(
-                                "red", f"Due {time_relative(due_at).lower()} (overdue)"
-                            )
-                            if is_past_date(due_at) and not completed_at
-                            else f"Due {time_relative(due_at).lower()}"
-                        )
-                        st.write(due_display)
-                    if completed_at:
-                        st.write(highlight_color("green", "✓ Completed"))
-
-                with st.container(width="content"):
-                    if st.button("View", key=f"view_other_{chore['chore_id']}"):
-                        chore_details_modal(chore)
-    else:
-        st.write(highlight_color("gray", "No other chores in this group."))
+                    if is_creator:
+                        if st.button("Edit", key=f"edit_{chore['chore_id']}"):
+                            edit_chore_modal(chore)
+                        if st.button("Delete", key=f"delete_{chore['chore_id']}"):
+                            client.delete(f"/groups/chores/{chore['chore_id']}")
+                            st.rerun()
+else:
+    st.write(highlight_color("gray", "No chores in this group yet."))
