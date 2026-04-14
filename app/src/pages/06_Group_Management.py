@@ -39,6 +39,29 @@ def delete_group_modal():
         st.switch_page("pages/00_User_Dashboard.py")
 
 
+@st.dialog("Transfer Ownership", width="medium")
+def transfer_ownership_modal():
+    other_members = [m for m in members if m["user_id"] != user_id]
+
+    if not other_members:
+        st.warning("There are no other members to transfer ownership to.")
+        return
+
+    selected = st.selectbox(
+        "Select new owner",
+        options=other_members,
+        format_func=lambda m: f"{m['first_name']} {m['last_name']}",
+    )
+
+    if selected and st.button("Transfer Ownership", type="primary", width="stretch"):
+        client.put(
+            f"/groups/{group_id}/owner", json={"new_owner_id": selected["user_id"]}
+        )
+        updated_group = client.get(f"/groups/{group_id}")
+        st.session_state["group"] = updated_group
+        st.switch_page("pages/02_Group_Dashboard.py")
+
+
 # --- Content ---
 
 # Invite User
@@ -139,7 +162,7 @@ st.divider()
 
 with st.container(horizontal=True, width="stretch", horizontal_alignment="left"):
     if st.button("Transfer Ownership"):
-        st.switch_page("pages/02_Group_Dashboard.py")
+        transfer_ownership_modal()
 
     if st.button("Delete Group"):
         delete_group_modal()
