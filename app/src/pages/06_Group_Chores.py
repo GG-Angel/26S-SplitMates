@@ -82,25 +82,21 @@ def chore_details_modal(chore: dict):
     created_by_display = highlight_color("gray", created_by)
     st.write(created_by_display)
 
-    st.divider()
-
-    if not completed_at:
-        if st.button("Mark as Complete", type="primary", use_container_width=True):
-            client.put(f"/groups/chores/{chore['chore_id']}/complete")
-            st.rerun()
-
 
 @st.dialog("Create Chore", width="medium")
 def create_chore_modal():
     title = st.text_input("Title", placeholder="e.g. Take Out Trash")
 
-    col_effort, col_date, col_time = st.columns(3)
-    with col_effort:
-        effort = st.selectbox("Effort", ["low", "medium", "high"])
-    with col_date:
-        due_date = st.date_input("Due Date", min_value=date.today())
-    with col_time:
-        due_time = st.time_input("Due Time", value=time(0, 0), step=3600)
+    effort = st.selectbox("Effort", ["low", "medium", "high"])
+    has_due_date = st.checkbox("Set due date")
+    due_date = date.today()
+    due_time = time(0, 0)
+    if has_due_date:
+        col_date, col_time = st.columns(2)
+        with col_date:
+            due_date = st.date_input("Due Date", min_value=date.today())
+        with col_time:
+            due_time = st.time_input("Due Time", value=time(0, 0), step=3600)
 
     if st.button("Create Chore", type="primary"):
         cleaned_title = (title or "").strip()
@@ -115,7 +111,9 @@ def create_chore_modal():
                     "effort": effort,
                     "due_at": datetime.combine(due_date, due_time).strftime(
                         "%Y-%m-%d %H:%M:%S"
-                    ),
+                    )
+                    if has_due_date
+                    else None,
                     "assignees": [],
                 },
             )
@@ -131,16 +129,18 @@ def edit_chore_modal(chore: dict):
         index=["low", "medium", "high"].index(chore["effort"]),
     )
 
-    due_at = parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
-    col_date, col_time = st.columns(2)
-    with col_date:
-        due_date = st.date_input(
-            "Due Date", value=due_at.date() if due_at else date.today()
-        )
-    with col_time:
-        due_time = st.time_input(
-            "Due Time", value=due_at.time() if due_at else time(0, 0), step=3600
-        )
+    existing_due = (
+        parse_mysql_datetime(chore["due_at"]) if chore.get("due_at") else None
+    )
+    has_due_date = st.checkbox("Set due date", value=existing_due is not None)
+    due_date = existing_due.date() if existing_due else date.today()
+    due_time = existing_due.time() if existing_due else time(0, 0)
+    if has_due_date:
+        col_date, col_time = st.columns(2)
+        with col_date:
+            due_date = st.date_input("Due Date", value=due_date)
+        with col_time:
+            due_time = st.time_input("Due Time", value=due_time, step=3600)
 
     if st.button("Save Changes", type="primary"):
         cleaned_title = (title or "").strip()
@@ -154,7 +154,9 @@ def edit_chore_modal(chore: dict):
                     "effort": effort,
                     "due_at": datetime.combine(due_date, due_time).strftime(
                         "%Y-%m-%d %H:%M:%S"
-                    ),
+                    )
+                    if has_due_date
+                    else None,
                 },
             )
             st.rerun()
@@ -213,7 +215,7 @@ def render_chore_card(chore: dict, col_key_prefix: str, action: str | None = Non
                     "You" if a["user_id"] == user_id else a["first_name"]
                     for a in assignees
                 )
-                st.write(highlight_color("gray", f"Assigned: {names}"))
+                st.write(highlight_color("gray", f"Assigned to {names}"))
 
         with st.container(horizontal=True):
             is_assigned = any(a["user_id"] == user_id for a in assignees)
@@ -246,7 +248,7 @@ def render_chore_card(chore: dict, col_key_prefix: str, action: str | None = Non
 left_col, right_col = st.columns(2, gap="large")
 
 with left_col:
-    st.subheader("Assigned Chores")
+    st.subheader("Your Chores")
     if my_chores:
         for chore in my_chores:
             render_chore_card(chore, "mine", action="drop")
