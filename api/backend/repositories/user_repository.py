@@ -38,3 +38,12 @@ class UserRepository(BaseRepository):
             {"bill_id": bill_id, "user_id": user_id},
         )
 
+    def rename_user(self, user_id: int, new_first_name: str, new_last_name: str):
+        self.execute(
+            load_query("users/rename_user.sql"),
+            {
+                "user_id": user_id,
+                "first_name": new_first_name,
+                "last_name": new_last_name,
+            },
+        )

@@ -1,4 +1,5 @@
 import logging
+import requests
 import streamlit as st
 from api.client import client
 from modules.nav import SideBarLinks
@@ -44,6 +45,31 @@ st.write(f"Email: {user['email']}")
 st.write(
     f"Joined {time_relative(joined_at)} on {format_date(joined_at)} at {format_time(joined_at)}"
 )
+
+st.divider()
+st.subheader("Update Name")
+with st.form("rename_form"):
+    first_name = st.text_input("First Name", value=user["first_name"])
+    last_name = st.text_input("Last Name", value=user["last_name"])
+    submitted = st.form_submit_button("Save Changes")
+
+if submitted:
+    if not first_name or not last_name:
+        st.error("Both first and last name are required.")
+    else:
+        try:
+            client.put(
+                f"/users/{user_id}/rename",
+                json={"new_first_name": first_name, "new_last_name": last_name},
+            )
+            st.session_state["user"] = client.get(f"/users/{user_id}")
+            st.rerun()
+        except requests.HTTPError as e:
+            try:
+                error_msg = e.response.json().get("error", "Failed to update name.")
+            except Exception:
+                error_msg = "Failed to update name."
+            st.error(error_msg)
 
 st.divider()
 

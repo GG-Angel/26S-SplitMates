@@ -40,6 +40,30 @@ def handle_user(user_id: int):
         return jsonify({"message": "User deleted"}), 200
 
 
+@user_routes.route("/<user_id>/rename", methods=["PUT"])
+@handle_db_errors
+def handle_user_rename(user_id: int):
+    user_repository = UserRepository()
+    current_app.logger.info(f"PUT /users/{user_id}")
+    data = request.get_json()
+
+    new_first_name = data.get("new_first_name")
+    new_last_name = data.get("new_last_name")
+
+    if not new_first_name or not new_last_name:
+        return jsonify({"error": "new_first_name and new_last_name required"}), 400
+
+    if len(new_first_name) > 50 or len(new_last_name) > 50:
+        return jsonify(
+            {"error": "New first/last names cannot exceed 50 characters"}
+        ), 400
+
+    user_repository.rename_user(
+        user_id, new_first_name=new_first_name, new_last_name=new_last_name
+    )
+    return jsonify({"message": "User renamed"}), 200
+
+
 @user_routes.route("/<user_id>/groups", methods=["GET"])
 @handle_db_errors
 def handle_user_groups(user_id: int):
