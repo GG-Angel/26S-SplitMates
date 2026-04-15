@@ -14,7 +14,7 @@ showSidebarNavigation = false
 
 [theme]
 # Setting some basic config options related to the theme of the app
-base = "dark"
+base = "light"
 primaryColor = "#bd0b0b"
 font = "Geist:https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"
 

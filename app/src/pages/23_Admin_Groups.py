@@ -37,9 +37,9 @@ st.markdown(
         .page-title { font-size: 2.1rem; font-weight: 800; margin-bottom: 0.1rem; }
         .page-subtitle { color: #667085; font-size: 1rem; margin-bottom: 1rem; }
         .metric-card {
-            background: white;
+            background: #F8FAFC;
             border: 1px solid #EAECF0;
-            border-radius: 20px;
+            border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
             height: 100%;
@@ -48,9 +48,9 @@ st.markdown(
         .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
         .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
         .panel {
-            background: white;
+            background: #F8FAFC;
             border: 1px solid #EAECF0;
-            border-radius: 20px;
+            border-radius: 12px;
             padding: 1rem;
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
         }
@@ -65,7 +65,7 @@ st.markdown(
         .pill {
             display: inline-block;
             padding: 0.2rem 0.55rem;
-            border-radius: 999px;
+            border-radius: 8px;
             font-size: 0.76rem;
             font-weight: 700;
             margin-top: 0.3rem;

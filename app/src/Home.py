@@ -1,6 +1,7 @@
 import logging
 import requests
 import streamlit as st
+
 from modules.nav import SideBarLinks
 
 logging.basicConfig(
@@ -15,23 +16,24 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 
-def login_as(user_id: int, persona_name: str, role: str = "roommate"):
-    """Fetch user data from API and store in session state"""
+def login_as(user_id: int, persona_name: str, role: str):
+    """Fetch user data from API and store it in session state."""
     try:
-        API_BASE_URL = "http://web-api:4000"
-        response = requests.get(f"{API_BASE_URL}/users/{user_id}", timeout=5)
+        api_base_url = "http://web-api:4000"
+        response = requests.get(f"{api_base_url}/users/{user_id}", timeout=5)
         response.raise_for_status()
         user_data = response.json()
 
         st.session_state["authenticated"] = True
         st.session_state["user"] = user_data
         st.session_state["role"] = role
+        st.session_state["first_name"] = user_data.get("first_name", persona_name)
 
         logger.info(f"Logging in as {persona_name} (user_id={user_id}, role={role})")
         return True
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Failed to fetch user data for user_id={user_id}: {e}")
-        st.error(f"Could not connect to the server. Please try again. ({e})")
+    except requests.exceptions.RequestException as exc:
+        logger.error(f"Failed to fetch user data for user_id={user_id}: {exc}")
+        st.error(f"Could not connect to the server. Please try again. ({exc})")
         return False
 
 
@@ -40,10 +42,6 @@ def login_as(user_id: int, persona_name: str, role: str = "roommate"):
 logger.info("Loading the Home Page")
 st.title("Welcome to SplitMates!")
 st.write("#### Which user would you like to log in as?")
-
-# For each of the user personas for which we are implementing
-# functionality, we put a button on the screen that the user
-# can click to MIMIC logging in as that mock user.
 
 if st.button(
     "Act as Victor, a Roommate Group Leader",

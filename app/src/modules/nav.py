@@ -1,4 +1,5 @@
 # Idea borrowed from https://github.com/fsmosca/sample-streamlit-authenticator
+
 # This file has functions to add links to the left sidebar based on the user's role.
 
 import base64
@@ -6,6 +7,68 @@ from pathlib import Path
 
 import streamlit as st
 
+
+# ---- General ----------------------------------------------------------------
+
+def home_nav():
+    st.sidebar.page_link("Home.py", label="Home", icon="🏠")
+
+
+def about_page_nav():
+    st.sidebar.page_link("pages/30_About.py", label="About", icon="🧠")
+
+
+# ---- Role: pol_strat_advisor ------------------------------------------------
+
+def pol_strat_home_nav():
+    st.sidebar.page_link(
+        "pages/00_Pol_Strat_Home.py", label="Political Strategist Home", icon="👤"
+    )
+
+
+def world_bank_viz_nav():
+    st.sidebar.page_link(
+        "pages/01_World_Bank_Viz.py", label="World Bank Visualization", icon="🏦"
+    )
+
+
+def map_demo_nav():
+    st.sidebar.page_link("pages/02_Map_Demo.py", label="Map Demonstration", icon="🗺️")
+
+
+# ---- Role: usaid_worker -----------------------------------------------------
+
+def usaid_worker_home_nav():
+    st.sidebar.page_link(
+        "pages/10_USAID_Worker_Home.py", label="USAID Worker Home", icon="🏠"
+    )
+
+
+def ngo_directory_nav():
+    st.sidebar.page_link("pages/14_NGO_Directory.py", label="NGO Directory", icon="📁")
+
+
+def add_ngo_nav():
+    st.sidebar.page_link("pages/15_Add_NGO.py", label="Add New NGO", icon="➕")
+
+
+def prediction_nav():
+    st.sidebar.page_link(
+        "pages/11_Prediction.py", label="Regression Prediction", icon="📈"
+    )
+
+
+def api_test_nav():
+    st.sidebar.page_link("pages/12_API_Test.py", label="Test the API", icon="🛜")
+
+
+def classification_nav():
+    st.sidebar.page_link(
+        "pages/13_Classification.py", label="Classification Demo", icon="🌺"
+    )
+
+
+# ---- Role: roommate ---------------------------------------------------------
 
 def my_groups_nav():
     if st.sidebar.button(label="Your Groups", icon="🏠", width="stretch"):
@@ -57,23 +120,52 @@ def admin_ops_nav():
     )
 
 
-def SideBarLinks():
+def ml_model_mgmt_nav():
+    st.sidebar.page_link(
+        "pages/21_ML_Model_Mgmt.py", label="ML Model Management", icon="🏢"
+    )
+
+
+def clickable_logo_nav():
+    """Render clickable sidebar logo that routes to Home.py (root persona selector)."""
+    logo_path = Path(__file__).resolve().parents[1] / "assets" / "logo.png"
+    try:
+        logo_b64 = base64.b64encode(logo_path.read_bytes()).decode("utf-8")
+        st.sidebar.markdown(
+            f"""
+            <a href="/" target="_self" title="Go to SplitMates Home">
+                <img src="data:image/png;base64,{logo_b64}" width="150" />
+            </a>
+            """,
+            unsafe_allow_html=True,
+        )
+    except OSError:
+        # Fallback if file path resolution fails.
+        st.sidebar.image("assets/logo.png", width=150)
+
+
+# ---- Sidebar assembly -------------------------------------------------------
+
+def SideBarLinks(show_home=False):
     """
     Renders sidebar navigation links based on the logged-in user's role.
     The role is stored in st.session_state when the user logs in on Home.py.
     """
 
-    # if no one is logged in, send them to the Home (login) page
+    # If no one is logged in, send them to the Home (login) page
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
         st.switch_page("Home.py")
 
     # Roommate navigation
     if st.session_state["authenticated"]:
-        role = st.session_state.get("role", "")
-        if role != "administrator":
+
+        if st.session_state["role"] == "roommate":
             my_groups_nav()
             st.sidebar.divider()
+
+    # TODO: display other buttons when the user is looking in a group
+    # TODO: display other buttons based on role (sysadmin, data analyst)
 
     if "group" in st.session_state and st.session_state["group"]:
         group_navs()
@@ -82,31 +174,16 @@ def SideBarLinks():
     # Admin navigation
     if st.session_state.get("role") == "administrator":
         admin_home_nav()
-        st.sidebar.page_link(
-            "pages/21_Admin_Tickets.py", label="Tickets", icon="🎫"
-        )
-        st.sidebar.page_link(
-            "pages/22_Admin_User_Reports.py", label="User Reports", icon="📝"
-        )
-        st.sidebar.page_link(
-            "pages/23_Admin_Groups.py", label="Roommate Groups", icon="👥"
-        )
-        st.sidebar.page_link(
-            "pages/24_Admin_Roommates.py", label="Roommates", icon="🧑‍🤝‍🧑"
-        )
-        st.sidebar.page_link(
-            "pages/25_Admin_Ops_And_Logs.py", label="Updates & Audit Logs", icon="🧾"
-        )
+        admin_tickets_nav()
+        admin_user_reports_nav()
+        admin_groups_nav()
+        admin_roommates_nav()
+        admin_ops_nav()
         st.sidebar.divider()
 
     if st.session_state["authenticated"]:
         if st.sidebar.button("Logout", width="stretch"):
-            if "user" in st.session_state:
-                del st.session_state["user"]
-            if "authenticated" in st.session_state:
-                del st.session_state["authenticated"]
-            if "group" in st.session_state:
-                del st.session_state["group"]
-            if "role" in st.session_state:
-                del st.session_state["role"]
+            for key in ["user", "authenticated", "group", "role"]:
+                if key in st.session_state:
+                    del st.session_state[key]
             st.switch_page("Home.py")

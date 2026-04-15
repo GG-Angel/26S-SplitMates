@@ -32,10 +32,21 @@ def load_summary():
     return get_admin_summary()
 
 
-summary: dict[str, Any] = {}
+fallback_summary: dict[str, Any] = {
+    "total_users": 0,
+    "active_households": 0,
+    "open_tickets": 0,
+    "inactive_users": 0,
+    "urgent_tickets": 0,
+    "urgent_message": "No urgent tickets right now",
+    "recent_tickets": [],
+    "recent_activity": [],
+}
+
+summary: dict[str, Any] = dict(fallback_summary)
 error = None
 try:
-    summary = load_summary() or {}
+    summary = load_summary() or fallback_summary
 except (requests.RequestException, ValueError) as exc:
     error = str(exc)
 
@@ -45,9 +56,9 @@ st.markdown(
         .admin-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.1rem; }
         .admin-subtitle { color: #667085; font-size: 1rem; margin-top: 0; }
         .metric-card {
-            background: white;
+            background: #F8FAFC;
             border: 1px solid #EAECF0;
-            border-radius: 20px;
+            border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
             height: 100%;
@@ -56,9 +67,9 @@ st.markdown(
         .metric-value { color: #101828; font-size: 2.6rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
         .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
         .panel {
-            background: white;
+            background: #F8FAFC;
             border: 1px solid #EAECF0;
-            border-radius: 20px;
+            border-radius: 12px;
             padding: 1rem 1rem 0.6rem 1rem;
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
             height: 100%;
@@ -74,7 +85,7 @@ st.markdown(
         .pill {
             display: inline-block;
             padding: 0.2rem 0.55rem;
-            border-radius: 999px;
+            border-radius: 8px;
             font-size: 0.78rem;
             font-weight: 700;
             background: #F2F4F7;
@@ -102,11 +113,9 @@ st.markdown(
 )
 
 st.markdown('<div class="admin-title">Welcome back, {}!</div>'.format(st.session_state.get("first_name", "Admin")), unsafe_allow_html=True)
-st.markdown('<div class="admin-subtitle">System admin dashboard for SplitMates</div>', unsafe_allow_html=True)
 
 if error:
-    st.error(f"Unable to load dashboard summary: {error}")
-    st.stop()
+    st.warning("Dashboard summary is temporarily unavailable. Showing fallback values.")
 
 col1, col2, col3, col4 = st.columns(4)
 
