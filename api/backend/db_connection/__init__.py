@@ -42,6 +42,7 @@ def init_app(app):
 
 def load_query(filename: str):
     backend_dir = os.path.dirname(os.path.dirname(__file__))
-    filepath = os.path.join(backend_dir, "queries", filename)
+    backend_dir_str = os.fspath(backend_dir)
+    filepath = os.path.join(backend_dir_str, "queries", filename)
     with open(filepath, "r") as f:
         return f.read()
