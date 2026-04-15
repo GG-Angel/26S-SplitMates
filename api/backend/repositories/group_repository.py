@@ -102,6 +102,11 @@ class GroupRepository(BaseRepository):
             {"group_id": group_id, "incomplete_only": incomplete_only},
         )
 
+    def get_group_chore_leaderboard(self, group_id: int):
+        return self.fetch_all(
+            load_query("chores/get_group_chore_leaderboard.sql"), {"group_id": group_id}
+        )
+
     def get_chore_assignees(self, chore_id: int):
         return self.fetch_all(
             load_query("chores/get_chore_assignees.sql"), {"chore_id": chore_id}

@@ -116,6 +116,15 @@ def handle_group_bill(group_id: int, bill_id: int):
         return jsonify({"message": "Bill deleted"}), 201
 
 
+@group_routes.route("/<group_id>/chores/leaderboard", methods=["GET"])
+@handle_db_errors
+def handle_group_chore_leaderboard(group_id: int):
+    repository = GroupRepository()
+    current_app.logger.info(f"GET /groups/{group_id}/chores/leaderboard")
+    leaderboard = repository.get_group_chore_leaderboard(group_id)
+    return jsonify(leaderboard), 200
+
+
 @group_routes.route("/<group_id>/chores", methods=["GET", "POST"])
 @handle_db_errors
 def handle_group_chores(group_id: int):

@@ -18,9 +18,10 @@ class UserRepository(BaseRepository):
             load_query("groups/get_user_groups.sql"), {"user_id": user_id}
         )
 
-    def get_user_chores(self, user_id: int):
+    def get_user_chores(self, user_id: int, group_id: int = None):
         return self.fetch_all(
-            load_query("chores/get_user_chores.sql"), {"user_id": user_id}
+            load_query("chores/get_user_chores.sql"),
+            {"user_id": user_id, "group_id": group_id},
         )
 
     def get_user_invitations(self, user_id: int, pending_only: bool = False):
