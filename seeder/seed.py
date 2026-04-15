@@ -326,4 +326,176 @@ if __name__ == "__main__":
     time.sleep(sleep_time)
     seed_db()
 
-# TODO: add invitations mocks
+
+# def generate_mock_support_tickets(user_ids: list[int], count: int = SUPPORT_TICKETS_COUNT):
+#     statuses = ["open", "in_progress", "closed"]
+#     priorities = ["low", "medium", "high"]
+#     ticket_templates = [
+#         (
+#             "Payment split looks incorrect",
+#             "Bill total appears right, but my split percentage is wrong after a roommate left the group.",
+#         ),
+#         (
+#             "Cannot submit chore completion",
+#             "When I mark a chore as completed, the page refreshes but status stays pending.",
+#         ),
+#         (
+#             "Group invitation expired too early",
+#             "My roommate's invite link says expired even though it was created today.",
+#         ),
+#         (
+#             "Event not visible to household",
+#             "I created an event for the group calendar, but other members cannot see it.",
+#         ),
+#         (
+#             "Duplicate charge on monthly bill",
+#             "The same utility bill appears twice and doubles what members owe.",
+#         ),
+#         (
+#             "Account suspended by mistake",
+#             "My account was suspended and I cannot access shared bills or chores.",
+#         ),
+#         (
+#             "Notification settings not saving",
+#             "I disable email notifications, but they are enabled again after refresh.",
+#         ),
+#     ]
+
+#     rows = []
+#     for _ in range(count):
+#         submitted_by = random.choice(user_ids)
+#         assigned_to = random.choice(user_ids)
+#         status = random.choices(statuses, weights=[0.45, 0.35, 0.20], k=1)[0]
+#         created_at = fake.date_time_between(start_date="-90d", end_date="now")
+#         resolved_at = (
+#             fake.date_time_between(start_date=created_at, end_date="now") if status == "closed" else None
+#         )
+#         title, description_template = random.choice(ticket_templates)
+
+#         rows.append(
+#             (
+#                 submitted_by,
+#                 status,
+#                 random.choice(priorities),
+#                 f"{description_template} (Ticket submitted by user #{submitted_by})",
+#                 assigned_to,
+#                 title,
+#                 created_at,
+#                 resolved_at,
+#             )
+#         )
+#     return rows
+
+
+# def generate_mock_user_reports(user_ids: list[int], count: int = USER_REPORTS_COUNT):
+#     statuses = ["pending", "under_review", "resolved", "dismissed"]
+#     rows = []
+
+#     for _ in range(count):
+#         reported_user = random.choice(user_ids)
+#         reported_by = random.choice([uid for uid in user_ids if uid != reported_user])
+#         reviewed_by = random.choice(user_ids)
+#         status = random.choices(statuses, weights=[0.35, 0.30, 0.25, 0.10], k=1)[0]
+#         created_at = fake.date_time_between(start_date="-90d", end_date="now")
+#         reviewed_at = (
+#             fake.date_time_between(start_date=created_at, end_date="now")
+#             if status in ("under_review", "resolved", "dismissed")
+#             else None
+#         )
+
+#         rows.append(
+#             (
+#                 reported_user,
+#                 reported_by,
+#                 fake.sentence(nb_words=10),
+#                 status,
+#                 reviewed_by,
+#                 reviewed_at,
+#                 created_at,
+#             )
+#         )
+#     return rows
+
+
+# def generate_mock_bans(user_ids: list[int], admin_ids: list[int], count: int = BANS_COUNT):
+#     rows = []
+#     eligible_users = [uid for uid in user_ids if uid not in admin_ids]
+#     for _ in range(min(count, len(eligible_users))):
+#         user_id = random.choice(eligible_users)
+#         eligible_users.remove(user_id)
+#         issued_at = fake.date_time_between(start_date="-60d", end_date="now")
+#         maybe_expires = random.random() < 0.65
+#         expires_at = fake.date_time_between(start_date=issued_at, end_date="+30d") if maybe_expires else None
+#         rows.append(
+#             (
+#                 user_id,
+#                 random.choice(admin_ids),
+#                 random.choice(
+#                     [
+#                         "Harassment in shared group chat",
+#                         "Repeated policy violations after warnings",
+#                         "Fraudulent payment dispute activity",
+#                         "Abusive behavior reported by multiple users",
+#                     ]
+#                 ),
+#                 expires_at,
+#                 issued_at,
+#             )
+#         )
+#     return rows
+
+
+# def generate_mock_app_versions(admin_ids: list[int], count: int = APP_VERSIONS_COUNT):
+#     rows = []
+#     status_values = ["deployed", "staged", "rolled_back", "deprecated"]
+#     for version in range(1, count + 1):
+#         status = random.choices(status_values, weights=[0.65, 0.15, 0.10, 0.10], k=1)[0]
+#         deployed_at = fake.date_time_between(start_date="-120d", end_date="now") if status != "staged" else None
+#         rows.append(
+#             (
+#                 version,
+#                 random.choice(admin_ids),
+#                 status,
+#                 "\n".join(
+#                     [
+#                         f"Version {version} summary:",
+#                         "- Improved moderation workflow and admin controls",
+#                         "- Updated dashboard cards and filtering behavior",
+#                         "- Added bug fixes and minor UX polish",
+#                     ]
+#                 ),
+#                 deployed_at,
+#             )
+#         )
+#     return rows
+
+
+# def generate_mock_audit_logs(user_ids: list[int], count: int = AUDIT_LOGS_COUNT):
+#     target_tables = ["users", "groups", "support_tickets", "user_reports", "bans", "app_versions"]
+#     action_types = ["create", "update", "delete"]
+
+#     rows = []
+#     for _ in range(count):
+#         target_table = random.choice(target_tables)
+#         action_type = random.choice(action_types)
+#         target_id = random.randint(1, 250)
+#         details = random.choice(
+#             [
+#                 f"{action_type.title()} performed on {target_table} record #{target_id}",
+#                 f"Admin moderation action: {action_type} {target_table} #{target_id}",
+#                 f"System admin updated {target_table} configuration #{target_id}",
+#                 f"Operational change logged for {target_table} #{target_id}",
+#             ]
+#         )
+
+#         rows.append(
+#             (
+#                 random.choice(user_ids),
+#                 details,
+#                 target_table,
+#                 target_id,
+#                 action_type,
+#                 fake.date_time_between(start_date="-90d", end_date="now"),
+#             )
+#         )
+#     return rows
