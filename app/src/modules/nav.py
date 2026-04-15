@@ -1,6 +1,9 @@
 # Idea borrowed from https://github.com/fsmosca/sample-streamlit-authenticator
 # This file has functions to add links to the left sidebar based on the user's role.
 
+import base64
+from pathlib import Path
+
 import streamlit as st
 
 
@@ -24,15 +27,50 @@ def group_navs():
         )
 
 
+def admin_home_nav():
+    st.sidebar.page_link("pages/20_Admin_Home.py", label="System Admin", icon="🏠")
+
+
+def admin_tickets_nav():
+    st.sidebar.page_link("pages/21_Admin_Tickets.py", label="Tickets", icon="🎫")
+
+
+def admin_user_reports_nav():
+    st.sidebar.page_link(
+        "pages/22_Admin_User_Reports.py", label="User Reports", icon="📝"
+    )
+
+
+def admin_groups_nav():
+    st.sidebar.page_link("pages/23_Admin_Groups.py", label="Roommate Groups", icon="👥")
+
+
+def admin_roommates_nav():
+    st.sidebar.page_link(
+        "pages/24_Admin_Roommates.py", label="Roommates", icon="🧑‍🤝‍🧑"
+    )
+
+
+def admin_ops_nav():
+    st.sidebar.page_link(
+        "pages/25_Admin_Ops_And_Logs.py", label="Updates & Audit Logs", icon="🧾"
+    )
+
+
+# TODO: wire up admin navs
+# admin_home_nav()
+# admin_tickets_nav()
+# admin_user_reports_nav()
+# admin_groups_nav()
+# admin_roommates_nav()
+# admin_ops_nav()
+
+
 def SideBarLinks():
     """
     Renders sidebar navigation links based on the logged-in user's role.
     The role is stored in st.session_state when the user logs in on Home.py.
     """
-
-    # Logo appears at the top of the sidebar on every page
-    # st.sidebar.image("assets/logo.png", width=150)
-    # TODO: make logo
 
     # if no one is logged in, send them to the Home (login) page
     if "authenticated" not in st.session_state:
@@ -42,9 +80,6 @@ def SideBarLinks():
     if st.session_state["authenticated"]:
         my_groups_nav()
         st.sidebar.divider()
-
-    # TODO: display other buttons when the user is looking in a group
-    # TODO: display other buttons based on role (sysadmin, data analyst)
 
     if "group" in st.session_state and st.session_state["group"]:
         group_navs()
