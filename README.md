@@ -28,14 +28,14 @@ It includes most of the infrastructure setup (containers), sample databases, and
 
 ## Structure of the Repo
 
-- This repository is organized into five main directories:
-  - `./app` - the Streamlit app
-  - `./api` - the Flask REST API
-  - `./database-files` - SQL scripts to initialize the MySQL database
-  - `./datasets` - folder for storing datasets
-  - `./ml-src` - folder for ML model development (Jupyter notebooks, training scripts)
+- This repository is organized into the main project folders:
+   - `./app` - the Streamlit app
+   - `./api` - the Flask REST API
+   - `./database-files` - SQL scripts to initialize the MySQL database
+   - `./seeder` - Python seed script for mock data
+   - `./docs` - project documentation
 
-- The repo also contains a `docker-compose.yaml` file that is used to set up the Docker containers for the front end app, the REST API, and MySQL database. 
+- The repo also contains a `docker-compose.yaml` file that is used to set up the Docker containers for the front end app, the REST API, MySQL database, and the seeder.
 
 ## Suggestion for Learning the Project Code Base
 
@@ -103,19 +103,22 @@ If you are not familiar with web app development, this code base might be confus
 
 ## Handling User Role Access and Control
 
-In most applications, when a user logs in, they assume a particular role in the app. For instance, when one logs in to a stock price prediction app, they may be a single investor, a portfolio manager, or a corporate executive (of a publicly traded company). Each of those _roles_ will likely present some similar features as well as some different features when compared to the other roles. So, how do you accomplish this in Streamlit? This is sometimes called Role-based Access Control, or **RBAC** for short.
+SplitMates uses a simple role-based access control setup in Streamlit without full username/password authentication. The app is organized around three roles:
 
-The code in this project demonstrates how to implement a simple RBAC system in Streamlit but without actually using user authentication (usernames and passwords). The Streamlit pages from the original template repo are split up among 3 roles - Political Strategist, USAID Worker, and a System Administrator role (this is used for any sort of system tasks such as re-training ML model, etc.). It also demonstrates how to deploy an ML model.
-
-Wrapping your head around this will take a little time and exploration of this code base. Some highlights are below.
+- **roommate** - normal roommate workflow, including group creation and group dashboards
+- **analyst** - analyst views for usage, sessions, and inactive users
+- **administrator** - system admin dashboard and admin management pages
 
 ### Getting Started with the RBAC
 
-1. We need to turn off the standard panel of links on the left side of the Streamlit app. This is done through the `app/src/.streamlit/config.toml` file. So check that out. We are turning it off so we can control directly what links are shown.
-1. Then I created a new python module in `app/src/modules/nav.py`. When you look at the file, you will see that there are functions for basically each page of the application. The `st.sidebar.page_link(...)` adds a single link to the sidebar. We have a separate function for each page so that we can organize the links/pages by role.
-1. Next, check out the `app/src/Home.py` file. Notice that there are 3 buttons added to the page and when one is clicked, it redirects via `st.switch_page(...)` to that Roles Home page in `app/src/pages`. But before the redirect, I set a few different variables in the Streamlit `session_state` object to track role, first name of the user, and that the user is now authenticated.
-1. Notice near the top of `app/src/Home.py` and all other pages, there is a call to `SideBarLinks(...)` from the `app/src/modules/nav.py` module. This is the function that will use the role set in `session_state` to determine what links to show the user in the sidebar.
-1. The pages are organized by Role. Pages that start with a `0` are related to the _Political Strategist_ role. Pages that start with a `1` are related to the _USAID worker_ role. And, pages that start with a `2` are related to The _System Administrator_ role.
+1. The standard Streamlit sidebar navigation is disabled in `app/src/.streamlit/config.toml` so the project can control the links directly.
+2. `app/src/modules/nav.py` builds the sidebar dynamically based on the current role stored in `st.session_state`.
+3. `app/src/Home.py` provides mock login buttons that switch the user into the roommate or system administrator flows.
+4. Every page that needs navigation calls `SideBarLinks()` near the top so the correct links appear for that role.
+5. The page prefixes control ordering in the sidebar:
+   - `00`-`07` - roommate workflow pages
+   - `07`-`09` - analyst pages
+   - `20`-`25` - system admin pages
 
 
 ## (Completely Optional) Incorporating ML Models into your Project

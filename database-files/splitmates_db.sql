@@ -9,6 +9,7 @@ CREATE TABLE users (
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(75) NOT NULL UNIQUE,
+    account_status ENUM('active', 'inactive', 'suspended', 'pending') NOT NULL DEFAULT 'active',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     is_analyst BOOLEAN NOT NULL DEFAULT FALSE,

@@ -57,15 +57,6 @@ def admin_ops_nav():
     )
 
 
-# TODO: wire up admin navs
-# admin_home_nav()
-# admin_tickets_nav()
-# admin_user_reports_nav()
-# admin_groups_nav()
-# admin_roommates_nav()
-# admin_ops_nav()
-
-
 def SideBarLinks():
     """
     Renders sidebar navigation links based on the logged-in user's role.
@@ -77,12 +68,35 @@ def SideBarLinks():
         st.session_state.authenticated = False
         st.switch_page("Home.py")
 
+    # Roommate navigation
     if st.session_state["authenticated"]:
-        my_groups_nav()
-        st.sidebar.divider()
+        role = st.session_state.get("role", "")
+        if role != "administrator":
+            my_groups_nav()
+            st.sidebar.divider()
 
     if "group" in st.session_state and st.session_state["group"]:
         group_navs()
+        st.sidebar.divider()
+
+    # Admin navigation
+    if st.session_state.get("role") == "administrator":
+        admin_home_nav()
+        st.sidebar.page_link(
+            "pages/21_Admin_Tickets.py", label="Tickets", icon="🎫"
+        )
+        st.sidebar.page_link(
+            "pages/22_Admin_User_Reports.py", label="User Reports", icon="📝"
+        )
+        st.sidebar.page_link(
+            "pages/23_Admin_Groups.py", label="Roommate Groups", icon="👥"
+        )
+        st.sidebar.page_link(
+            "pages/24_Admin_Roommates.py", label="Roommates", icon="🧑‍🤝‍🧑"
+        )
+        st.sidebar.page_link(
+            "pages/25_Admin_Ops_And_Logs.py", label="Updates & Audit Logs", icon="🧾"
+        )
         st.sidebar.divider()
 
     if st.session_state["authenticated"]:
@@ -93,4 +107,6 @@ def SideBarLinks():
                 del st.session_state["authenticated"]
             if "group" in st.session_state:
                 del st.session_state["group"]
+            if "role" in st.session_state:
+                del st.session_state["role"]
             st.switch_page("Home.py")
