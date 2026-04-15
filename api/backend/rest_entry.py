@@ -5,6 +5,7 @@ import logging
 
 from backend.routes.group_routes import group_routes
 from backend.routes.user_routes import user_routes
+from backend.routes.analyst_routes import analyst_routes
 from backend.db_connection import init_app as init_db
 
 
@@ -37,5 +38,7 @@ def create_app():
     app.logger.info("create_app(): registering blueprints")
     app.register_blueprint(user_routes, url_prefix="/users")
     app.register_blueprint(group_routes, url_prefix="/groups")
+    app.register_blueprint(analyst_routes, url_prefix="/analyst")
+    
 
     return app
