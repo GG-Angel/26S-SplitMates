@@ -44,7 +44,8 @@ def handle_bill_payment(user_id: int, bill_id: int):
 def handle_user_chores(user_id: int):
     repository = UserRepository()
     current_app.logger.info(f"GET /users/{user_id}/chores")
-    chores = repository.get_user_chores(user_id)
+    group_id = request.args.get("group_id", type=int)
+    chores = repository.get_user_chores(user_id, group_id)
     return jsonify(chores), 200
 
 
