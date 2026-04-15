@@ -132,6 +132,32 @@ CREATE TABLE invitations (
         ON DELETE CASCADE
 );
 
+CREATE TABLE items (
+    item_id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    `name` VARCHAR(128) NOT NULL,
+    picture_url VARCHAR(255),
+    created_by INT NOT NULL,
+    FOREIGN KEY (created_by) REFERENCES users (user_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES `groups` (group_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+CREATE TABLE item_owners (
+    item_id INT NOT NULL,
+    user_id INT NOT NULL,
+    PRIMARY KEY (item_id, user_id),
+    FOREIGN KEY (item_id) REFERENCES items (item_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
 CREATE TABLE audit_logs (
     log_id INT AUTO_INCREMENT NOT NULL,
     user_id INT NOT NULL,
