@@ -149,7 +149,7 @@ CREATE TABLE item_owners (
             ON DELETE CASCADE
 );
 
-CREATE TABLE chores (
+CREATE TABLE IF NOT EXISTS chores (
     chore_id INT AUTO_INCREMENT PRIMARY KEY,
     group_id INT NOT NULL,
     created_by INT NOT NULL,
@@ -169,7 +169,7 @@ CREATE TABLE chores (
     INDEX idx_chores_created_by (created_by)
 );
 
-CREATE TABLE chore_assignments (
+CREATE TABLE IF NOT EXISTS chore_assignments (
     chore_id INT NOT NULL,
     user_id INT NOT NULL,
     PRIMARY KEY (chore_id, user_id),
@@ -291,7 +291,7 @@ CREATE TABLE user_reports (
             ON DELETE RESTRICT
 );
 
-CREATE TABLE chores (
+CREATE TABLE IF NOT EXISTS chores (
     chore_id INT AUTO_INCREMENT PRIMARY KEY,
     group_id INT NOT NULL,
     created_by INT NOT NULL,
@@ -308,7 +308,7 @@ CREATE TABLE chores (
         ON DELETE CASCADE
 );
 
-CREATE TABLE chore_assignments (
+CREATE TABLE IF NOT EXISTS chore_assignments (
     chore_id INT NOT NULL,
     user_id INT NOT NULL,
     PRIMARY KEY (chore_id, user_id),
@@ -320,7 +320,7 @@ CREATE TABLE chore_assignments (
         ON DELETE CASCADE
 );
 
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     event_id INT AUTO_INCREMENT PRIMARY KEY,
     group_id INT NOT NULL,
     title VARCHAR(128) NOT NULL,
@@ -337,7 +337,7 @@ CREATE TABLE events (
         ON DELETE CASCADE
 );
 
-CREATE TABLE invitations (
+CREATE TABLE IF NOT EXISTS invitations (
     invitation_id INT AUTO_INCREMENT PRIMARY KEY,
     group_id INT NOT NULL,
     sent_to INT NOT NULL,

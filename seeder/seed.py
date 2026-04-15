@@ -1,12 +1,10 @@
-from datetime import datetime, timedelta
 import os
 import random
 import time
 from decimal import Decimal
-from typing import Callable, Optional, cast
-
 from faker import Faker
 import mysql.connector
+from mysql.connector import Error as MySQLError
 
 fake = Faker()
 
@@ -14,13 +12,9 @@ fake = Faker()
 Faker.seed(1)
 random.seed(1)
 
-GROUP_ROWS = 10
-GROUP_MEMBER_ROWS = 150
-BILL_ROWS = 60
-BILL_ASSIGNMENT_ROWS = 180
-CHORE_ROWS = 120
-CHORE_ASSIGNMENT_ROWS = 80
-EVENT_ROWS = 32
+GROUP_MEMBERS_COUNT = 150
+BILLS_COUNT = 60
+BILL_ASSIGNMENTS_COUNT = 180
 SUPPORT_TICKETS_COUNT = 45
 USER_REPORTS_COUNT = 35
 AUDIT_LOGS_COUNT = 80
@@ -31,8 +25,8 @@ APP_VERSIONS_COUNT = 10
 def generate_mock_users(count: int = 50):
     rows = []
     for idx in range(count):
-        first_name = fake.unique.first_name()
-        last_name = fake.unique.last_name()
+        first_name = fake.first_name()
+        last_name = fake.last_name()
         is_admin = False
         is_analyst = False
 
@@ -49,18 +43,18 @@ def generate_mock_users(count: int = 50):
             (
                 first_name,
                 last_name,
-                f"{first_name}.{last_name}@{fake.free_email_domain()}",
+                fake.unique.email(),
                 is_admin,
                 is_analyst,
-                "active",
-                fake.sha256(raw_output=False),
-                fake.past_datetime(),
+                "active",  # account_status
+                fake.sha256(raw_output=False),  # password_hash
+                fake.past_datetime(),  # created_at
             )
         )
     return rows
 
 
-def generate_mock_groups(user_ids: list, count: int = GROUP_ROWS):
+def generate_mock_groups(user_ids: list, count: int = 10):
     return [
         (
             random.choice(user_ids),  # group_leader
@@ -76,13 +70,13 @@ def generate_mock_groups(user_ids: list, count: int = GROUP_ROWS):
 
 def generate_mock_group_memberships(
     user_ids: list[int],
-    group_ids_and_leaders: list[tuple[int, int]],
-    count: int = GROUP_MEMBER_ROWS,
+    group_rows: list[tuple[int, int]],
+    count: int = GROUP_MEMBERS_COUNT,
 ):
     memberships: set[tuple[int, int]] = set()
 
     # Participation constraint: every group has members and includes the leader.
-    for group_id, group_leader in group_ids_and_leaders:
+    for group_id, group_leader in group_rows:
         group_size = random.randint(3, min(8, len(user_ids)))
         other_users = [uid for uid in user_ids if uid != group_leader]
         chosen_users = random.sample(other_users, k=max(0, group_size - 1))
@@ -92,7 +86,7 @@ def generate_mock_group_memberships(
             memberships.add((member_id, group_id))
 
     # Top up to target bridge-table volume.
-    group_ids = [row[0] for row in group_ids_and_leaders]
+    group_ids = [row[0] for row in group_rows]
     max_possible = len(user_ids) * len(group_ids)
     target = min(count, max_possible)
     while len(memberships) < target:
@@ -108,131 +102,119 @@ def _build_group_to_members(memberships: list[tuple[int, int]]) -> dict[int, lis
     return group_to_members
 
 
+def connect_with_retry(max_attempts: int = 15, initial_delay: int = 2):
+    last_error: Exception | None = None
+    delay = initial_delay
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("MYSQL_ROOT_PASSWORD"),
+                database=os.getenv("DB_NAME"),
+                port=int(os.getenv("DB_PORT", "3306")),
+            )
+        except MySQLError as exc:
+            last_error = exc
+            if attempt == max_attempts:
+                break
+            print(f"Database not ready yet (attempt {attempt}/{max_attempts}). Retrying in {delay} seconds...")
+            time.sleep(delay)
+            delay = min(delay * 2, 5)
+
+    raise last_error if last_error is not None else RuntimeError("Unable to connect to the database")
+
+
+def generate_mock_bills(group_to_members: dict[int, list[int]], count: int = BILLS_COUNT):
+    group_ids = list(group_to_members.keys())
+    bills = []
+
+    # Ensure each group has at least one bill if count allows.
+    for group_id in group_ids[: min(len(group_ids), count)]:
+        creator = random.choice(group_to_members[group_id])
+        created_at = fake.date_time_between(start_date="-240d", end_date="now")
+        bills.append(
+            (
+                group_id,
+                Decimal(f"{random.uniform(40.0, 2000.0):.2f}"),
+                fake.date_time_between(start_date=created_at, end_date="+120d"),
+                fake.sentence(nb_words=4).rstrip("."),
+                creator,
+                created_at,
+            )
+        )
+
+    while len(bills) < count:
+        group_id = random.choice(group_ids)
+        creator = random.choice(group_to_members[group_id])
+        created_at = fake.date_time_between(start_date="-240d", end_date="now")
+        bills.append(
+            (
+                group_id,
+                Decimal(f"{random.uniform(40.0, 2000.0):.2f}"),
+                fake.date_time_between(start_date=created_at, end_date="+120d"),
+                fake.sentence(nb_words=4).rstrip("."),
+                creator,
+                created_at,
+            )
+        )
+
+    return bills
+
+
 def _split_percentages(n: int) -> list[Decimal]:
     # Produce n positive values that sum to exactly 1.000.
     cuts = sorted(random.sample(range(1, 1000), n - 1))
-    parts = (
-        [cuts[0]]
-        + [cuts[i] - cuts[i - 1] for i in range(1, len(cuts))]
-        + [1000 - cuts[-1]]
-    )
+    parts = [cuts[0]] + [cuts[i] - cuts[i - 1] for i in range(1, len(cuts))] + [1000 - cuts[-1]]
     return [Decimal(p) / Decimal(1000) for p in parts]
 
 
 def generate_mock_bill_assignments(
-    bill_and_group_ids: list[tuple[int, int]],
+    bill_rows: list[tuple[int, int]],
     group_to_members: dict[int, list[int]],
-    count: int = BILL_ASSIGNMENT_ROWS,
+    count: int = BILL_ASSIGNMENTS_COUNT,
 ):
+    assignments_map: dict[int, list[tuple[int, int, Decimal, object]]] = {}
     used_pairs: set[tuple[int, int]] = set()
-    assignments: list[tuple[int, int, Decimal, Optional[datetime]]] = []
 
-    for bill_id, group_id in bill_and_group_ids:
+    for bill_id, group_id in bill_rows:
         members = group_to_members[group_id]
-        assignees = random.sample(members, k=random.randint(2, min(6, len(members))))
-        for user_id, split in zip(assignees, _split_percentages(len(assignees))):
+        assignee_count = random.randint(2, min(6, len(members)))
+        assignees = random.sample(members, k=assignee_count)
+        splits = _split_percentages(assignee_count)
+
+        bill_rows_list: list[tuple[int, int, Decimal, object]] = []
+        for user_id, split in zip(assignees, splits):
             used_pairs.add((bill_id, user_id))
-            paid_at = (
-                fake.date_time_between(start_date="-60d", end_date="now")
-                if random.random() < 0.55
-                else None
-            )
-            assignments.append((bill_id, user_id, split, paid_at))
+            paid_at = fake.date_time_between(start_date="-60d", end_date="now") if random.random() < 0.55 else None
+            bill_rows_list.append((bill_id, user_id, split, paid_at))
+        assignments_map[bill_id] = bill_rows_list
 
+    # Top up unique assignments to meet volume target, then normalize each bill.
+    bill_to_group = {bill_id: group_id for bill_id, group_id in bill_rows}
+    flat_count = sum(len(v) for v in assignments_map.values())
     attempts = 0
-    while len(assignments) < count and attempts < 10000:
+    while flat_count < count and attempts < 10000:
         attempts += 1
-        bill_id, group_id = random.choice(bill_and_group_ids)
+        bill_id = random.choice(list(bill_to_group.keys()))
+        group_id = bill_to_group[bill_id]
         user_id = random.choice(group_to_members[group_id])
-        if (bill_id, user_id) in used_pairs:
+        key = (bill_id, user_id)
+        if key in used_pairs:
             continue
-        used_pairs.add((bill_id, user_id))
-        assignments.append((bill_id, user_id, Decimal("1.000"), None))
 
-    return assignments
+        used_pairs.add(key)
+        assignments_map.setdefault(bill_id, []).append((bill_id, user_id, Decimal("1.000"), None))
+        flat_count += 1
 
+    normalized_rows: list[tuple[int, int, Decimal, object]] = []
+    for bill_id, rows in assignments_map.items():
+        splits = _split_percentages(len(rows))
+        for row, split in zip(rows, splits):
+            normalized_rows.append((bill_id, row[1], split, row[3]))
 
-def generate_mock_chore_assignments(
-    chore_and_group_ids: list[tuple[int, int]],
-    group_to_members: dict[int, list[int]],
-    count: int = CHORE_ASSIGNMENT_ROWS,
-):
-    assignments: set[tuple[int, int]] = set()
-    i = 0
-
-    while len(assignments) < count:
-        chore_id, group_id = chore_and_group_ids[i]
-        members = group_to_members[group_id]
-
-        # pick k users from the group to assign this chore to
-        assignees = random.sample(members, k=random.randint(1, min(3, len(members))))
-
-        for assignee in assignees:
-            assignment = (chore_id, assignee)
-            # ensure assignments are unique
-            if assignment not in assignments:
-                assignments.add(assignment)
-                if len(assignments) >= count:
-                    break
-
-        # cycle back to the start if we reach the last chore
-        i = (i + 1) % len(chore_and_group_ids)
-
-    return list(assignments)
-
-
-def generate_mock_title() -> str:
-    return fake.sentence(nb_words=4).rstrip(".")
-
-
-def generate_mock_bill(group_id: int, group_members: list[int]):
-    title = generate_mock_title()
-    total_cost = Decimal(f"{random.uniform(40.0, 2000.0):.2f}")
-    created_at = fake.past_datetime("-60d")
-    due_at = fake.date_time_between(start_date=created_at, end_date="+14d")
-    created_by = random.choice(group_members)
-    return (group_id, title, total_cost, due_at, created_by, created_at)
-
-
-def generate_mock_chore(group_id: int, group_members: list[int]):
-    title = generate_mock_title()
-    effort = random.choice(["low", "medium", "high"])
-    created_by = random.choice(group_members)
-    created_at = fake.date_time_between(start_date="-240d", end_date="now")
-    due_at = fake.date_time_between(start_date=created_at, end_date="+14d")
-    completed_at = random.choice(
-        [None, fake.date_time_between(start_date=created_at, end_date="now")]
-    )
-    return (group_id, title, effort, created_by, created_at, due_at, completed_at)
-
-
-def generate_mock_event(group_id: int, group_members: list[int]):
-    title = generate_mock_title()
-    starts_at = fake.future_datetime()
-    ends_at = starts_at + timedelta(hours=random.randint(1, 8))
-    is_private = fake.boolean(chance_of_getting_true=75)
-    created_by = random.choice(group_members)
-    created_at = fake.past_datetime("-7d")
-    return (group_id, title, starts_at, ends_at, is_private, created_by, created_at)
-
-
-def generate_group_items(
-    generator: Callable[[int, list[int]], tuple],
-    group_to_members: dict[int, list[int]],
-    count: int,
-) -> list[tuple]:
-    group_ids = list(group_to_members.keys())
-    items: list[tuple] = []
-    i = 0
-
-    while len(items) < count:
-        group_id = group_ids[i]
-        group_members = group_to_members[group_id]
-        item = generator(group_id, group_members)
-        items.append(item)
-        i = (i + 1) % len(group_ids)
-
-    return items
+    return normalized_rows
 
 
 def generate_mock_support_tickets(user_ids: list[int], count: int = SUPPORT_TICKETS_COUNT):
@@ -411,13 +393,7 @@ def generate_mock_audit_logs(user_ids: list[int], count: int = AUDIT_LOGS_COUNT)
 
 def seed_db():
     print("Connecting to the database...")
-    conn = mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("MYSQL_ROOT_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-        port=int(os.getenv("DB_PORT", "3306")),
-    )
+    conn = connect_with_retry()
     cursor = conn.cursor()
 
     # Rerun-safe reset in FK order.
@@ -426,8 +402,6 @@ def seed_db():
     cursor.execute("DELETE FROM user_reports")
     cursor.execute("DELETE FROM support_tickets")
     cursor.execute("DELETE FROM bans")
-    cursor.execute("DELETE FROM chore_assignments")
-    cursor.execute("DELETE FROM chores")
     cursor.execute("DELETE FROM bill_assignments")
     cursor.execute("DELETE FROM bills")
     cursor.execute("DELETE FROM group_members")
@@ -446,13 +420,13 @@ def seed_db():
     )
     conn.commit()
     cursor.execute("SELECT user_id FROM users")
-    user_ids = [cast(int, tuple(row)[0]) for row in cursor.fetchall()]
+    user_ids = [tuple(row)[0] for row in cursor.fetchall()]
     cursor.execute("SELECT user_id FROM users WHERE is_admin = TRUE")
-    admin_ids = [cast(int, tuple(row)[0]) for row in cursor.fetchall()]
+    admin_ids = [tuple(row)[0] for row in cursor.fetchall()]
     print(f"  ✔ Seeded {len(user_ids)} users")
 
     # --- Groups ---
-    groups = generate_mock_groups(user_ids, count=GROUP_ROWS)
+    groups = generate_mock_groups(user_ids, count=10)
     cursor.executemany(
         """
         INSERT INTO `groups` (group_leader, name, address, city, state, zip_code)
@@ -462,11 +436,11 @@ def seed_db():
     )
     conn.commit()
     cursor.execute("SELECT group_id, group_leader FROM `groups`")
-    group_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
+    group_rows = cursor.fetchall()
     print(f"  ✔ Seeded {len(group_rows)} groups")
 
     # --- Group Members ---
-    group_memberships = generate_mock_group_memberships(user_ids, group_rows, count=GROUP_MEMBER_ROWS)
+    group_memberships = generate_mock_group_memberships(user_ids, group_rows, count=GROUP_MEMBERS_COUNT)
     cursor.executemany(
         """
         INSERT INTO group_members (user_id, group_id)
@@ -476,74 +450,36 @@ def seed_db():
     )
     conn.commit()
     print(f"  ✔ Seeded {len(group_memberships)} group memberships")
-    group_to_members = _build_group_to_members(group_memberships)
 
     # --- Bills ---
-    bills = generate_group_items(generate_mock_bill, group_to_members, BILL_ROWS)
+    group_to_members = _build_group_to_members(group_memberships)
+    bills = generate_mock_bills(group_to_members, count=BILLS_COUNT)
     cursor.executemany(
         """
-        INSERT INTO bills (group_id, title, total_cost, due_at, created_by, created_at)
+        INSERT INTO bills (group_id, total_cost, due_at, title, created_by, created_at)
         VALUES (%s, %s, %s, %s, %s, %s)
     """,
         bills,
     )
     conn.commit()
     cursor.execute("SELECT bill_id, group_id FROM bills")
-    bill_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
+    bill_rows = cursor.fetchall()
     print(f"  ✔ Seeded {len(bill_rows)} bills")
 
     # --- Bill Assignments ---
-    bill_assignments = generate_mock_bill_assignments(bill_rows, group_to_members, BILL_ASSIGNMENT_ROWS)
+    assignments = generate_mock_bill_assignments(bill_rows, group_to_members, count=BILL_ASSIGNMENTS_COUNT)
     cursor.executemany(
         """
         INSERT INTO bill_assignments (bill_id, user_id, split_percentage, paid_at)
         VALUES (%s, %s, %s, %s)
     """,
-        bill_assignments,
+        assignments,
     )
     conn.commit()
-    print(f"  ✔ Seeded {len(bill_assignments)} bill assignments")
-
-    # --- Chores ---
-    chores = generate_group_items(generate_mock_chore, group_to_members, CHORE_ROWS)
-    cursor.executemany(
-        """
-        INSERT INTO chores (group_id, title, effort, created_by, created_at, due_at, completed_at)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """,
-        chores,
-    )
-    conn.commit()
-    cursor.execute("SELECT chore_id, group_id FROM chores")
-    chore_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
-    print(f"  ✔ Seeded {len(chores)} chores")
-
-    # --- Chore Assignments ---
-    chore_assignments = generate_mock_chore_assignments(chore_rows, group_to_members, CHORE_ASSIGNMENT_ROWS)
-    cursor.executemany(
-        """
-        INSERT INTO chore_assignments (chore_id, user_id)
-        VALUES (%s, %s)
-    """,
-        chore_assignments,
-    )
-    conn.commit()
-    print(f"  ✔ Seeded {len(chore_assignments)} chore assignments")
-
-    # --- Events ---
-    events = generate_group_items(generate_mock_event, group_to_members, EVENT_ROWS)
-    cursor.executemany(
-        """
-        INSERT INTO events (group_id, title, starts_at, ends_at, is_private, created_by, created_at)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """,
-        events,
-    )
-    conn.commit()
-    print(f"  ✔ Seeded {len(events)} events")
+    print(f"  ✔ Seeded {len(assignments)} bill assignments")
 
     # --- Support Tickets ---
-    support_tickets = generate_mock_support_tickets(user_ids, SUPPORT_TICKETS_COUNT)
+    support_tickets = generate_mock_support_tickets(user_ids, count=SUPPORT_TICKETS_COUNT)
     cursor.executemany(
         """
         INSERT INTO support_tickets (submitted_by, status, priority, description, assigned_to, title, created_at, resolved_at)
@@ -555,7 +491,7 @@ def seed_db():
     print(f"  ✔ Seeded {len(support_tickets)} support tickets")
 
     # --- User Reports ---
-    user_reports = generate_mock_user_reports(user_ids, USER_REPORTS_COUNT)
+    user_reports = generate_mock_user_reports(user_ids, count=USER_REPORTS_COUNT)
     cursor.executemany(
         """
         INSERT INTO user_reports (reported_user, reported_by, reason, status, reviewed_by, reviewed_at, created_at)
@@ -567,7 +503,7 @@ def seed_db():
     print(f"  ✔ Seeded {len(user_reports)} user reports")
 
     # --- Bans ---
-    bans = generate_mock_bans(user_ids, admin_ids, BANS_COUNT)
+    bans = generate_mock_bans(user_ids, admin_ids, count=BANS_COUNT)
     cursor.executemany(
         """
         INSERT INTO bans (user_id, issued_by, reasons, expires_at, issued_at)
@@ -578,6 +514,7 @@ def seed_db():
     conn.commit()
     print(f"  ✔ Seeded {len(bans)} bans")
 
+    # Keep account status consistent with active bans.
     cursor.execute(
         """
         UPDATE users u
@@ -593,7 +530,7 @@ def seed_db():
     conn.commit()
 
     # --- App Versions ---
-    app_versions = generate_mock_app_versions(admin_ids, APP_VERSIONS_COUNT)
+    app_versions = generate_mock_app_versions(admin_ids, count=APP_VERSIONS_COUNT)
     cursor.executemany(
         """
         INSERT INTO app_versions (version_number, deployed_by, status, release_notes, deployed_at)
@@ -605,7 +542,7 @@ def seed_db():
     print(f"  ✔ Seeded {len(app_versions)} app versions")
 
     # --- Audit Logs ---
-    audit_logs = generate_mock_audit_logs(user_ids, AUDIT_LOGS_COUNT)
+    audit_logs = generate_mock_audit_logs(user_ids, count=AUDIT_LOGS_COUNT)
     cursor.executemany(
         """
         INSERT INTO audit_logs (user_id, details, target_table, target_id, action_type, performed_at)
@@ -622,7 +559,4 @@ def seed_db():
 
 
 if __name__ == "__main__":
-    sleep_time = 7
-    print(f"Sleeping for {sleep_time} seconds...")
-    time.sleep(sleep_time)
     seed_db()
