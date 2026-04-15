@@ -1,9 +1,13 @@
 import logging
-from requests import HTTPError
 import streamlit as st
 from api.client import client
 from modules.nav import SideBarLinks
-from utils import highlight_color, parse_mysql_datetime, time_relative
+from utils import (
+    format_date,
+    format_time,
+    parse_mysql_datetime,
+    time_relative,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +35,17 @@ def delete_user_modal():
 
 # --- Content ---
 
-st.title("Profile Settings")
+st.title("User Settings")
+
+joined_at = parse_mysql_datetime(user["created_at"])
+st.subheader("Profile Information")
+st.write(f"Name: {user['first_name']} {user['last_name']}")
+st.write(f"Email: {user['email']}")
+st.write(
+    f"Joined {time_relative(joined_at)} on {format_date(joined_at)} at {format_time(joined_at)}"
+)
+
+st.divider()
 
 if st.button(label="Delete Account"):
     delete_user_modal()

@@ -13,7 +13,7 @@ def user_navs():
         return
 
     if st.sidebar.button(label=user["first_name"], icon="👤"):
-        st.switch_page("pages/10_User_Profile.py")
+        st.switch_page("pages/10_User_Settings.py")
 
     if st.sidebar.button(label="Your Groups", icon="🏠"):
         if "group" in st.session_state:
