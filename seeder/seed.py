@@ -1,9 +1,8 @@
 import os
 import random
 import time
-from datetime import timedelta
 from decimal import Decimal
-from typing import Callable, cast
+from typing import cast
 
 from faker import Faker
 import mysql.connector
@@ -402,17 +401,12 @@ def seed_db():
     conn = connect_with_retry()
     cursor = conn.cursor()
 
-    # Rerun-safe reset in FK order.
-    cursor.execute("DELETE FROM audit_logs")
-    cursor.execute("DELETE FROM app_versions")
-    cursor.execute("DELETE FROM user_reports")
-    cursor.execute("DELETE FROM support_tickets")
-    cursor.execute("DELETE FROM bans")
-    cursor.execute("DELETE FROM bill_assignments")
-    cursor.execute("DELETE FROM bills")
-    cursor.execute("DELETE FROM group_members")
-    cursor.execute("DELETE FROM `groups`")
-    cursor.execute("DELETE FROM users")
+    # Rerun-safe reset — TRUNCATE resets auto-increment so IDs start from 1.
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+    for table in ["audit_logs", "app_versions", "user_reports", "support_tickets",
+                  "bans", "bill_assignments", "bills", "group_members", "`groups`", "users"]:
+        cursor.execute(f"TRUNCATE TABLE {table}")
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
     conn.commit()
 
     # --- Users ---
@@ -432,88 +426,6 @@ def seed_db():
     if not admin_ids:
         admin_ids = user_ids[:1]
     print(f"  ✔ Seeded {len(user_ids)} users")
-
-    # --- Sysadmin Data ---
-    support_tickets = generate_mock_support_tickets(user_ids)
-    support_tickets_query = """
-        INSERT INTO support_tickets (
-            submitted_by,
-            status,
-            priority,
-            description,
-            assigned_to,
-            title,
-            created_at,
-            resolved_at
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """
-    cursor.executemany(support_tickets_query, support_tickets)
-    conn.commit()
-    print(f"  ✔ Seeded {len(support_tickets)} support tickets")
-
-    user_reports = generate_mock_user_reports(user_ids)
-    user_reports_query = """
-        INSERT INTO user_reports (
-            reported_user,
-            reported_by,
-            reason,
-            status,
-            reviewed_by,
-            reviewed_at,
-            created_at
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """
-    cursor.executemany(user_reports_query, user_reports)
-    conn.commit()
-    print(f"  ✔ Seeded {len(user_reports)} user reports")
-
-    bans = generate_mock_bans(user_ids, admin_ids)
-    bans_query = """
-        INSERT INTO bans (
-            user_id,
-            issued_by,
-            reasons,
-            expires_at,
-            issued_at
-        )
-        VALUES (%s, %s, %s, %s, %s)
-    """
-    cursor.executemany(bans_query, bans)
-    conn.commit()
-    print(f"  ✔ Seeded {len(bans)} bans")
-
-    app_versions = generate_mock_app_versions(admin_ids)
-    app_versions_query = """
-        INSERT INTO app_versions (
-            version_number,
-            deployed_by,
-            status,
-            release_notes,
-            deployed_at
-        )
-        VALUES (%s, %s, %s, %s, %s)
-    """
-    cursor.executemany(app_versions_query, app_versions)
-    conn.commit()
-    print(f"  ✔ Seeded {len(app_versions)} app versions")
-
-    audit_logs = generate_mock_audit_logs(user_ids)
-    audit_logs_query = """
-        INSERT INTO audit_logs (
-            user_id,
-            details,
-            target_table,
-            target_id,
-            action_type,
-            performed_at
-        )
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """
-    cursor.executemany(audit_logs_query, audit_logs)
-    conn.commit()
-    print(f"  ✔ Seeded {len(audit_logs)} audit logs")
 
     # --- Groups ---
     groups = generate_mock_groups(user_ids, count=10)
@@ -650,5 +562,3 @@ def seed_db():
 
 if __name__ == "__main__":
     seed_db()
-
-# TODO: add invitations mocks
