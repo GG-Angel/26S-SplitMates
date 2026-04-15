@@ -132,4 +132,110 @@ CREATE TABLE invitations (
         ON DELETE CASCADE
 );
 
--- TODO: add sysadmin and data-analyst related tables
+CREATE TABLE audit_logs (
+    log_id INT AUTO_INCREMENT NOT NULL,
+    user_id INT NOT NULL,
+    details VARCHAR(255) NOT NULL,
+    target_table VARCHAR(50) NOT NULL,
+    target_id INT NOT NULL,
+    action_type ENUM('create', 'update', 'delete') NOT NULL DEFAULT 'create',
+    performed_at DATETIME NOT NULL,
+    PRIMARY KEY (log_id),
+    CONSTRAINT auditLog_fk01
+        FOREIGN KEY (user_id) REFERENCES users (user_id)
+            ON UPDATE CASCADE
+            ON DELETE RESTRICT,
+    INDEX idx_audit_user_id (user_id)
+);
+
+CREATE TABLE `sessions` (
+    session_id INT NOT NULL,
+    user_id INT NOT NULL,
+    start_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_time DATETIME NOT NULL,
+    duration INT NOT NULL CHECK (duration > 0),
+    PRIMARY KEY (session_id),
+    CONSTRAINT session_fk01
+        FOREIGN KEY (user_id) REFERENCES users (user_id)
+            ON UPDATE CASCADE
+            ON DELETE RESTRICT,
+    INDEX idx_session_user_id (user_id)
+);
+
+CREATE TABLE user_reports (
+    report_id INT AUTO_INCREMENT NOT NULL,
+    reported_user INT NOT NULL,
+    reported_by INT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    status ENUM('pending', 'resolved',  'under_review', 'dismissed'),
+    reviewed_by INT NOT NULL,
+    reviewed_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (report_id),
+    CONSTRAINT fk_reported_user_users
+        FOREIGN KEY (reported_user) REFERENCES users(user_id)
+            ON UPDATE CASCADE
+            ON DELETE RESTRICT,
+    CONSTRAINT fk_reported_by_users
+        FOREIGN KEY (reported_by) REFERENCES users(user_id)
+            ON UPDATE CASCADE
+            ON DELETE RESTRICT,
+    CONSTRAINT fk_reviewed_by_admin
+        FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
+            ON UPDATE CASCADE
+            ON DELETE RESTRICT
+);
+
+CREATE TABLE support_tickets (
+    ticket_id INT AUTO_INCREMENT,
+    submitted_by INT NOT NULL,
+    status ENUM('open', 'in_progress', 'closed') NOT NULL DEFAULT 'open',
+    priority ENUM('low', 'medium', 'high') NOT NULL DEFAULT 'low',
+    description VARCHAR(255),
+    assigned_to INT NOT NULL,
+    title VARCHAR(100),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resolved_at DATETIME,
+    PRIMARY KEY(ticket_id),
+    CONSTRAINT fk_support_ticket_submit_by
+        FOREIGN KEY (submitted_by) REFERENCES users (user_id)
+            ON UPDATE CASCADE
+            ON DELETE RESTRICT,
+    CONSTRAINT fk_support_ticket_assigned_to
+        FOREIGN KEY (assigned_to) REFERENCES users (user_id)
+            ON UPDATE CASCADE
+            ON DELETE RESTRICT
+);
+
+CREATE TABLE app_versions (
+    version_id INT AUTO_INCREMENT,
+    version_number INT NOT NULL UNIQUE,
+    deployed_by INT NOT NULL,
+    status ENUM('staged', 'deployed', 'rolled_back', 'deprecated') NOT NULL DEFAULT 'deployed',
+    release_notes VARCHAR(1024),
+    deployed_at DATETIME,
+    PRIMARY KEY (version_id),
+    CONSTRAINT fk_appversion_admin
+        FOREIGN KEY (deployed_by) REFERENCES users (user_id)
+            ON UPDATE CASCADE
+            ON DELETE RESTRICT,
+    INDEX idx_ver_num (version_number)
+);
+
+CREATE TABLE bans (
+    ban_id INT AUTO_INCREMENT NOT NULL,
+    user_id INT NOT NULL,
+    issued_by INT NOT NULL,
+    issued_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reasons VARCHAR(255),
+    expires_at DATETIME,
+    PRIMARY KEY (ban_id),
+    CONSTRAINT fk_ban_user_id
+        FOREIGN KEY (user_id) REFERENCES users (user_id)
+            ON UPDATE CASCADE
+            ON DELETE CASCADE,
+    CONSTRAINT fk_ban_user_admin
+        FOREIGN KEY (issued_by) REFERENCES users (user_id)
+            ON UPDATE CASCADE
+            ON DELETE RESTRICT
+);
