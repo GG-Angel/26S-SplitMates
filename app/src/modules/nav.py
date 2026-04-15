@@ -6,9 +6,19 @@ from pathlib import Path
 
 import streamlit as st
 
+from utils import highlight_color
 
-def my_groups_nav():
-    if st.sidebar.button(label="Your Groups", icon="🏠", width="stretch"):
+
+def user_navs():
+    user = st.session_state.get("user")
+
+    if not user:
+        return
+
+    if st.sidebar.button(label=user["first_name"], icon="👤"):
+        st.switch_page("pages/10_User_Settings.py")
+
+    if st.sidebar.button(label="Your Groups", icon="🏠"):
         if "group" in st.session_state:
             del st.session_state["group"]
         st.switch_page("pages/00_User_Dashboard.py")
@@ -78,7 +88,8 @@ def SideBarLinks():
         st.switch_page("Home.py")
 
     if st.session_state["authenticated"]:
-        my_groups_nav()
+        st.sidebar.header(f"*{highlight_color('red', 'SplitMates')}*")
+        user_navs()
         st.sidebar.divider()
 
     if "group" in st.session_state and st.session_state["group"]:
@@ -86,7 +97,7 @@ def SideBarLinks():
         st.sidebar.divider()
 
     if st.session_state["authenticated"]:
-        if st.sidebar.button("Logout", width="stretch"):
+        if st.sidebar.button("Logout"):
             if "user" in st.session_state:
                 del st.session_state["user"]
             if "authenticated" in st.session_state:

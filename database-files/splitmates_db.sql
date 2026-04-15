@@ -69,7 +69,7 @@ CREATE TABLE bill_assignments (
         ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users (user_id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE CASCADE
 );
 
 CREATE TABLE chores (

@@ -34,6 +34,24 @@ def handle_group(group_id: int):
         return jsonify({"message": "Group deleted successfully"}), 200
 
 
+@group_routes.route("/<group_id>/rename", methods=["PUT"])
+@handle_db_errors
+def handle_group_rename(group_id: int):
+    repository = GroupRepository()
+    current_app.logger.info(f"PUT /groups/{group_id}/rename")
+    data = request.get_json()
+    new_name = data.get("new_name")
+
+    if not new_name:
+        return jsonify({"error": "new_name is required"}), 400
+
+    if len(new_name) > 50:
+        return jsonify({"error": "new_name cannot exceed 50 characters"}), 400
+
+    repository.rename_group(group_id, new_name)
+    return jsonify({"message": "Group renamed successfully"}), 200
+
+
 @group_routes.route("/<group_id>/owner", methods=["PUT"])
 @handle_db_errors
 def handle_group_owner(group_id: int):

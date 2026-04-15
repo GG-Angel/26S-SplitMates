@@ -7,6 +7,9 @@ class UserRepository(BaseRepository):
     def get_user(self, user_id: int):
         return self.fetch_one(load_query("users/get_user.sql"), {"user_id": user_id})
 
+    def delete_user(self, user_id: int):
+        self.execute(load_query("users/delete_user.sql"), {"user_id": user_id})
+
     def insert_user(self, user: dict) -> None:
         self.execute(load_query("users/insert_user.sql"), user)
 
@@ -34,4 +37,14 @@ class UserRepository(BaseRepository):
         self.execute(
             load_query("bills/pay_bill.sql"),
             {"bill_id": bill_id, "user_id": user_id},
+        )
+
+    def rename_user(self, user_id: int, new_first_name: str, new_last_name: str):
+        self.execute(
+            load_query("users/rename_user.sql"),
+            {
+                "user_id": user_id,
+                "first_name": new_first_name,
+                "last_name": new_last_name,
+            },
         )
