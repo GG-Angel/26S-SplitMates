@@ -31,6 +31,7 @@ def group_navs():
     st.sidebar.page_link("pages/05_Group_Bills.py", label="Bills", icon="💰")
     st.sidebar.page_link("pages/06_Group_Chores.py", label="Chores", icon="🧹")
     st.sidebar.page_link("pages/03_Group_Events.py", label="Events", icon="📅")
+    st.sidebar.page_link("pages/08_Group_Items.py", label="Items", icon="📦")
     if st.session_state["user"]["user_id"] == st.session_state["group"]["group_leader"]:
         st.sidebar.page_link(
             "pages/07_Group_Management.py", label="Management", icon="🛠️"

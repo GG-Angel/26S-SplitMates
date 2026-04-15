@@ -21,6 +21,15 @@ BILL_ASSIGNMENT_ROWS = 180
 CHORE_ROWS = 120
 CHORE_ASSIGNMENT_ROWS = 80
 EVENT_ROWS = 32
+ITEM_ROWS = 40
+ITEM_OWNER_ROWS = 60
+
+
+def generate_picture_url():
+    # kitty :3
+    sizes = [200, 225, 250, 275, 300]
+    width, height = random.choice(sizes), random.choice(sizes)
+    return f"https://placekittens.com/{width}/{height}"
 
 
 def generate_mock_users(count: int = USER_ROWS):
@@ -32,8 +41,17 @@ def generate_mock_users(count: int = USER_ROWS):
         is_admin = False
         is_analyst = False
         created_at = fake.past_datetime("-90d")
+        picture_url = generate_picture_url() if random.random() < 0.6 else None
 
-        user = (first_name, last_name, email, is_admin, is_analyst, created_at)
+        user = (
+            first_name,
+            last_name,
+            email,
+            is_admin,
+            is_analyst,
+            created_at,
+            picture_url,
+        )
         users.append(user)
     return users
 
@@ -194,6 +212,68 @@ def generate_mock_event(group_id: int, group_members: list[int]):
     return (group_id, title, starts_at, ends_at, is_private, created_by, created_at)
 
 
+HOUSEHOLD_ITEMS = [
+    "Vacuum Cleaner",
+    "Coffee Maker",
+    "Couch",
+    "TV",
+    "Dining Table",
+    "Microwave",
+    "Toaster",
+    "Blender",
+    "Air Fryer",
+    "Rice Cooker",
+    "Bookshelf",
+    "Desk Lamp",
+    "Gaming Console",
+    "Printer",
+    "Router",
+    "Bed Frame",
+    "Dresser",
+    "Mirror",
+    "Rug",
+    "Standing Fan",
+    "Humidifier",
+    "Space Heater",
+    "Mini Fridge",
+    "Kettle",
+    "Iron",
+    "Mop",
+    "Broom",
+    "Trash Can",
+    "Paper Shredder",
+    "Surge Protector",
+]
+
+
+def generate_mock_item(group_id: int, group_members: list[int]):
+    name = random.choice(HOUSEHOLD_ITEMS)
+    picture_url = generate_picture_url() if random.random() < 0.8 else None
+    created_by = random.choice(group_members)
+    return (group_id, name, picture_url, created_by)
+
+
+def generate_mock_item_owners(
+    item_and_group_ids: list[tuple[int, int]],
+    group_to_members: dict[int, list[int]],
+    count: int = ITEM_OWNER_ROWS,
+):
+    owners: set[tuple[int, int]] = set()
+
+    for item_id, group_id in item_and_group_ids:
+        members = group_to_members[group_id]
+        owners.add((item_id, random.choice(members)))
+
+    attempts = 0
+    while len(owners) < count and attempts < 10000:
+        attempts += 1
+        item_id, group_id = random.choice(item_and_group_ids)
+        user_id = random.choice(group_to_members[group_id])
+        owners.add((item_id, user_id))
+
+    return list(owners)
+
+
 def generate_group_items(
     generator: Callable[[int, list[int]], tuple],
     group_to_members: dict[int, list[int]],
@@ -227,8 +307,8 @@ def seed_db():
     # --- Users ---
     users = generate_mock_users()
     users_query = """
-        INSERT INTO users (first_name, last_name, email, is_admin, is_analyst, created_at)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO users (first_name, last_name, email, is_admin, is_analyst, created_at, picture_url)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
     cursor.executemany(users_query, users)
     conn.commit()
@@ -314,6 +394,28 @@ def seed_db():
     # cursor.execute("SELECT event_id, group_id FROM chores")
     # event_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
     print(f"  ✔ Seeded {len(events)} events")
+
+    # --- Items ---
+    items = generate_group_items(generate_mock_item, group_to_members, ITEM_ROWS)
+    items_query = """
+        INSERT INTO items (group_id, name, picture_url, created_by)
+        VALUES (%s, %s, %s, %s)
+    """
+    cursor.executemany(items_query, items)
+    conn.commit()
+    cursor.execute("SELECT item_id, group_id FROM items")
+    item_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
+    print(f"  ✔ Seeded {len(item_rows)} items")
+
+    # --- Item Owners ---
+    item_owners = generate_mock_item_owners(item_rows, group_to_members)
+    item_owners_query = """
+        INSERT INTO item_owners (item_id, user_id)
+        VALUES (%s, %s)
+    """
+    cursor.executemany(item_owners_query, item_owners)
+    conn.commit()
+    print(f"  ✔ Seeded {len(item_owners)} item owners")
 
     cursor.close()
     conn.close()

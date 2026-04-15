@@ -241,3 +241,46 @@ class GroupRepository(BaseRepository):
             load_query("groups/get_user_groups_led.sql"),
             {"user_id": user_id},
         )
+
+    def get_group_items(self, group_id: int):
+        return self.fetch_all(
+            load_query("items/get_group_items.sql"), {"group_id": group_id}
+        )
+
+    def get_item_owners(self, item_id: int):
+        return self.fetch_all(
+            load_query("items/get_item_owners.sql"), {"item_id": item_id}
+        )
+
+    def create_item(self, group_id: int, data: dict):
+        with get_db() as conn:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(
+                load_query("items/insert_item.sql"),
+                {
+                    "group_id": group_id,
+                    "name": data["name"],
+                    "picture_url": data.get("picture_url"),
+                    "created_by": data["created_by"],
+                },
+            )
+            item_id = cursor.lastrowid
+            for user_id in data.get("owners", []):
+                cursor.execute(
+                    load_query("items/insert_item_owner.sql"),
+                    {"item_id": item_id, "user_id": user_id},
+                )
+            conn.commit()
+
+    def update_item(self, item_id: int, data: dict):
+        self.execute(
+            load_query("items/update_item.sql"),
+            {
+                "item_id": item_id,
+                "name": data["name"],
+                "picture_url": data.get("picture_url"),
+            },
+        )
+
+    def delete_item(self, item_id: int):
+        self.execute(load_query("items/delete_item.sql"), {"item_id": item_id})
