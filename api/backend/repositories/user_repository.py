@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from backend.db_connection import load_query
 from backend.repositories.base_repository import BaseRepository
 
@@ -21,7 +21,7 @@ class UserRepository(BaseRepository):
             load_query("groups/get_user_groups.sql"), {"user_id": user_id}
         )
 
-    def get_user_chores(self, user_id: int, group_id: int = None):
+    def get_user_chores(self, user_id: int, group_id: Optional[int] = None):
         return self.fetch_all(
             load_query("chores/get_user_chores.sql"),
             {"user_id": user_id, "group_id": group_id},

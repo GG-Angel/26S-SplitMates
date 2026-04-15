@@ -6,6 +6,8 @@ from backend.db_connection import get_db
 
 admin_routes = Blueprint("admin", __name__)
 
+# TODO: SQL logic should be in dedicated files inside the queries folder. make an admin repository for this purpose.
+
 
 @admin_routes.route("/", methods=["GET"])
 def get_root():
@@ -309,7 +311,9 @@ def update_ban_for_user(user_id: int, ban_id: int):
     cursor = get_db().cursor(dictionary=True)
     try:
         params.extend([user_id, ban_id])
-        query = f"UPDATE bans SET {', '.join(updates)} WHERE user_id = %s AND ban_id = %s"
+        query = (
+            f"UPDATE bans SET {', '.join(updates)} WHERE user_id = %s AND ban_id = %s"
+        )
         cursor.execute(query, tuple(params))
         get_db().commit()
 
@@ -328,7 +332,9 @@ def lift_ban_for_user(user_id: int, ban_id: int):
     """Lift a ban for a user and restore active status when no active bans remain."""
     cursor = get_db().cursor(dictionary=True)
     try:
-        cursor.execute("DELETE FROM bans WHERE user_id = %s AND ban_id = %s", (user_id, ban_id))
+        cursor.execute(
+            "DELETE FROM bans WHERE user_id = %s AND ban_id = %s", (user_id, ban_id)
+        )
         if cursor.rowcount == 0:
             get_db().rollback()
             return jsonify({"error": "Not found"}), 404
@@ -345,7 +351,10 @@ def lift_ban_for_user(user_id: int, ban_id: int):
         active_bans = cursor.fetchone()["active_bans"]
 
         if active_bans == 0:
-            cursor.execute("UPDATE users SET account_status = 'active' WHERE user_id = %s", (user_id,))
+            cursor.execute(
+                "UPDATE users SET account_status = 'active' WHERE user_id = %s",
+                (user_id,),
+            )
 
         get_db().commit()
         return jsonify({"message": "Ban lifted"}), 200
@@ -466,7 +475,9 @@ def get_support_tickets_by_submitter(user_id: int):
         cursor.execute(query, (user_id,))
         return jsonify(cursor.fetchall()), 200
     except Error as e:
-        current_app.logger.error(f"Database error in get_support_tickets_by_submitter(): {e}")
+        current_app.logger.error(
+            f"Database error in get_support_tickets_by_submitter(): {e}"
+        )
         return jsonify({"error": "Unexpected error"}), 500
     finally:
         cursor.close()
@@ -507,7 +518,9 @@ def get_user_reports_by_reporter(reported_by: int):
         cursor.execute(query, (reported_by,))
         return jsonify(cursor.fetchall()), 200
     except Error as e:
-        current_app.logger.error(f"Database error in get_user_reports_by_reporter(): {e}")
+        current_app.logger.error(
+            f"Database error in get_user_reports_by_reporter(): {e}"
+        )
         return jsonify({"error": "Unexpected error"}), 500
     finally:
         cursor.close()
@@ -528,7 +541,9 @@ def get_user_reports_against_user(reported_user: int):
         cursor.execute(query, (reported_user,))
         return jsonify(cursor.fetchall()), 200
     except Error as e:
-        current_app.logger.error(f"Database error in get_user_reports_against_user(): {e}")
+        current_app.logger.error(
+            f"Database error in get_user_reports_against_user(): {e}"
+        )
         return jsonify({"error": "Unexpected error"}), 500
     finally:
         cursor.close()
@@ -627,7 +642,9 @@ def create_app_version():
     deployed_at = payload.get("deployed_at")
 
     if version_number is None or deployed_by is None:
-        return jsonify({"error": "Fields 'version_number' and 'deployed_by' are required"}), 400
+        return jsonify(
+            {"error": "Fields 'version_number' and 'deployed_by' are required"}
+        ), 400
 
     cursor = get_db().cursor(dictionary=True)
     try:
@@ -635,9 +652,13 @@ def create_app_version():
             INSERT INTO app_versions (version_number, deployed_by, status, release_notes, deployed_at)
             VALUES (%s, %s, %s, %s, %s)
         """
-        cursor.execute(query, (version_number, deployed_by, status, release_notes, deployed_at))
+        cursor.execute(
+            query, (version_number, deployed_by, status, release_notes, deployed_at)
+        )
         get_db().commit()
-        return jsonify({"message": "App version created", "version_id": cursor.lastrowid}), 201
+        return jsonify(
+            {"message": "App version created", "version_id": cursor.lastrowid}
+        ), 201
     except Error as e:
         current_app.logger.error(f"Database error in create_app_version(): {e}")
         return jsonify({"error": "Unexpected error"}), 500
@@ -712,10 +733,16 @@ def get_maintenance_normalize_check():
         )
         checks["orphan_bill_assignments"] = cursor.fetchone()["c"]
 
-        checks["status"] = "ok" if checks["orphan_bills"] == 0 and checks["orphan_bill_assignments"] == 0 else "warning"
+        checks["status"] = (
+            "ok"
+            if checks["orphan_bills"] == 0 and checks["orphan_bill_assignments"] == 0
+            else "warning"
+        )
         return jsonify(checks), 200
     except Error as e:
-        current_app.logger.error(f"Database error in get_maintenance_normalize_check(): {e}")
+        current_app.logger.error(
+            f"Database error in get_maintenance_normalize_check(): {e}"
+        )
         return jsonify({"error": "Unexpected error"}), 500
     finally:
         cursor.close()
