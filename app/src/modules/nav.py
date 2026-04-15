@@ -68,6 +68,28 @@ def classification_nav():
     )
 
 
+# ---- Role: roommate ---------------------------------------------------------
+
+def my_groups_nav():
+    if st.sidebar.button(label="Your Groups", icon="🏠", width="stretch"):
+        if "group" in st.session_state:
+            del st.session_state["group"]
+        st.switch_page("pages/00_User_Dashboard.py")
+
+
+def group_navs():
+    group = st.session_state["group"]
+    st.sidebar.write(f"### {group['name']}")
+    st.sidebar.page_link("pages/02_Group_Dashboard.py", label="Dashboard", icon="📊")
+    st.sidebar.page_link("pages/05_Group_Bills.py", label="Bills", icon="💰")
+    st.sidebar.page_link("pages/06_Group_Chores.py", label="Chores", icon="🧹")
+    st.sidebar.page_link("pages/03_Group_Events.py", label="Events", icon="📅")
+    if st.session_state["user"]["user_id"] == st.session_state["group"]["group_leader"]:
+        st.sidebar.page_link(
+            "pages/07_Group_Management.py", label="Management", icon="🛠️"
+        )
+
+
 # ---- Role: administrator ----------------------------------------------------
 
 def admin_home_nav():
@@ -136,6 +158,10 @@ def SideBarLinks(show_home=False):
 
     if st.session_state["authenticated"]:
 
+        if st.session_state["role"] == "roommate":
+            my_groups_nav()
+            st.sidebar.divider()
+
         if st.session_state["role"] == "pol_strat_advisor":
             pol_strat_home_nav()
             world_bank_viz_nav()
@@ -158,6 +184,10 @@ def SideBarLinks(show_home=False):
             admin_roommates_nav()
             admin_ops_nav()
 
+    if "group" in st.session_state and st.session_state["group"]:
+        group_navs()
+        st.sidebar.divider()
+
     # Add extra breathing room on root persona selector page.
     if show_home:
         st.sidebar.markdown("<div style='height: 1.25rem;'></div>", unsafe_allow_html=True)
@@ -166,7 +196,8 @@ def SideBarLinks(show_home=False):
     about_page_nav()
 
     if st.session_state["authenticated"]:
-        if st.sidebar.button("Logout"):
-            del st.session_state["role"]
-            del st.session_state["authenticated"]
+        if st.sidebar.button("Logout", width="stretch"):
+            for key in ["user", "authenticated", "group", "role"]:
+                if key in st.session_state:
+                    del st.session_state[key]
             st.switch_page("Home.py")
