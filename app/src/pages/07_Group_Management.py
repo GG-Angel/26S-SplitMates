@@ -64,33 +64,71 @@ def transfer_ownership_modal():
 
 # --- Content ---
 
-# Invite User
+# Invite User | Rename Group
 
-st.subheader("Invite a Roommate")
-with st.container(border=True):
-    with st.container(
-        horizontal=True,
-        horizontal_alignment="distribute",
-        vertical_alignment="center",
-    ):
-        invite_email = st.text_input(
-            label="",
-            label_visibility="collapsed",
-            placeholder="Enter email",
-            max_chars=75,
-        )
-        send_invite_btn = st.button(label="Send", type="primary")
+invite_col, rename_col = st.columns(2, gap="medium")
 
-    if send_invite_btn:
-        try:
-            client.post(f"/groups/{group_id}/invites", json={"email": invite_email})
-            pending_invites = client.get(f"/groups/{group_id}/invites")  # refresh
-            st.success("Invite sent!")
-        except HTTPError as e:
-            if e.response is not None:
-                st.error(e.response.json()["error"])
+with invite_col:
+    st.subheader("Invite a Roommate")
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            invite_email = st.text_input(
+                label="",
+                label_visibility="collapsed",
+                placeholder="Enter email",
+                max_chars=75,
+            )
+            send_invite_btn = st.button(label="Send", type="primary")
+
+        if send_invite_btn:
+            try:
+                client.post(f"/groups/{group_id}/invites", json={"email": invite_email})
+                pending_invites = client.get(f"/groups/{group_id}/invites")  # refresh
+                st.success("Invite sent!")
+            except HTTPError as e:
+                if e.response is not None:
+                    st.error(e.response.json()["error"])
+                else:
+                    st.error("Failed to send invite. Please try again.")
+
+with rename_col:
+    st.subheader("Rename Group")
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            new_group_name = st.text_input(
+                label="",
+                label_visibility="collapsed",
+                placeholder="Enter new name",
+                max_chars=50,
+            )
+            rename_btn = st.button(label="Rename", type="primary")
+
+        if rename_btn:
+            if not new_group_name.strip():
+                st.error("Group name cannot be empty.")
             else:
-                st.error("Failed to send invite. Please try again.")
+                try:
+                    client.put(
+                        f"/groups/{group_id}/rename",
+                        json={"new_name": new_group_name.strip()},
+                    )
+                    updated_group = client.get(f"/groups/{group_id}")
+                    st.session_state["group"] = updated_group
+                    group = updated_group
+                    st.success("Group renamed successfully!")
+                except HTTPError as e:
+                    if e.response is not None:
+                        st.error(e.response.json()["error"])
+                    else:
+                        st.error("Failed to rename group. Please try again.")
 
 
 # Roommates | Pending Invites
