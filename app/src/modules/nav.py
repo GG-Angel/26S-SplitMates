@@ -2,6 +2,9 @@
 
 # This file has functions to add links to the left sidebar based on the user's role.
 
+import base64
+from pathlib import Path
+
 import streamlit as st
 
 
@@ -68,13 +71,51 @@ def classification_nav():
 # ---- Role: administrator ----------------------------------------------------
 
 def admin_home_nav():
-    st.sidebar.page_link("pages/20_Admin_Home.py", label="System Admin", icon="🖥️")
+    st.sidebar.page_link("pages/20_Admin_Home.py", label="System Admin", icon="🏠")
+
+
+def admin_tickets_nav():
+    st.sidebar.page_link("pages/21_Admin_Tickets.py", label="Tickets", icon="🎫")
+
+
+def admin_user_reports_nav():
+    st.sidebar.page_link("pages/22_Admin_User_Reports.py", label="User Reports", icon="📝")
+
+
+def admin_groups_nav():
+    st.sidebar.page_link("pages/23_Admin_Groups.py", label="Roommate Groups", icon="👥")
+
+
+def admin_roommates_nav():
+    st.sidebar.page_link("pages/24_Admin_Roommates.py", label="Roommates", icon="🧑‍🤝‍🧑")
+
+
+def admin_ops_nav():
+    st.sidebar.page_link("pages/25_Admin_Ops_And_Logs.py", label="Updates & Audit Logs", icon="🧾")
 
 
 def ml_model_mgmt_nav():
     st.sidebar.page_link(
         "pages/21_ML_Model_Mgmt.py", label="ML Model Management", icon="🏢"
     )
+
+
+def clickable_logo_nav():
+    """Render clickable sidebar logo that routes to Home.py (root persona selector)."""
+    logo_path = Path(__file__).resolve().parents[1] / "assets" / "logo.png"
+    try:
+        logo_b64 = base64.b64encode(logo_path.read_bytes()).decode("utf-8")
+        st.sidebar.markdown(
+            f"""
+            <a href="/" target="_self" title="Go to SplitMates Home">
+                <img src="data:image/png;base64,{logo_b64}" width="150" />
+            </a>
+            """,
+            unsafe_allow_html=True,
+        )
+    except OSError:
+        # Fallback if file path resolution fails.
+        st.sidebar.image("assets/logo.png", width=150)
 
 
 # ---- Sidebar assembly -------------------------------------------------------
@@ -85,16 +126,13 @@ def SideBarLinks(show_home=False):
     The role is stored in st.session_state when the user logs in on Home.py.
     """
 
-    # Logo appears at the top of the sidebar on every page
-    st.sidebar.image("assets/logo.png", width=150)
+    # Clickable logo at the top routes to Home persona selector.
+    clickable_logo_nav()
 
     # If no one is logged in, send them to the Home (login) page
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
         st.switch_page("Home.py")
-
-    if show_home:
-        home_nav()
 
     if st.session_state["authenticated"]:
 
@@ -112,8 +150,17 @@ def SideBarLinks(show_home=False):
             classification_nav()
 
         if st.session_state["role"] == "administrator":
+            st.sidebar.markdown(f"**{st.session_state.get('first_name', 'Admin')}**")
             admin_home_nav()
-            ml_model_mgmt_nav()
+            admin_tickets_nav()
+            admin_user_reports_nav()
+            admin_groups_nav()
+            admin_roommates_nav()
+            admin_ops_nav()
+
+    # Add extra breathing room on root persona selector page.
+    if show_home:
+        st.sidebar.markdown("<div style='height: 1.25rem;'></div>", unsafe_allow_html=True)
 
     # About link appears at the bottom for all roles
     about_page_nav()
