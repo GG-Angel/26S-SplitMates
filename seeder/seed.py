@@ -326,6 +326,7 @@ if __name__ == "__main__":
     time.sleep(sleep_time)
     seed_db()
 
+# TODO: wire up sysadmin mocks
 
 # def generate_mock_support_tickets(user_ids: list[int], count: int = SUPPORT_TICKETS_COUNT):
 #     statuses = ["open", "in_progress", "closed"]

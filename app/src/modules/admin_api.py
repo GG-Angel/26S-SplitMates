@@ -7,7 +7,7 @@ import requests
 API_BASE = os.getenv("ADMIN_API_BASE", "http://web-api:4000/admin")
 REQUEST_TIMEOUT = 10
 
-# TODO: use api/client.py
+# TODO: use api/client.py to interact with the api
 
 
 def _url(path: str) -> str:
