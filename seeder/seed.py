@@ -24,9 +24,12 @@ EVENT_ROWS = 32
 ITEM_ROWS = 40
 ITEM_OWNER_ROWS = 60
 
+
 def generate_picture_url():
     # kitty :3
-    return "https://placekittens.com/200/300" if random.random() < 0.4 else None
+    sizes = [200, 225, 250, 275, 300]
+    width, height = random.choice(sizes), random.choice(sizes)
+    return f"https://placekittens.com/{width}/{height}"
 
 
 def generate_mock_users(count: int = USER_ROWS):
@@ -38,9 +41,17 @@ def generate_mock_users(count: int = USER_ROWS):
         is_admin = False
         is_analyst = False
         created_at = fake.past_datetime("-90d")
-        picture_url = generate_picture_url()
+        picture_url = generate_picture_url() if random.random() < 0.6 else None
 
-        user = (first_name, last_name, email, is_admin, is_analyst, created_at, picture_url)
+        user = (
+            first_name,
+            last_name,
+            email,
+            is_admin,
+            is_analyst,
+            created_at,
+            picture_url,
+        )
         users.append(user)
     return users
 
@@ -202,17 +213,42 @@ def generate_mock_event(group_id: int, group_members: list[int]):
 
 
 HOUSEHOLD_ITEMS = [
-    "Vacuum Cleaner", "Coffee Maker", "Couch", "TV", "Dining Table",
-    "Microwave", "Toaster", "Blender", "Air Fryer", "Rice Cooker",
-    "Bookshelf", "Desk Lamp", "Gaming Console", "Printer", "Router",
-    "Bed Frame", "Dresser", "Mirror", "Rug", "Standing Fan",
-    "Humidifier", "Space Heater", "Mini Fridge", "Kettle", "Iron",
-    "Mop", "Broom", "Trash Can", "Paper Shredder", "Surge Protector",
+    "Vacuum Cleaner",
+    "Coffee Maker",
+    "Couch",
+    "TV",
+    "Dining Table",
+    "Microwave",
+    "Toaster",
+    "Blender",
+    "Air Fryer",
+    "Rice Cooker",
+    "Bookshelf",
+    "Desk Lamp",
+    "Gaming Console",
+    "Printer",
+    "Router",
+    "Bed Frame",
+    "Dresser",
+    "Mirror",
+    "Rug",
+    "Standing Fan",
+    "Humidifier",
+    "Space Heater",
+    "Mini Fridge",
+    "Kettle",
+    "Iron",
+    "Mop",
+    "Broom",
+    "Trash Can",
+    "Paper Shredder",
+    "Surge Protector",
 ]
+
 
 def generate_mock_item(group_id: int, group_members: list[int]):
     name = random.choice(HOUSEHOLD_ITEMS)
-    picture_url = generate_picture_url()
+    picture_url = generate_picture_url() if random.random() < 0.8 else None
     created_by = random.choice(group_members)
     return (group_id, name, picture_url, created_by)
 
@@ -224,12 +260,10 @@ def generate_mock_item_owners(
 ):
     owners: set[tuple[int, int]] = set()
 
-    # Participation constraint: every item has at least one owner.
     for item_id, group_id in item_and_group_ids:
         members = group_to_members[group_id]
         owners.add((item_id, random.choice(members)))
 
-    # Top up to target count.
     attempts = 0
     while len(owners) < count and attempts < 10000:
         attempts += 1

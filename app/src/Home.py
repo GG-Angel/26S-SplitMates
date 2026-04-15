@@ -43,9 +43,9 @@ st.write("#### Which user would you like to log in as?")
 # can click to MIMIC logging in as that mock user.
 
 if st.button(
-    "Act as Victor, a Roommate Group Leader",
+    "Act as Laurie, a Roommate Group Leader",
     type="primary",
     use_container_width=True,
 ):
-    login_as(user_id=15, persona_name="Roommate Leader")
+    login_as(user_id=5, persona_name="Roommate Leader")
     st.switch_page("pages/00_User_Dashboard.py")
