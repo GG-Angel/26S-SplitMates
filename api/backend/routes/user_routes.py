@@ -1,24 +1,43 @@
+import random
 from flask import Blueprint, current_app, jsonify, request
 from backend.decorators import handle_db_errors
+from backend.repositories.group_repository import GroupRepository
 from backend.repositories.user_repository import UserRepository
 
 
 user_routes = Blueprint("users", __name__)
 
 
-@user_routes.route("/<user_id>", methods=["GET"])
+@user_routes.route("/<user_id>", methods=["GET", "DELETE"])
 @handle_db_errors
 def handle_user(user_id: int):
-    repository = UserRepository()
-    current_app.logger.info(f"GET /users/{user_id}")
-    user = repository.get_user(user_id)
+    user_repository = UserRepository()
+    current_app.logger.info(f"{request.method} /users/{user_id}")
+
+    user = user_repository.get_user(user_id)
 
     # ensure user exists
     if not user:
         return jsonify({"error": "Not found"}), 404
 
-    current_app.logger.info(f"Retrieved user {user_id}")
-    return jsonify(user), 200
+    if request.method == "GET":
+        return jsonify(user), 200
+    else:
+        # transfer owned groups to a random member
+        group_repository = GroupRepository()
+        groups_led = group_repository.get_user_groups_led(user_id)
+        for group in groups_led:
+            group_id = group["group_id"]
+            members = group_repository.get_group_members(group_id)
+            new_owner = random.choice(members)
+            new_owner_id = new_owner["user_id"]
+            group_repository.transfer_group_ownership(group_id, user_id=new_owner_id)
+            current_app.logger.info(
+                f"Transfered ownership of group #{group_id} to member #{new_owner_id}"
+            )
+
+        user_repository.delete_user(user_id)
+        return jsonify({"message": "User deleted"}), 200
 
 
 @user_routes.route("/<user_id>/groups", methods=["GET"])
