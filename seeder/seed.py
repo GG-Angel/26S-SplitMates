@@ -24,6 +24,10 @@ EVENT_ROWS = 32
 ITEM_ROWS = 40
 ITEM_OWNER_ROWS = 60
 
+def generate_picture_url():
+    # kitty :3
+    return "https://placekittens.com/200/300" if random.random() < 0.4 else None
+
 
 def generate_mock_users(count: int = USER_ROWS):
     users = []
@@ -34,8 +38,9 @@ def generate_mock_users(count: int = USER_ROWS):
         is_admin = False
         is_analyst = False
         created_at = fake.past_datetime("-90d")
+        picture_url = generate_picture_url()
 
-        user = (first_name, last_name, email, is_admin, is_analyst, created_at)
+        user = (first_name, last_name, email, is_admin, is_analyst, created_at, picture_url)
         users.append(user)
     return users
 
@@ -205,10 +210,9 @@ HOUSEHOLD_ITEMS = [
     "Mop", "Broom", "Trash Can", "Paper Shredder", "Surge Protector",
 ]
 
-
 def generate_mock_item(group_id: int, group_members: list[int]):
     name = random.choice(HOUSEHOLD_ITEMS)
-    picture_url = fake.image_url() if random.random() < 0.4 else None
+    picture_url = generate_picture_url()
     created_by = random.choice(group_members)
     return (group_id, name, picture_url, created_by)
 
@@ -269,8 +273,8 @@ def seed_db():
     # --- Users ---
     users = generate_mock_users()
     users_query = """
-        INSERT INTO users (first_name, last_name, email, is_admin, is_analyst, created_at)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO users (first_name, last_name, email, is_admin, is_analyst, created_at, picture_url)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
     cursor.executemany(users_query, users)
     conn.commit()
