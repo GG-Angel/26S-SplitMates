@@ -249,3 +249,35 @@ def handle_chore(chore_id: int):
         current_app.logger.info(f"DELETE /groups/chores/{chore_id}")
         repository.delete_chore(chore_id)
         return jsonify({"message": "Chore deleted"}), 200
+
+
+@group_routes.route("/<group_id>/items", methods=["GET", "POST"])
+@handle_db_errors
+def handle_group_items(group_id: int):
+    repository = GroupRepository()
+    if request.method == "GET":
+        current_app.logger.info(f"GET /groups/{group_id}/items")
+        items = repository.get_group_items(group_id)
+        for item in items:
+            item["owners"] = repository.get_item_owners(item["item_id"])
+        return jsonify(items), 200
+    else:
+        data = request.get_json()
+        current_app.logger.info(f"POST /groups/{group_id}/items")
+        repository.create_item(group_id, data)
+        return jsonify({"message": "Item created"}), 201
+
+
+@group_routes.route("/<group_id>/items/<item_id>", methods=["PUT", "DELETE"])
+@handle_db_errors
+def handle_group_item(group_id: int, item_id: int):
+    repository = GroupRepository()
+    if request.method == "PUT":
+        data = request.get_json()
+        current_app.logger.info(f"PUT /groups/{group_id}/items/{item_id}")
+        repository.update_item(item_id, data)
+        return jsonify({"message": "Item updated"}), 200
+    else:
+        current_app.logger.info(f"DELETE /groups/{group_id}/items/{item_id}")
+        repository.delete_item(item_id)
+        return jsonify({"message": "Item deleted"}), 200
