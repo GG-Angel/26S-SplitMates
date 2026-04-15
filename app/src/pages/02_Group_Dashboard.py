@@ -34,37 +34,46 @@ upcoming_events = [
     if datetime.strptime(e["starts_at"], "%a, %d %b %Y %H:%M:%S %Z") <= two_weeks_out
 ]
 
-col1, col2 = st.columns([2, 5])
+rank_colors = {0: "#FFD700", 1: "#C0C0C0", 2: "#CD7F32"}
+
+col1, col_lb, col2 = st.columns([3, 2, 4])
 with col1:
     st.metric("You currently owe", f"${total_owed:,.2f}")
 
+with col_lb:
+    st.markdown("##### Chore Points")
+    if leaderboard:
+        for i, entry in enumerate(leaderboard[:5]):
+            color = rank_colors.get(i, "inherit")
+            pts = int(entry["chore_points"])
+            if i in rank_colors:
+                st.markdown(
+                    f"<span style='color:{color}'><b>{i + 1}. {entry['first_name']}</b></span> — {pts} pts",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(f"**{i + 1}. {entry['first_name']}** — {pts} pts")
+    else:
+        st.caption("No completed chores yet.")
+
 with col2:
+    st.markdown("##### Upcoming Events")
     if upcoming_events:
-        n = min(len(upcoming_events[:3]), 3)
-        filler = max(1, 4 - n)
-        _, title_col = st.columns([filler, n])
-        with title_col:
-            st.markdown("##### Upcoming Events")
-        all_cols = st.columns([filler] + [1] * n)
+        event_cols = st.columns(3)
         for i, e in enumerate(upcoming_events[:3]):
-            with all_cols[i + 1]:
+            with event_cols[i]:
                 starts = datetime.strptime(e["starts_at"], "%a, %d %b %Y %H:%M:%S %Z")
                 is_today = starts.date() == now.date()
                 if is_today:
-                    st.success(f"**{e['title']}**  \n:green[**Today**] · {starts.strftime('%b %d, %Y')} at {starts.strftime('%-I:%M %p')}", icon=None)
+                    st.success(f"**{e['title']}**  \n:green[**Today**] · {starts.strftime('%b %d')} at {starts.strftime('%-I:%M %p')}", icon=None)
                 else:
                     with st.container(border=True):
-                        st.caption(f"**{e['title']}**  \n{starts.strftime('%b %d, %Y')} at {starts.strftime('%-I:%M %p')}")
+                        st.caption(f"**{e['title']}**  \n{starts.strftime('%b %d')} at {starts.strftime('%-I:%M %p')}")
         if len(upcoming_events) > 3:
-            _, btn_col = st.columns([filler, n])
-            with btn_col:
-                if st.button("See All"):
-                    st.switch_page("pages/03_Group_Events.py")
+            if st.button("See All"):
+                st.switch_page("pages/03_Group_Events.py")
     else:
-        _, text_col = st.columns([3, 1])
-        with text_col:
-            st.markdown("##### Upcoming Events")
-            st.caption("No upcoming household events.")
+        st.caption("No upcoming household events.")
 
 st.divider()
 
@@ -112,22 +121,6 @@ with col_chores:
                 st.write(highlight_color(effort_colors.get(c["effort"], "gray"), f"Effort: {c['effort'].capitalize()}"))
     else:
         st.write("No upcoming chores.")
-
-    st.subheader("Chore Points")
-    if leaderboard:
-        rank_colors = {0: "#FFD700", 1: "#C0C0C0", 2: "#CD7F32"}
-        for i, entry in enumerate(leaderboard):
-            with st.container(border=True):
-                if i in rank_colors:
-                    st.markdown(
-                        f"<span style='color:{rank_colors[i]}'><b>{i + 1}. {entry['first_name']}</b></span>"
-                        f" — {entry['chore_points']} pts",
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.write(f"**{i + 1}. {entry['first_name']}** — {entry['chore_points']} pts")
-    else:
-        st.write("No completed chores yet.")
 
 with col_assigned:
     st.subheader("Bills You Assigned")
