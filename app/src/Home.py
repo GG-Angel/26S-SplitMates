@@ -44,7 +44,7 @@ st.title("Welcome to SplitMates!")
 st.write("#### Which user would you like to log in as?")
 
 if st.button(
-    "Act as Victor, a Roommate Group Leader",
+    "Act as Laurie, a Roommate Group Leader",
     type="primary",
     use_container_width=True,
     key="roommate_login"

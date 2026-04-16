@@ -234,7 +234,7 @@ with left_col:
                         client.put(f"/users/{user_id}/bills/{bill['bill_id']}/pay")
                         st.rerun()
                     if st.button(
-                        label="View Details", key=f"view_created_{bill['bill_id']}"
+                        label="View Details", key=f"view_assigned_{bill['bill_id']}"
                     ):
                         bill_details_modal(bill)
 

@@ -7,6 +7,8 @@ from pathlib import Path
 
 import streamlit as st
 
+from utils import highlight_color
+
 
 # ---- General ----------------------------------------------------------------
 
@@ -20,8 +22,16 @@ def about_page_nav():
 
 # ---- Role: roommate ---------------------------------------------------------
 
-def my_groups_nav():
-    if st.sidebar.button(label="Your Groups", icon="🏠", width="stretch"):
+def user_navs():
+    user = st.session_state.get("user")
+
+    if not user:
+        return
+
+    if st.sidebar.button(label=user["first_name"], icon="👤"):
+        st.switch_page("pages/10_User_Settings.py")
+
+    if st.sidebar.button(label="Your Groups", icon="🏠"):
         if "group" in st.session_state:
             del st.session_state["group"]
         st.switch_page("pages/00_User_Dashboard.py")
@@ -34,6 +44,7 @@ def group_navs():
     st.sidebar.page_link("pages/05_Group_Bills.py", label="Bills", icon="💰")
     st.sidebar.page_link("pages/06_Group_Chores.py", label="Chores", icon="🧹")
     st.sidebar.page_link("pages/03_Group_Events.py", label="Events", icon="📅")
+    st.sidebar.page_link("pages/08_Group_Items.py", label="Items", icon="📦")
     if st.session_state["user"]["user_id"] == st.session_state["group"]["group_leader"]:
         st.sidebar.page_link(
             "pages/07_Group_Management.py", label="Management", icon="🛠️"
@@ -107,9 +118,11 @@ def SideBarLinks(show_home=False):
     # Roommate navigation
     if st.session_state["authenticated"]:
 
+        st.sidebar.header(f"*{highlight_color('red', 'SplitMates')}*")
         if st.session_state.get("role") == "roommate":
-            my_groups_nav()
+            user_navs()
             st.sidebar.divider()
+
 
     # TODO: display other buttons when the user is looking in a group
     # TODO: display other buttons based on role (sysadmin, data analyst)
@@ -137,7 +150,7 @@ def SideBarLinks(show_home=False):
     about_page_nav()
 
     if st.session_state["authenticated"]:
-        if st.sidebar.button("Logout", width="stretch"):
+        if st.sidebar.button("Logout"):
             for key in ["user", "authenticated", "group", "role"]:
                 if key in st.session_state:
                     del st.session_state[key]

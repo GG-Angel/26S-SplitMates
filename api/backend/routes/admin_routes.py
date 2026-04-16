@@ -235,7 +235,9 @@ def get_support_tickets_by_submitter(user_id: int):
     try:
         return jsonify(admin_repository.get_support_tickets_by_submitter(user_id)), 200
     except Error as e:
-        current_app.logger.error(f"Database error in get_support_tickets_by_submitter(): {e}")
+        current_app.logger.error(
+            f"Database error in get_support_tickets_by_submitter(): {e}"
+        )
         return jsonify({"error": "Unexpected error"}), 500
 
 
@@ -255,7 +257,9 @@ def get_user_reports_by_reporter(reported_by: int):
     try:
         return jsonify(admin_repository.get_user_reports_by_reporter(reported_by)), 200
     except Error as e:
-        current_app.logger.error(f"Database error in get_user_reports_by_reporter(): {e}")
+        current_app.logger.error(
+            f"Database error in get_user_reports_by_reporter(): {e}"
+        )
         return jsonify({"error": "Unexpected error"}), 500
 
 
@@ -265,7 +269,9 @@ def get_user_reports_against_user(reported_user: int):
     try:
         return jsonify(admin_repository.get_user_reports_against_user(reported_user)), 200
     except Error as e:
-        current_app.logger.error(f"Database error in get_user_reports_against_user(): {e}")
+        current_app.logger.error(
+            f"Database error in get_user_reports_against_user(): {e}"
+        )
         return jsonify({"error": "Unexpected error"}), 500
 
 
@@ -323,7 +329,9 @@ def create_app_version():
     deployed_at = payload.get("deployed_at")
 
     if version_number is None or deployed_by is None:
-        return jsonify({"error": "Fields 'version_number' and 'deployed_by' are required"}), 400
+        return jsonify(
+            {"error": "Fields 'version_number' and 'deployed_by' are required"}
+        ), 400
 
     try:
         version_id = admin_repository.create_app_version(
@@ -363,5 +371,7 @@ def get_maintenance_normalize_check():
     try:
         return jsonify(admin_repository.maintenance_check()), 200
     except Error as e:
-        current_app.logger.error(f"Database error in get_maintenance_normalize_check(): {e}")
+        current_app.logger.error(
+            f"Database error in get_maintenance_normalize_check(): {e}"
+        )
         return jsonify({"error": "Unexpected error"}), 500

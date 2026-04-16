@@ -237,6 +237,7 @@ CREATE TABLE app_versions (
     INDEX idx_ver_num (version_number)
 );
 
+
 CREATE TABLE audit_logs (
     log_id INT AUTO_INCREMENT NOT NULL,
     user_id INT NOT NULL,
