@@ -35,7 +35,7 @@ BILL_ASSIGNMENTS_COUNT = BILL_ASSIGNMENT_ROWS
 
 def generate_mock_users(count: int = USER_ROWS):
     rows = []
-    for _ in range(count):
+    for idx in range(count):
         first_name = fake.first_name()
         last_name = fake.last_name()
         email = fake.unique.email()
@@ -44,6 +44,15 @@ def generate_mock_users(count: int = USER_ROWS):
         account_status = "active"
         password_hash = "mock_hash"
         created_at = fake.past_datetime("-90d")
+
+        if idx == 0:
+            first_name = "Bob"
+            last_name = "McDonald"
+            is_admin = True
+        elif idx in (1, 2):
+            is_admin = True
+        elif idx in (3, 4, 5):
+            is_analyst = True
 
         user = (
             first_name,

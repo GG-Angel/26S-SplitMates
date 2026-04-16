@@ -18,56 +18,6 @@ def about_page_nav():
     st.sidebar.page_link("pages/30_About.py", label="About", icon="🧠")
 
 
-# ---- Role: pol_strat_advisor ------------------------------------------------
-
-def pol_strat_home_nav():
-    st.sidebar.page_link(
-        "pages/00_Pol_Strat_Home.py", label="Political Strategist Home", icon="👤"
-    )
-
-
-def world_bank_viz_nav():
-    st.sidebar.page_link(
-        "pages/01_World_Bank_Viz.py", label="World Bank Visualization", icon="🏦"
-    )
-
-
-def map_demo_nav():
-    st.sidebar.page_link("pages/02_Map_Demo.py", label="Map Demonstration", icon="🗺️")
-
-
-# ---- Role: usaid_worker -----------------------------------------------------
-
-def usaid_worker_home_nav():
-    st.sidebar.page_link(
-        "pages/10_USAID_Worker_Home.py", label="USAID Worker Home", icon="🏠"
-    )
-
-
-def ngo_directory_nav():
-    st.sidebar.page_link("pages/14_NGO_Directory.py", label="NGO Directory", icon="📁")
-
-
-def add_ngo_nav():
-    st.sidebar.page_link("pages/15_Add_NGO.py", label="Add New NGO", icon="➕")
-
-
-def prediction_nav():
-    st.sidebar.page_link(
-        "pages/11_Prediction.py", label="Regression Prediction", icon="📈"
-    )
-
-
-def api_test_nav():
-    st.sidebar.page_link("pages/12_API_Test.py", label="Test the API", icon="🛜")
-
-
-def classification_nav():
-    st.sidebar.page_link(
-        "pages/13_Classification.py", label="Classification Demo", icon="🌺"
-    )
-
-
 # ---- Role: roommate ---------------------------------------------------------
 
 def my_groups_nav():
@@ -120,12 +70,6 @@ def admin_ops_nav():
     )
 
 
-def ml_model_mgmt_nav():
-    st.sidebar.page_link(
-        "pages/21_ML_Model_Mgmt.py", label="ML Model Management", icon="🏢"
-    )
-
-
 def clickable_logo_nav():
     """Render clickable sidebar logo that routes to Home.py (root persona selector)."""
     logo_path = Path(__file__).resolve().parents[1] / "assets" / "logo.png"
@@ -152,6 +96,9 @@ def SideBarLinks(show_home=False):
     The role is stored in st.session_state when the user logs in on Home.py.
     """
 
+    # Clickable logo at the top routes to Home persona selector.
+    clickable_logo_nav()
+
     # If no one is logged in, send them to the Home (login) page
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
@@ -160,7 +107,7 @@ def SideBarLinks(show_home=False):
     # Roommate navigation
     if st.session_state["authenticated"]:
 
-        if st.session_state["role"] == "roommate":
+        if st.session_state.get("role") == "roommate":
             my_groups_nav()
             st.sidebar.divider()
 
@@ -172,7 +119,8 @@ def SideBarLinks(show_home=False):
         st.sidebar.divider()
 
     # Admin navigation
-    if st.session_state.get("role") == "administrator":
+    if st.session_state.get("user", {}).get("is_admin"):
+        st.sidebar.markdown(f"**{st.session_state.get('first_name', 'Admin')}**")
         admin_home_nav()
         admin_tickets_nav()
         admin_user_reports_nav()
@@ -180,6 +128,13 @@ def SideBarLinks(show_home=False):
         admin_roommates_nav()
         admin_ops_nav()
         st.sidebar.divider()
+
+    # Add extra breathing room on root persona selector page.
+    if show_home:
+        st.sidebar.markdown("<div style='height: 1.25rem;'></div>", unsafe_allow_html=True)
+
+    # About link appears at the bottom for all roles
+    about_page_nav()
 
     if st.session_state["authenticated"]:
         if st.sidebar.button("Logout", width="stretch"):
