@@ -1,3 +1,4 @@
+USE splitmates_db;
 insert into chores (group_id, title, effort, due_at, completed_at) values (4, 'Wipe Counters', 'high', '7/23/2025', '5/4/2025');
 insert into chores (group_id, title, effort, due_at, completed_at) values (2, 'Mop Kitchen', 'medium', '3/31/2026', '10/7/2025');
 insert into chores (group_id, title, effort, due_at, completed_at) values (4, 'Clean Bathroom', 'high', '1/11/2026', '3/30/2026');
