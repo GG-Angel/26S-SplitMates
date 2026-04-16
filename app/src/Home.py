@@ -15,7 +15,7 @@ SideBarLinks()
 st.session_state["authenticated"] = False
 
 
-def login_as(user_id: int, persona_name: str):
+def login_as(user_id: int, persona_name: str, role: str = "roommate"):
     """Fetch user data from API and store in session state"""
     try:
         API_BASE_URL = "http://web-api:4000"
@@ -25,6 +25,7 @@ def login_as(user_id: int, persona_name: str):
 
         st.session_state["authenticated"] = True
         st.session_state["user"] = user_data
+        st.session_state["role"] = role
 
         logger.info(f"Logging in as {persona_name} (user_id={user_id})")
     except requests.exceptions.RequestException as e:
@@ -57,3 +58,11 @@ if st.button(
 ):
     login_as(user_id=1, persona_name="Roommate")
     st.switch_page("pages/00_User_Dashboard.py")
+
+if st.button(
+    "Act as Tina Belcher, Data Analyst",
+    type="primary",
+    use_container_width=True,
+):
+    login_as(user_id=2, persona_name="Data Analyst", role="analyst")
+    st.switch_page("pages/07_Analyst_Feature_Usage.py")
