@@ -1,6 +1,7 @@
 import os
 import random
 import time
+from datetime import timedelta
 from decimal import Decimal
 from typing import Callable, cast
 
@@ -37,6 +38,14 @@ def generate_picture_url():
     width, height = random.choice(sizes), random.choice(sizes)
     return f"https://placekittens.com/{width}/{height}"
 
+
+HOUSEHOLD_ITEMS = [
+    "Vacuum Cleaner", "Coffee Maker", "Couch", "TV", "Dining Table", "Microwave",
+    "Toaster", "Blender", "Air Fryer", "Rice Cooker", "Bookshelf", "Desk Lamp",
+    "Gaming Console", "Printer", "Router", "Bed Frame", "Dresser", "Mirror",
+    "Rug", "Standing Fan", "Humidifier", "Space Heater", "Mini Fridge", "Kettle",
+    "Iron", "Mop", "Broom", "Trash Can", "Paper Shredder", "Surge Protector",
+]
 
 # aliases for template naming
 GROUP_MEMBERS_COUNT = GROUP_MEMBER_ROWS
@@ -217,10 +226,18 @@ def generate_mock_bill_assignments(
         key = (bill_id, user_id)
         if key in used_pairs:
             continue
-        used_pairs.add((bill_id, user_id))
-        assignments.append((bill_id, user_id, Decimal("1.000"), None))
 
-    return assignments
+        used_pairs.add(key)
+        assignments_map.setdefault(bill_id, []).append((bill_id, user_id, Decimal("1.000"), None))
+        flat_count += 1
+
+    normalized_rows: list[tuple[int, int, Decimal, object]] = []
+    for bill_id, rows in assignments_map.items():
+        splits = _split_percentages(len(rows))
+        for row, split in zip(rows, splits):
+            normalized_rows.append((bill_id, row[1], split, row[3]))
+
+    return normalized_rows
 
 
 def generate_mock_chore_assignments(
@@ -287,6 +304,208 @@ def generate_mock_event(group_id: int, group_members: list[int]):
     return (group_id, title, starts_at, ends_at, is_private, created_by, created_at)
 
 
+def generate_mock_support_tickets(user_ids: list[int], count: int = SUPPORT_TICKETS_COUNT):
+    statuses = ["open", "in_progress", "closed"]
+    priorities = ["low", "medium", "high"]
+    ticket_templates = [
+        (
+            "Payment split looks incorrect",
+            "Bill total appears right, but my split percentage is wrong after a roommate left the group.",
+        ),
+        (
+            "Cannot submit chore completion",
+            "When I mark a chore as completed, the page refreshes but status stays pending.",
+        ),
+        (
+            "Group invitation expired too early",
+            "My roommate's invite link says expired even though it was created today.",
+        ),
+        (
+            "Event not visible to household",
+            "I created an event for the group calendar, but other members cannot see it.",
+        ),
+        (
+            "Duplicate charge on monthly bill",
+            "The same utility bill appears twice and doubles what members owe.",
+        ),
+        (
+            "Account suspended by mistake",
+            "My account was suspended and I cannot access shared bills or chores.",
+        ),
+        (
+            "Notification settings not saving",
+            "I disable email notifications, but they are enabled again after refresh.",
+        ),
+    ]
+
+    rows = []
+    for _ in range(count):
+        submitted_by = random.choice(user_ids)
+        assigned_to = random.choice(user_ids)
+        status = random.choices(statuses, weights=[0.45, 0.35, 0.20], k=1)[0]
+        created_at = fake.date_time_between(start_date="-90d", end_date="now")
+        resolved_at = (
+            fake.date_time_between(start_date=created_at, end_date="now") if status == "closed" else None
+        )
+        title, description_template = random.choice(ticket_templates)
+
+        rows.append(
+            (
+                submitted_by,
+                status,
+                random.choice(priorities),
+                f"{description_template} (Ticket submitted by user #{submitted_by})",
+                assigned_to,
+                title,
+                created_at,
+                resolved_at,
+            )
+        )
+    return rows
+
+
+def generate_mock_user_reports(user_ids: list[int], count: int = USER_REPORTS_COUNT):
+    statuses = ["pending", "under_review", "resolved", "dismissed"]
+    rows = []
+
+    for _ in range(count):
+        reported_user = random.choice(user_ids)
+        reported_by = random.choice([uid for uid in user_ids if uid != reported_user])
+        reviewed_by = random.choice(user_ids)
+        status = random.choices(statuses, weights=[0.35, 0.30, 0.25, 0.10], k=1)[0]
+        created_at = fake.date_time_between(start_date="-90d", end_date="now")
+        reviewed_at = (
+            fake.date_time_between(start_date=created_at, end_date="now")
+            if status in ("under_review", "resolved", "dismissed")
+            else None
+        )
+
+        rows.append(
+            (
+                reported_user,
+                reported_by,
+                fake.sentence(nb_words=10),
+                status,
+                reviewed_by,
+                reviewed_at,
+                created_at,
+            )
+        )
+    return rows
+
+
+def generate_mock_bans(user_ids: list[int], admin_ids: list[int], count: int = BANS_COUNT):
+    rows = []
+    eligible_users = [uid for uid in user_ids if uid not in admin_ids]
+    for _ in range(min(count, len(eligible_users))):
+        user_id = random.choice(eligible_users)
+        eligible_users.remove(user_id)
+        issued_at = fake.date_time_between(start_date="-60d", end_date="now")
+        maybe_expires = random.random() < 0.65
+        expires_at = fake.date_time_between(start_date=issued_at, end_date="+30d") if maybe_expires else None
+        rows.append(
+            (
+                user_id,
+                random.choice(admin_ids),
+                random.choice(
+                    [
+                        "Harassment in shared group chat",
+                        "Repeated policy violations after warnings",
+                        "Fraudulent payment dispute activity",
+                        "Abusive behavior reported by multiple users",
+                    ]
+                ),
+                expires_at,
+                issued_at,
+            )
+        )
+    return rows
+
+
+def generate_mock_app_versions(admin_ids: list[int], count: int = APP_VERSIONS_COUNT):
+    rows = []
+    status_values = ["deployed", "staged", "rolled_back", "deprecated"]
+    for version in range(1, count + 1):
+        status = random.choices(status_values, weights=[0.65, 0.15, 0.10, 0.10], k=1)[0]
+        deployed_at = fake.date_time_between(start_date="-120d", end_date="now") if status != "staged" else None
+        rows.append(
+            (
+                version,
+                random.choice(admin_ids),
+                status,
+                "\n".join(
+                    [
+                        f"Version {version} summary:",
+                        "- Improved moderation workflow and admin controls",
+                        "- Updated dashboard cards and filtering behavior",
+                        "- Added bug fixes and minor UX polish",
+                    ]
+                ),
+                deployed_at,
+            )
+        )
+    return rows
+
+
+def generate_mock_audit_logs(user_ids: list[int], count: int = AUDIT_LOGS_COUNT):
+    target_tables = ["users", "groups", "support_tickets", "user_reports", "bans", "app_versions"]
+    action_types = ["create", "update", "delete"]
+
+    rows = []
+    for _ in range(count):
+        target_table = random.choice(target_tables)
+        action_type = random.choice(action_types)
+        target_id = random.randint(1, 250)
+        details = random.choice(
+            [
+                f"{action_type.title()} performed on {target_table} record #{target_id}",
+                f"Admin moderation action: {action_type} {target_table} #{target_id}",
+                f"System admin updated {target_table} configuration #{target_id}",
+                f"Operational change logged for {target_table} #{target_id}",
+            ]
+        )
+
+        rows.append(
+            (
+                random.choice(user_ids),
+                details,
+                target_table,
+                target_id,
+                action_type,
+                fake.date_time_between(start_date="-90d", end_date="now"),
+            )
+        )
+    return rows
+
+
+def generate_mock_item(group_id: int, group_members: list[int]):
+    name = random.choice(HOUSEHOLD_ITEMS)
+    picture_url = generate_picture_url() if random.random() < 0.8 else None
+    created_by = random.choice(group_members)
+    return (group_id, name, picture_url, created_by)
+
+
+def generate_mock_item_owners(
+    item_and_group_ids: list[tuple[int, int]],
+    group_to_members: dict[int, list[int]],
+    count: int = ITEM_OWNER_ROWS,
+):
+    owners: set[tuple[int, int]] = set()
+
+    for item_id, group_id in item_and_group_ids:
+        members = group_to_members[group_id]
+        owners.add((item_id, random.choice(members)))
+
+    attempts = 0
+    while len(owners) < count and attempts < 10000:
+        attempts += 1
+        item_id, group_id = random.choice(item_and_group_ids)
+        user_id = random.choice(group_to_members[group_id])
+        owners.add((item_id, user_id))
+
+    return list(owners)
+
+
 def generate_group_items(
     generator: Callable[[int, list[int]], tuple],
     group_to_members: dict[int, list[int]],
@@ -314,7 +533,8 @@ def seed_db():
     # Rerun-safe reset — TRUNCATE resets auto-increment so IDs start from 1.
     cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
     for table in ["audit_logs", "app_versions", "user_reports", "support_tickets",
-                  "bans", "bill_assignments", "bills", "group_members", "`groups`", "users"]:
+                  "bans", "item_owners", "items", "chore_assignments", "chores",
+                  "bill_assignments", "bills", "events", "group_members", "`groups`", "users"]:
         cursor.execute(f"TRUNCATE TABLE {table}")
     cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
     conn.commit()
@@ -387,6 +607,38 @@ def seed_db():
     )
     conn.commit()
     print(f"  ✔ Seeded {len(assignments)} bill assignments")
+
+    # --- Chores ---
+    chores = generate_group_items(generate_mock_chore, group_to_members, CHORE_ROWS)
+    chores_query = """
+        INSERT INTO chores (group_id, title, effort, created_by, created_at, due_at, completed_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    cursor.executemany(chores_query, chores)
+    conn.commit()
+    cursor.execute("SELECT chore_id, group_id FROM chores")
+    chore_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
+    print(f"  ✔ Seeded {len(chores)} chores")
+
+    # --- Chore Assignments ---
+    chore_assignments = generate_mock_chore_assignments(chore_rows, group_to_members)
+    chore_assignments_query = """
+        INSERT INTO chore_assignments (chore_id, user_id)
+        VALUES (%s, %s)
+    """
+    cursor.executemany(chore_assignments_query, chore_assignments)
+    conn.commit()
+    print(f"  ✔ Seeded {len(chore_assignments)} chore assignments")
+
+    # --- Events ---
+    events = generate_group_items(generate_mock_event, group_to_members, EVENT_ROWS)
+    events_query = """
+        INSERT INTO events (group_id, title, starts_at, ends_at, is_private, created_by, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    cursor.executemany(events_query, events)
+    conn.commit()
+    print(f"  ✔ Seeded {len(events)} events")
 
     # --- Support Tickets ---
     support_tickets = generate_mock_support_tickets(user_ids, count=SUPPORT_TICKETS_COUNT)
