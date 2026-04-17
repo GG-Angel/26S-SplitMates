@@ -72,7 +72,7 @@ def generate_mock_users(count: int = USER_ROWS):
         elif idx in (3, 4, 5):
             is_analyst = True
 
-        user = (first_name, last_name, email, is_admin, is_analyst, created_at, picture_url)
+        user = (first_name, last_name, email, is_admin, is_analyst, "active", fake.sha256(raw_output=False), created_at, picture_url)
         rows.append(user)
     return rows
 
@@ -542,8 +542,8 @@ def seed_db():
     # --- Users ---
     users = generate_mock_users()
     users_query = """
-        INSERT INTO users (first_name, last_name, email, is_admin, is_analyst, created_at, picture_url)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO users (first_name, last_name, email, is_admin, is_analyst, account_status, password_hash, created_at, picture_url)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     cursor.executemany(users_query, users)
     conn.commit()
