@@ -36,15 +36,6 @@ st.markdown(
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
         }
         .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: #101828; }
-        .pill {
-            display: inline-block;
-            padding: 0.2rem 0.6rem;
-            border-radius: 8px;
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
-        .pill-inactive { background: #FEF3F2; color: #B42318; }
-        .pill-active { background: #FFFAEB; color: #B54708; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -53,10 +44,9 @@ st.markdown(
 st.markdown('<div class="page-title">Inactive Users</div>', unsafe_allow_html=True)
 st.markdown('<div class="page-subtitle">Monitor user dropoff and identify accounts that have gone inactive.</div>', unsafe_allow_html=True)
 
-# --- Metric Cards ---
 total = len(inactive_users)
-truly_inactive = len([u for u in inactive_users if u.get("account_status") == "inactive"])
-at_risk = len([u for u in inactive_users if u.get("account_status") == "active"])
+never_active = len([u for u in inactive_users if not u.get("last_session")])
+inactive_30 = total - never_active
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -71,18 +61,18 @@ with col1:
 with col2:
     st.markdown(
         f"""<div class="metric-card">
-            <div class="metric-label">INACTIVE ACCOUNTS</div>
-            <div class="metric-value-red">{truly_inactive}</div>
-            <div class="metric-note">Account status: inactive</div>
+            <div class="metric-label">INACTIVE 30+ DAYS</div>
+            <div class="metric-value-red">{inactive_30}</div>
+            <div class="metric-note">No session in 30+ days</div>
         </div>""",
         unsafe_allow_html=True,
     )
 with col3:
     st.markdown(
         f"""<div class="metric-card">
-            <div class="metric-label">AT RISK (30+ DAYS)</div>
-            <div class="metric-value">{at_risk}</div>
-            <div class="metric-note">Active but not seen recently</div>
+            <div class="metric-label">NEVER ACTIVE</div>
+            <div class="metric-value">{never_active}</div>
+            <div class="metric-note">No session on record</div>
         </div>""",
         unsafe_allow_html=True,
     )
@@ -92,12 +82,8 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("<div class='panel'><div class='panel-title'>User Engagement Table</div>", unsafe_allow_html=True)
 
 if inactive_users:
-    status_filter = st.selectbox("Filter by Status", ["All", "inactive", "active"])
-
-    display = [u for u in inactive_users if status_filter == "All" or u.get("account_status") == status_filter]
-
     rows = []
-    for u in display:
+    for u in inactive_users:
         last = u.get("last_session")
         try:
             last_fmt = parse_mysql_datetime(last).strftime("%b %d, %Y") if last else "Never"
@@ -107,7 +93,6 @@ if inactive_users:
             "First Name": u.get("first_name", ""),
             "Last Name": u.get("last_name", ""),
             "Email": u.get("email", ""),
-            "Status": u.get("account_status", ""),
             "Last Session": last_fmt,
         })
 
