@@ -32,10 +32,21 @@ def load_summary():
     return get_admin_summary()
 
 
-summary: dict[str, Any] = {}
+fallback_summary: dict[str, Any] = {
+    "total_users": 0,
+    "active_households": 0,
+    "open_tickets": 0,
+    "inactive_users": 0,
+    "urgent_tickets": 0,
+    "urgent_message": "No urgent tickets right now",
+    "recent_tickets": [],
+    "recent_activity": [],
+}
+
+summary: dict[str, Any] = dict(fallback_summary)
 error = None
 try:
-    summary = load_summary() or {}
+    summary = load_summary() or fallback_summary
 except (requests.RequestException, ValueError) as exc:
     error = str(exc)
 
@@ -45,68 +56,68 @@ st.markdown(
         .admin-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.1rem; }
         .admin-subtitle { color: #667085; font-size: 1rem; margin-top: 0; }
         .metric-card {
-            background: white;
-            border: 1px solid #EAECF0;
-            border-radius: 20px;
+            background: #1E293B !important;
+            border: 1px solid #334155;
+            border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
             height: 100%;
+            color: #F1F5F9;
         }
-        .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; }
-        .metric-value { color: #101828; font-size: 2.6rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-label { color: #94A3B8 !important; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; }
+        .metric-value { color: #F1F5F9 !important; font-size: 2.6rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note { color: #CBD5E1 !important; font-size: 0.85rem; margin-top: 0.45rem; }
         .panel {
-            background: white;
-            border: 1px solid #EAECF0;
-            border-radius: 20px;
+            background: #1E293B !important;
+            border: 1px solid #334155;
+            border-radius: 12px;
             padding: 1rem 1rem 0.6rem 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
             height: 100%;
+            color: #F1F5F9;
         }
-        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #F1F5F9 !important; }
         .ticket-row, .activity-row {
             padding: 0.75rem 0;
-            border-bottom: 1px solid #EAECF0;
+            border-bottom: 1px solid #334155;
         }
         .ticket-row:last-child, .activity-row:last-child { border-bottom: none; }
-        .row-title { font-weight: 600; font-size: 0.98rem; margin-bottom: 0.1rem; }
-        .row-meta { color: #667085; font-size: 0.86rem; }
+        .row-title { font-weight: 600; font-size: 0.98rem; margin-bottom: 0.1rem; color: #F1F5F9 !important; }
+        .row-meta { color: #94A3B8 !important; font-size: 0.86rem; }
         .pill {
             display: inline-block;
             padding: 0.2rem 0.55rem;
-            border-radius: 999px;
+            border-radius: 8px;
             font-size: 0.78rem;
             font-weight: 700;
-            background: #F2F4F7;
-            color: #344054;
+            background: #334155;
+            color: #CBD5E1;
             margin-top: 0.25rem;
         }
-        .pill-urgent { background: #FEF3F2; color: #B42318; }
-        .pill-open { background: #ECFDF3; color: #027A48; }
-        .pill-resolved { background: #EFF8FF; color: #175CD3; }
-        .pill-closed { background: #F2F4F7; color: #344054; }
+        .pill-urgent { background: #4C0519; color: #FCA5A5; }
+        .pill-open { background: #064E3B; color: #6EE7B7; }
+        .pill-resolved { background: #1E3A5F; color: #93C5FD; }
+        .pill-closed { background: #334155; color: #CBD5E1; }
         .banner {
-            background: #FEF3F2;
-            border: 1px solid #FDA29B;
-            color: #B42318;
+            background: #4C0519;
+            border: 1px solid #991B1B;
+            color: #FCA5A5;
             border-radius: 16px;
             padding: 0.9rem 1rem;
             font-weight: 600;
             margin: 0.5rem 0 1rem 0;
         }
         .sidebar-faux-header { font-size: 1.35rem; font-weight: 800; margin-top: 0.4rem; }
-        .sidebar-user { color: #344054; font-weight: 600; margin: 0.2rem 0 0.8rem 0; }
+        .sidebar-user { color: #94A3B8; font-weight: 600; margin: 0.2rem 0 0.8rem 0; }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
 st.markdown('<div class="admin-title">Welcome back, {}!</div>'.format(st.session_state.get("first_name", "Admin")), unsafe_allow_html=True)
-st.markdown('<div class="admin-subtitle">System admin dashboard for SplitMates</div>', unsafe_allow_html=True)
 
 if error:
-    st.error(f"Unable to load dashboard summary: {error}")
-    st.stop()
+    st.warning("Dashboard summary is temporarily unavailable. Showing fallback values.")
 
 col1, col2, col3, col4 = st.columns(4)
 
