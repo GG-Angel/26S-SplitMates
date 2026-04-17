@@ -1,9 +1,9 @@
 import os
 import random
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Callable, cast
+from typing import Callable, Optional, cast
 
 from faker import Faker
 import mysql.connector
@@ -40,17 +40,43 @@ def generate_picture_url():
 
 
 HOUSEHOLD_ITEMS = [
-    "Vacuum Cleaner", "Coffee Maker", "Couch", "TV", "Dining Table", "Microwave",
-    "Toaster", "Blender", "Air Fryer", "Rice Cooker", "Bookshelf", "Desk Lamp",
-    "Gaming Console", "Printer", "Router", "Bed Frame", "Dresser", "Mirror",
-    "Rug", "Standing Fan", "Humidifier", "Space Heater", "Mini Fridge", "Kettle",
-    "Iron", "Mop", "Broom", "Trash Can", "Paper Shredder", "Surge Protector",
+    "Vacuum Cleaner",
+    "Coffee Maker",
+    "Couch",
+    "TV",
+    "Dining Table",
+    "Microwave",
+    "Toaster",
+    "Blender",
+    "Air Fryer",
+    "Rice Cooker",
+    "Bookshelf",
+    "Desk Lamp",
+    "Gaming Console",
+    "Printer",
+    "Router",
+    "Bed Frame",
+    "Dresser",
+    "Mirror",
+    "Rug",
+    "Standing Fan",
+    "Humidifier",
+    "Space Heater",
+    "Mini Fridge",
+    "Kettle",
+    "Iron",
+    "Mop",
+    "Broom",
+    "Trash Can",
+    "Paper Shredder",
+    "Surge Protector",
 ]
 
 # aliases for template naming
 GROUP_MEMBERS_COUNT = GROUP_MEMBER_ROWS
 BILLS_COUNT = BILL_ROWS
 BILL_ASSIGNMENTS_COUNT = BILL_ASSIGNMENT_ROWS
+
 
 def generate_mock_users(count: int = USER_ROWS):
     rows = []
@@ -72,7 +98,17 @@ def generate_mock_users(count: int = USER_ROWS):
         elif idx in (3, 4, 5):
             is_analyst = True
 
-        user = (first_name, last_name, email, is_admin, is_analyst, "active", fake.sha256(raw_output=False), created_at, picture_url)
+        user = (
+            first_name,
+            last_name,
+            email,
+            is_admin,
+            is_analyst,
+            "active",
+            fake.sha256(raw_output=False),
+            created_at,
+            picture_url,
+        )
         rows.append(user)
     return rows
 
@@ -142,14 +178,22 @@ def connect_with_retry(max_attempts: int = 15, initial_delay: int = 2):
             last_error = exc
             if attempt == max_attempts:
                 break
-            print(f"Database not ready yet (attempt {attempt}/{max_attempts}). Retrying in {delay} seconds...")
+            print(
+                f"Database not ready yet (attempt {attempt}/{max_attempts}). Retrying in {delay} seconds..."
+            )
             time.sleep(delay)
             delay = min(delay * 2, 5)
 
-    raise last_error if last_error is not None else RuntimeError("Unable to connect to the database")
+    raise (
+        last_error
+        if last_error is not None
+        else RuntimeError("Unable to connect to the database")
+    )
 
 
-def generate_mock_bills(group_to_members: dict[int, list[int]], count: int = BILLS_COUNT):
+def generate_mock_bills(
+    group_to_members: dict[int, list[int]], count: int = BILLS_COUNT
+):
     group_ids = list(group_to_members.keys())
     bills = []
 
@@ -189,7 +233,11 @@ def generate_mock_bills(group_to_members: dict[int, list[int]], count: int = BIL
 def _split_percentages(n: int) -> list[Decimal]:
     # Produce n positive values that sum to exactly 1.000.
     cuts = sorted(random.sample(range(1, 1000), n - 1))
-    parts = [cuts[0]] + [cuts[i] - cuts[i - 1] for i in range(1, len(cuts))] + [1000 - cuts[-1]]
+    parts = (
+        [cuts[0]]
+        + [cuts[i] - cuts[i - 1] for i in range(1, len(cuts))]
+        + [1000 - cuts[-1]]
+    )
     return [Decimal(p) / Decimal(1000) for p in parts]
 
 
@@ -210,7 +258,11 @@ def generate_mock_bill_assignments(
         bill_rows_list: list[tuple[int, int, Decimal, object]] = []
         for user_id, split in zip(assignees, splits):
             used_pairs.add((bill_id, user_id))
-            paid_at = fake.date_time_between(start_date="-60d", end_date="now") if random.random() < 0.55 else None
+            paid_at = (
+                fake.date_time_between(start_date="-60d", end_date="now")
+                if random.random() < 0.55
+                else None
+            )
             bill_rows_list.append((bill_id, user_id, split, paid_at))
         assignments_map[bill_id] = bill_rows_list
 
@@ -228,14 +280,18 @@ def generate_mock_bill_assignments(
             continue
 
         used_pairs.add(key)
-        assignments_map.setdefault(bill_id, []).append((bill_id, user_id, Decimal("1.000"), None))
+        assignments_map.setdefault(bill_id, []).append(
+            (bill_id, user_id, Decimal("1.000"), None)
+        )
         flat_count += 1
 
-    normalized_rows: list[tuple[int, int, Decimal, object]] = []
+    normalized_rows: list[tuple[int, int, Decimal, Optional[datetime]]] = []
     for bill_id, rows in assignments_map.items():
         splits = _split_percentages(len(rows))
         for row, split in zip(rows, splits):
-            normalized_rows.append((bill_id, row[1], split, row[3]))
+            normalized_rows.append(
+                (bill_id, row[1], split, cast(Optional[datetime], row[3]))
+            )
 
     return normalized_rows
 
@@ -304,7 +360,9 @@ def generate_mock_event(group_id: int, group_members: list[int]):
     return (group_id, title, starts_at, ends_at, is_private, created_by, created_at)
 
 
-def generate_mock_support_tickets(user_ids: list[int], count: int = SUPPORT_TICKETS_COUNT):
+def generate_mock_support_tickets(
+    user_ids: list[int], count: int = SUPPORT_TICKETS_COUNT
+):
     statuses = ["open", "in_progress", "closed"]
     priorities = ["low", "medium", "high"]
     ticket_templates = [
@@ -345,7 +403,9 @@ def generate_mock_support_tickets(user_ids: list[int], count: int = SUPPORT_TICK
         status = random.choices(statuses, weights=[0.45, 0.35, 0.20], k=1)[0]
         created_at = fake.date_time_between(start_date="-90d", end_date="now")
         resolved_at = (
-            fake.date_time_between(start_date=created_at, end_date="now") if status == "closed" else None
+            fake.date_time_between(start_date=created_at, end_date="now")
+            if status == "closed"
+            else None
         )
         title, description_template = random.choice(ticket_templates)
 
@@ -394,7 +454,9 @@ def generate_mock_user_reports(user_ids: list[int], count: int = USER_REPORTS_CO
     return rows
 
 
-def generate_mock_bans(user_ids: list[int], admin_ids: list[int], count: int = BANS_COUNT):
+def generate_mock_bans(
+    user_ids: list[int], admin_ids: list[int], count: int = BANS_COUNT
+):
     rows = []
     eligible_users = [uid for uid in user_ids if uid not in admin_ids]
     for _ in range(min(count, len(eligible_users))):
@@ -402,7 +464,11 @@ def generate_mock_bans(user_ids: list[int], admin_ids: list[int], count: int = B
         eligible_users.remove(user_id)
         issued_at = fake.date_time_between(start_date="-60d", end_date="now")
         maybe_expires = random.random() < 0.65
-        expires_at = fake.date_time_between(start_date=issued_at, end_date="+30d") if maybe_expires else None
+        expires_at = (
+            fake.date_time_between(start_date=issued_at, end_date="+30d")
+            if maybe_expires
+            else None
+        )
         rows.append(
             (
                 user_id,
@@ -427,7 +493,11 @@ def generate_mock_app_versions(admin_ids: list[int], count: int = APP_VERSIONS_C
     status_values = ["deployed", "staged", "rolled_back", "deprecated"]
     for version in range(1, count + 1):
         status = random.choices(status_values, weights=[0.65, 0.15, 0.10, 0.10], k=1)[0]
-        deployed_at = fake.date_time_between(start_date="-120d", end_date="now") if status != "staged" else None
+        deployed_at = (
+            fake.date_time_between(start_date="-120d", end_date="now")
+            if status != "staged"
+            else None
+        )
         rows.append(
             (
                 version,
@@ -448,7 +518,14 @@ def generate_mock_app_versions(admin_ids: list[int], count: int = APP_VERSIONS_C
 
 
 def generate_mock_audit_logs(user_ids: list[int], count: int = AUDIT_LOGS_COUNT):
-    target_tables = ["users", "groups", "support_tickets", "user_reports", "bans", "app_versions"]
+    target_tables = [
+        "users",
+        "groups",
+        "support_tickets",
+        "user_reports",
+        "bans",
+        "app_versions",
+    ]
     action_types = ["create", "update", "delete"]
 
     rows = []
@@ -532,9 +609,23 @@ def seed_db():
 
     # Rerun-safe reset — TRUNCATE resets auto-increment so IDs start from 1.
     cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
-    for table in ["audit_logs", "app_versions", "user_reports", "support_tickets",
-                  "bans", "item_owners", "items", "chore_assignments", "chores",
-                  "bill_assignments", "bills", "events", "group_members", "`groups`", "users"]:
+    for table in [
+        "audit_logs",
+        "app_versions",
+        "user_reports",
+        "support_tickets",
+        "bans",
+        "item_owners",
+        "items",
+        "chore_assignments",
+        "chores",
+        "bill_assignments",
+        "bills",
+        "events",
+        "group_members",
+        "`groups`",
+        "users",
+    ]:
         cursor.execute(f"TRUNCATE TABLE {table}")
     cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
     conn.commit()
@@ -566,11 +657,13 @@ def seed_db():
     )
     conn.commit()
     cursor.execute("SELECT group_id, group_leader FROM `groups`")
-    group_rows = cursor.fetchall()
+    group_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
     print(f"  ✔ Seeded {len(group_rows)} groups")
 
     # --- Group Members ---
-    group_memberships = generate_mock_group_memberships(user_ids, group_rows, count=GROUP_MEMBERS_COUNT)
+    group_memberships = generate_mock_group_memberships(
+        user_ids, group_rows, count=GROUP_MEMBERS_COUNT
+    )
     cursor.executemany(
         """
         INSERT INTO group_members (user_id, group_id)
@@ -593,11 +686,13 @@ def seed_db():
     )
     conn.commit()
     cursor.execute("SELECT bill_id, group_id FROM bills")
-    bill_rows = cursor.fetchall()
+    bill_rows = [cast(tuple[int, int], row) for row in cursor.fetchall()]
     print(f"  ✔ Seeded {len(bill_rows)} bills")
 
     # --- Bill Assignments ---
-    assignments = generate_mock_bill_assignments(bill_rows, group_to_members, count=BILL_ASSIGNMENTS_COUNT)
+    assignments = generate_mock_bill_assignments(
+        bill_rows, group_to_members, count=BILL_ASSIGNMENTS_COUNT
+    )
     cursor.executemany(
         """
         INSERT INTO bill_assignments (bill_id, user_id, split_percentage, paid_at)
@@ -641,7 +736,9 @@ def seed_db():
     print(f"  ✔ Seeded {len(events)} events")
 
     # --- Support Tickets ---
-    support_tickets = generate_mock_support_tickets(user_ids, count=SUPPORT_TICKETS_COUNT)
+    support_tickets = generate_mock_support_tickets(
+        user_ids, count=SUPPORT_TICKETS_COUNT
+    )
     cursor.executemany(
         """
         INSERT INTO support_tickets (submitted_by, status, priority, description, assigned_to, title, created_at, resolved_at)
