@@ -66,8 +66,8 @@ st.markdown('<div class="page-title">Feature Usage Overview</div>', unsafe_allow
 st.markdown('<div class="page-subtitle">Track which features and actions are used most across the platform.</div>', unsafe_allow_html=True)
 
 # --- Metric Cards ---
-total_sessions = sum(r.get("total_sessions", 0) for r in sessions)
-avg_session = round(sum(r.get("avg_duration_mins", 0) for r in sessions) / len(sessions), 1) if sessions else 0
+total_sessions = sum(int(r.get("total_sessions", 0)) for r in sessions)
+avg_session = round(sum(float(r.get("avg_duration_mins", 0)) for r in sessions) / len(sessions), 1) if sessions else 0
 active_users = len(set(r.get("user_id") for r in sessions))
 inactive_count = len(inactive_users)
 
