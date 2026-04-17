@@ -12,15 +12,13 @@ from utils import highlight_color
 
 # ---- General ----------------------------------------------------------------
 
+
 def home_nav():
     st.sidebar.page_link("Home.py", label="Home", icon="🏠")
 
 
-def about_page_nav():
-    st.sidebar.page_link("pages/30_About.py", label="About", icon="🧠")
-
-
 # ---- Role: roommate ---------------------------------------------------------
+
 
 def user_navs():
     user = st.session_state.get("user")
@@ -81,34 +79,14 @@ def admin_ops_nav():
     )
 
 
-def clickable_logo_nav():
-    """Render clickable sidebar logo that routes to Home.py (root persona selector)."""
-    logo_path = Path(__file__).resolve().parents[1] / "assets" / "logo.png"
-    try:
-        logo_b64 = base64.b64encode(logo_path.read_bytes()).decode("utf-8")
-        st.sidebar.markdown(
-            f"""
-            <a href="/" target="_self" title="Go to SplitMates Home">
-                <img src="data:image/png;base64,{logo_b64}" width="150" />
-            </a>
-            """,
-            unsafe_allow_html=True,
-        )
-    except OSError:
-        # Fallback if file path resolution fails.
-        st.sidebar.image("assets/logo.png", width=150)
-
-
 # ---- Sidebar assembly -------------------------------------------------------
+
 
 def SideBarLinks(show_home=False):
     """
     Renders sidebar navigation links based on the logged-in user's role.
     The role is stored in st.session_state when the user logs in on Home.py.
     """
-
-    # Clickable logo at the top routes to Home persona selector.
-    clickable_logo_nav()
 
     # If no one is logged in, send them to the Home (login) page
     if "authenticated" not in st.session_state:
@@ -117,15 +95,10 @@ def SideBarLinks(show_home=False):
 
     # Roommate navigation
     if st.session_state["authenticated"]:
-
         st.sidebar.header(f"*{highlight_color('red', 'SplitMates')}*")
         if st.session_state.get("role") == "roommate":
             user_navs()
             st.sidebar.divider()
-
-
-    # TODO: display other buttons when the user is looking in a group
-    # TODO: display other buttons based on role (sysadmin, data analyst)
 
     if "group" in st.session_state and st.session_state["group"]:
         group_navs()
@@ -144,10 +117,9 @@ def SideBarLinks(show_home=False):
 
     # Add extra breathing room on root persona selector page.
     if show_home:
-        st.sidebar.markdown("<div style='height: 1.25rem;'></div>", unsafe_allow_html=True)
-
-    # About link appears at the bottom for all roles
-    about_page_nav()
+        st.sidebar.markdown(
+            "<div style='height: 1.25rem;'></div>", unsafe_allow_html=True
+        )
 
     if st.session_state["authenticated"]:
         if st.sidebar.button("Logout"):
