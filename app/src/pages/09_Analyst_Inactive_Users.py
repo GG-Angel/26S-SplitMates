@@ -45,8 +45,8 @@ st.markdown('<div class="page-title">Inactive Users</div>', unsafe_allow_html=Tr
 st.markdown('<div class="page-subtitle">Monitor user dropoff and identify accounts that have gone inactive.</div>', unsafe_allow_html=True)
 
 total = len(inactive_users)
-never_active = len([u for u in inactive_users if not u.get("last_session")])
-inactive_30 = total - never_active
+truly_inactive = len([u for u in inactive_users if u.get("account_status") == "inactive"])
+at_risk = len([u for u in inactive_users if u.get("account_status") == "active"])
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -61,18 +61,18 @@ with col1:
 with col2:
     st.markdown(
         f"""<div class="metric-card">
-            <div class="metric-label">INACTIVE 30+ DAYS</div>
-            <div class="metric-value-red">{inactive_30}</div>
-            <div class="metric-note">No session in 30+ days</div>
+            <div class="metric-label">INACTIVE ACCOUNTS</div>
+            <div class="metric-value-red">{truly_inactive}</div>
+            <div class="metric-note">Account status: inactive</div>
         </div>""",
         unsafe_allow_html=True,
     )
 with col3:
     st.markdown(
         f"""<div class="metric-card">
-            <div class="metric-label">NEVER ACTIVE</div>
-            <div class="metric-value">{never_active}</div>
-            <div class="metric-note">No session on record</div>
+            <div class="metric-label">AT RISK (30+ DAYS)</div>
+            <div class="metric-value">{at_risk}</div>
+            <div class="metric-note">Active but not seen recently</div>
         </div>""",
         unsafe_allow_html=True,
     )
@@ -82,8 +82,11 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("<div class='panel'><div class='panel-title'>User Engagement Table</div>", unsafe_allow_html=True)
 
 if inactive_users:
+    status_filter = st.selectbox("Filter by Status", ["All", "inactive", "active"])
+    display = [u for u in inactive_users if status_filter == "All" or u.get("account_status") == status_filter]
+
     rows = []
-    for u in inactive_users:
+    for u in display:
         last = u.get("last_session")
         try:
             last_fmt = parse_mysql_datetime(last).strftime("%b %d, %Y") if last else "Never"
@@ -93,6 +96,7 @@ if inactive_users:
             "First Name": u.get("first_name", ""),
             "Last Name": u.get("last_name", ""),
             "Email": u.get("email", ""),
+            "Status": u.get("account_status", ""),
             "Last Session": last_fmt,
         })
 
