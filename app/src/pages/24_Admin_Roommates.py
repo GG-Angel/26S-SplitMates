@@ -60,7 +60,7 @@ st.markdown(
             padding: 1rem;
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
         }
-        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; }
+        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #101828; }
         .row {
             padding: 0.8rem 0;
             border-bottom: 1px solid #EAECF0;
@@ -126,8 +126,11 @@ with left_col:
     st.markdown('<div class="panel-title">Filters</div>', unsafe_allow_html=True)
     search_term = st.text_input("Search users", placeholder="Search name, email, or user id")
     status_options = sorted({_as_text(user.get("account_status")).lower() or "pending" for user in users}) or ["pending"]
-    selected_statuses = st.multiselect("Account status", status_options, default=status_options)
-    role_filter = st.selectbox("Role filter", ["all", "admins", "analysts", "standard users"], index=0)
+    flt_col1, flt_col2 = st.columns(2)
+    with flt_col1:
+        selected_statuses = st.multiselect("Account status", status_options, default=status_options)
+    with flt_col2:
+        role_filter = st.selectbox("Role filter", ["all", "admins", "analysts", "standard users"], index=0)
 
     if search_term:
         needle = search_term.lower()

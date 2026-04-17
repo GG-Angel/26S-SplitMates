@@ -74,7 +74,7 @@ st.markdown(
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
             height: 100%;
         }
-        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #101828; }
         .ticket-row, .activity-row {
             padding: 0.75rem 0;
             border-bottom: 1px solid #EAECF0;

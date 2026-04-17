@@ -75,7 +75,7 @@ st.markdown(
             padding: 1rem;
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
         }
-        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; }
+        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #101828; }
         .row {
             padding: 0.8rem 0;
             border-bottom: 1px solid #EAECF0;

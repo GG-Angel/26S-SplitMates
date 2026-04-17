@@ -68,7 +68,7 @@ st.markdown(
             padding: 1rem;
             box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
         }
-        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; }
+        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #101828; }
         .ticket-row {
             padding: 0.8rem 0;
             border-bottom: 1px solid #EAECF0;
@@ -141,8 +141,11 @@ with filter_col:
     st.markdown('<div class="panel-title">Filters</div>', unsafe_allow_html=True)
 
     search_term = st.text_input("Search tickets", placeholder="Search title, description, or user id")
-    selected_statuses = st.multiselect("Status", status_order, default=status_order)
-    selected_priorities = st.multiselect("Priority", priority_order, default=priority_order)
+    flt_col1, flt_col2 = st.columns(2)
+    with flt_col1:
+        selected_statuses = st.multiselect("Status", status_order, default=status_order)
+    with flt_col2:
+        selected_priorities = st.multiselect("Priority", priority_order, default=priority_order)
 
     if search_term:
         search_term_lower = search_term.lower()

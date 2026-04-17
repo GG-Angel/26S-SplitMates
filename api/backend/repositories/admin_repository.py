@@ -71,12 +71,13 @@ class AdminRepository(BaseRepository):
                     "expires_at": data.get("expires_at"),
                 },
             )
+            ban_id = cursor.lastrowid
             cursor.execute(
                 load_query("admin/set_user_status_suspended.sql"),
                 {"user_id": user_id},
             )
             conn.commit()
-            return cursor.lastrowid
+            return ban_id
 
     def update_ban_for_user(self, user_id: int, ban_id: int, data: dict):
         with get_db() as conn:
@@ -108,7 +109,8 @@ class AdminRepository(BaseRepository):
                 load_query("admin/count_active_bans_for_user.sql"),
                 {"user_id": user_id},
             )
-            active_bans = cursor.fetchone()["active_bans"]
+            row = cursor.fetchone()
+            active_bans = row["active_bans"] if row else 0
 
             if active_bans == 0:
                 cursor.execute(
@@ -216,24 +218,12 @@ class AdminRepository(BaseRepository):
     def maintenance_check(self):
         checks: dict[str, Any] = {}
 
-        checks["users_count"] = self.fetch_one(
-            load_query("admin/maintenance_count_users.sql")
-        )["c"]
-        checks["groups_count"] = self.fetch_one(
-            load_query("admin/maintenance_count_groups.sql")
-        )["c"]
-        checks["bills_count"] = self.fetch_one(
-            load_query("admin/maintenance_count_bills.sql")
-        )["c"]
-        checks["group_members_count"] = self.fetch_one(
-            load_query("admin/maintenance_count_group_members.sql")
-        )["c"]
-        checks["orphan_bills"] = self.fetch_one(
-            load_query("admin/maintenance_count_orphan_bills.sql")
-        )["c"]
-        checks["orphan_bill_assignments"] = self.fetch_one(
-            load_query("admin/maintenance_count_orphan_bill_assignments.sql")
-        )["c"]
+        checks["users_count"] = (self.fetch_one(load_query("admin/maintenance_count_users.sql")) or {}).get("c", 0)
+        checks["groups_count"] = (self.fetch_one(load_query("admin/maintenance_count_groups.sql")) or {}).get("c", 0)
+        checks["bills_count"] = (self.fetch_one(load_query("admin/maintenance_count_bills.sql")) or {}).get("c", 0)
+        checks["group_members_count"] = (self.fetch_one(load_query("admin/maintenance_count_group_members.sql")) or {}).get("c", 0)
+        checks["orphan_bills"] = (self.fetch_one(load_query("admin/maintenance_count_orphan_bills.sql")) or {}).get("c", 0)
+        checks["orphan_bill_assignments"] = (self.fetch_one(load_query("admin/maintenance_count_orphan_bill_assignments.sql")) or {}).get("c", 0)
 
         checks["status"] = (
             "ok"
