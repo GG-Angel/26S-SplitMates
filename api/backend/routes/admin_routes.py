@@ -19,13 +19,27 @@ def get_root():
 def get_admin_summary():
     """Return dashboard KPI counts plus recent tickets/activity for the admin home page."""
     try:
-        total_users = admin_repository.get_summary_total_users()["total_users"]
-        active_households = admin_repository.get_summary_active_households()[
-            "active_households"
-        ]
-        open_tickets = admin_repository.get_summary_open_tickets()["open_tickets"]
-        inactive_users = admin_repository.get_summary_inactive_users()["inactive_users"]
-        urgent_tickets = admin_repository.get_summary_urgent_tickets()["urgent_tickets"]
+        total_users_data = admin_repository.get_summary_total_users()
+        active_households_data = admin_repository.get_summary_active_households()
+        open_tickets_data = admin_repository.get_summary_open_tickets()
+        inactive_users_data = admin_repository.get_summary_inactive_users()
+        urgent_tickets_data = admin_repository.get_summary_urgent_tickets()
+
+        if (
+            total_users_data is None
+            or active_households_data is None
+            or open_tickets_data is None
+            or inactive_users_data is None
+            or urgent_tickets_data is None
+        ):
+            current_app.logger.error("One or more summary data objects are None")
+            raise Error("Data objects are None")
+
+        total_users = total_users_data["total_users"]
+        active_households = active_households_data["active_households"]
+        open_tickets = open_tickets_data["open_tickets"]
+        inactive_users = inactive_users_data["inactive_users"]
+        urgent_tickets = urgent_tickets_data["urgent_tickets"]
         recent_tickets = admin_repository.get_summary_recent_tickets()
         recent_activity = admin_repository.get_summary_recent_activity()
 
@@ -267,7 +281,9 @@ def get_user_reports_by_reporter(reported_by: int):
 def get_user_reports_against_user(reported_user: int):
     """Return reports filed against a specific user."""
     try:
-        return jsonify(admin_repository.get_user_reports_against_user(reported_user)), 200
+        return jsonify(
+            admin_repository.get_user_reports_against_user(reported_user)
+        ), 200
     except Error as e:
         current_app.logger.error(
             f"Database error in get_user_reports_against_user(): {e}"
@@ -343,7 +359,9 @@ def create_app_version():
                 "deployed_at": deployed_at,
             }
         )
-        return jsonify({"message": "App version created", "version_id": version_id}), 201
+        return jsonify(
+            {"message": "App version created", "version_id": version_id}
+        ), 201
     except Error as e:
         current_app.logger.error(f"Database error in create_app_version(): {e}")
         return jsonify({"error": "Unexpected error"}), 500
