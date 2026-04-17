@@ -37,31 +37,33 @@ st.markdown(
         .page-title { font-size: 2.1rem; font-weight: 800; margin-bottom: 0.1rem; }
         .page-subtitle { color: #667085; font-size: 1rem; margin-bottom: 1rem; }
         .metric-card {
-            background: #F8FAFC;
-            border: 1px solid #EAECF0;
+            background: #1E293B !important;
+            border: 1px solid #334155;
             border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
             height: 100%;
+            color: #F1F5F9;
         }
-        .metric-label { color: #667085; font-size: 0.83rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-label { color: #94A3B8 !important; font-size: 0.83rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #F1F5F9 !important; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note { color: #CBD5E1 !important; font-size: 0.85rem; margin-top: 0.45rem; }
         .panel {
-            background: #F8FAFC;
-            border: 1px solid #EAECF0;
+            background: #1E293B !important;
+            border: 1px solid #334155;
             border-radius: 12px;
             padding: 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            color: #F1F5F9;
         }
-        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #101828; }
+        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #F1F5F9 !important; }
         .row {
             padding: 0.8rem 0;
-            border-bottom: 1px solid #EAECF0;
+            border-bottom: 1px solid #334155;
         }
         .row:last-child { border-bottom: none; }
-        .row-title { font-weight: 700; color: #101828; font-size: 0.98rem; }
-        .row-meta { color: #667085; font-size: 0.85rem; margin-top: 0.18rem; }
+        .row-title { font-weight: 700; color: #F1F5F9 !important; font-size: 0.98rem; }
+        .row-meta { color: #94A3B8 !important; font-size: 0.85rem; margin-top: 0.18rem; }
         .pill {
             display: inline-block;
             padding: 0.2rem 0.55rem;
@@ -70,9 +72,13 @@ st.markdown(
             font-weight: 700;
             margin-top: 0.3rem;
             margin-right: 0.35rem;
-            background: #ECFDF3;
-            color: #027A48;
+            background: #064E3B;
+            color: #6EE7B7;
         }
+        .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.4rem; }
+        .item-card { background: #0F172A; border: 1px solid #334155; border-radius: 8px; padding: 0.5rem 0.6rem; }
+        .item-card .row-title { font-size: 0.82rem; margin-bottom: 0.1rem; }
+        .item-card .row-meta { font-size: 0.72rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -139,17 +145,15 @@ with left_col:
         )
         st.divider()
         st.markdown('<div class="panel-title">Filtered List</div>', unsafe_allow_html=True)
+        cards_html = ""
         for group in filtered_groups[:8]:
-            st.markdown(
-                f"""
-                <div class="row">
+            cards_html += f"""
+                <div class="item-card">
                     <div class="row-title">{_as_text(group.get('name')) or 'Unnamed Group'}</div>
-                    <div class="row-meta">Group #{group.get('group_id')} • Leader #{group.get('group_leader')}</div>
+                    <div class="row-meta">#{group.get('group_id')} • Leader #{group.get('group_leader')}</div>
                     <span class="pill">{group.get('member_count', 0)} members</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+                </div>"""
+        st.markdown(f'<div class="item-grid">{cards_html}</div>', unsafe_allow_html=True)
     else:
         st.info("No groups match the selected filters.")
 

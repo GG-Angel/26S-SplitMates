@@ -153,6 +153,17 @@ class AdminRepository(BaseRepository):
             {"user_id": user_id},
         )
 
+    def insert_user_report(self, reported_user: int, reported_by: int, reason: str):
+        with get_db() as conn:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(
+                load_query("admin/insert_user_report.sql"),
+                {"reported_user": reported_user, "reported_by": reported_by, "reason": reason},
+            )
+            report_id = cursor.lastrowid
+            conn.commit()
+            return report_id
+
     def get_all_user_reports(self):
         return self.fetch_all(load_query("admin/get_all_user_reports.sql"))
 

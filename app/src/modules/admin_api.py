@@ -40,6 +40,10 @@ def update_support_ticket(ticket_id: int, payload: dict[str, Any]) -> Any:
     return _client.put(f"support_tickets/{ticket_id}", json=payload)
 
 
+def submit_user_report(payload: dict[str, Any]) -> Any:
+    return _client.post("user_reports", json=payload)
+
+
 def get_user_reports() -> list[dict[str, Any]]:
     return _client.get("user_reports")
 

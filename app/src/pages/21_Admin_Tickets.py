@@ -49,33 +49,35 @@ st.markdown(
     """
     <style>
         .ticket-page-title { font-size: 2.1rem; font-weight: 800; margin-bottom: 0.1rem; }
-        .ticket-page-subtitle { color: #667085; font-size: 1rem; margin-bottom: 1rem; }
+        .ticket-page-subtitle { color: #94A3B8; font-size: 1rem; margin-bottom: 1rem; }
         .metric-card {
-            background: #F8FAFC;
-            border: 1px solid #EAECF0;
+            background: #1E293B !important;
+            border: 1px solid #334155;
             border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
             height: 100%;
+            color: #F1F5F9;
         }
-        .metric-label { color: #667085; font-size: 0.83rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-label { color: #94A3B8 !important; font-size: 0.83rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #F1F5F9 !important; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note { color: #CBD5E1 !important; font-size: 0.85rem; margin-top: 0.45rem; }
         .panel {
-            background: #F8FAFC;
-            border: 1px solid #EAECF0;
+            background: #1E293B !important;
+            border: 1px solid #334155;
             border-radius: 12px;
             padding: 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            color: #F1F5F9;
         }
-        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #101828; }
+        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #F1F5F9 !important; }
         .ticket-row {
             padding: 0.8rem 0;
-            border-bottom: 1px solid #EAECF0;
+            border-bottom: 1px solid #334155;
         }
         .ticket-row:last-child { border-bottom: none; }
-        .ticket-title { font-weight: 700; color: #101828; font-size: 0.98rem; }
-        .ticket-meta { color: #667085; font-size: 0.85rem; margin-top: 0.18rem; }
+        .ticket-title { font-weight: 700; color: #F1F5F9 !important; font-size: 0.98rem; }
+        .ticket-meta { color: #94A3B8 !important; font-size: 0.85rem; margin-top: 0.18rem; }
         .pill {
             display: inline-block;
             padding: 0.2rem 0.55rem;
@@ -84,18 +86,22 @@ st.markdown(
             font-weight: 700;
             margin-top: 0.3rem;
             margin-right: 0.35rem;
-            background: #F2F4F7;
-            color: #344054;
+            background: #334155;
+            color: #CBD5E1;
         }
-        .pill-open { background: #ECFDF3; color: #027A48; }
-        .pill-progress { background: #FEF3C7; color: #B54708; }
-        .pill-closed { background: #EFF8FF; color: #175CD3; }
-        .pill-high { background: #FEF3F2; color: #B42318; }
-        .pill-medium { background: #FFFAEB; color: #B54708; }
-        .pill-low { background: #ECFDF3; color: #027A48; }
-        .detail-value { color: #101828; font-weight: 600; }
-        .detail-label { color: #667085; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
-        .ticket-divider { border-top: 1px solid #EAECF0; margin: 0.85rem 0; }
+        .pill-open { background: #064E3B; color: #6EE7B7; }
+        .pill-progress { background: #451A03; color: #FCD34D; }
+        .pill-closed { background: #1E3A5F; color: #93C5FD; }
+        .pill-high { background: #4C0519; color: #FCA5A5; }
+        .pill-medium { background: #451A03; color: #FCD34D; }
+        .pill-low { background: #064E3B; color: #6EE7B7; }
+        .detail-value { color: #F1F5F9 !important; font-weight: 600; }
+        .detail-label { color: #94A3B8 !important; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+        .ticket-divider { border-top: 1px solid #334155; margin: 0.85rem 0; }
+        .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.4rem; }
+        .item-card { background: #0F172A; border: 1px solid #334155; border-radius: 8px; padding: 0.5rem 0.6rem; }
+        .item-card .ticket-title { font-size: 0.82rem; margin-bottom: 0.1rem; }
+        .item-card .ticket-meta { font-size: 0.72rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -141,11 +147,8 @@ with filter_col:
     st.markdown('<div class="panel-title">Filters</div>', unsafe_allow_html=True)
 
     search_term = st.text_input("Search tickets", placeholder="Search title, description, or user id")
-    flt_col1, flt_col2 = st.columns(2)
-    with flt_col1:
-        selected_statuses = st.multiselect("Status", status_order, default=status_order)
-    with flt_col2:
-        selected_priorities = st.multiselect("Priority", priority_order, default=priority_order)
+    selected_statuses = st.multiselect("Status", status_order, default=status_order)
+    selected_priorities = st.multiselect("Priority", priority_order, default=priority_order)
 
     if search_term:
         search_term_lower = search_term.lower()
@@ -175,24 +178,20 @@ with filter_col:
         )
         st.divider()
         st.markdown("<div class='panel-title'>Filtered List</div>", unsafe_allow_html=True)
+        cards_html = ""
         for ticket in filtered_tickets[:8]:
             status = _as_text(ticket.get("status")).lower()
             priority = _as_text(ticket.get("priority")).lower()
             status_class = {"open": "pill-open", "in_progress": "pill-progress", "closed": "pill-closed"}.get(status, "")
             priority_class = {"high": "pill-high", "medium": "pill-medium", "low": "pill-low"}.get(priority, "")
-            st.markdown(
-                f"""
-                <div class="ticket-row">
+            cards_html += f"""
+                <div class="item-card">
                     <div class="ticket-title">{_as_text(ticket.get('title')) or 'Untitled Ticket'}</div>
-                    <div class="ticket-meta">Ticket #{ticket.get('ticket_id')} • {_as_text(ticket.get('first_name'))} {_as_text(ticket.get('last_name'))} • {fmt_dt(ticket.get('created_at'))}</div>
-                    <div>
-                        <span class="pill {status_class}">{status.replace('_', ' ').title() if status else 'Unknown'}</span>
-                        <span class="pill {priority_class}">{priority.title() if priority else 'Unknown'}</span>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+                    <div class="ticket-meta">#{ticket.get('ticket_id')} • {fmt_dt(ticket.get('created_at'))}</div>
+                    <span class="pill {status_class}">{status.replace('_', ' ').title() if status else 'Unknown'}</span>
+                    <span class="pill {priority_class}">{priority.title() if priority else 'Unknown'}</span>
+                </div>"""
+        st.markdown(f'<div class="item-grid">{cards_html}</div>', unsafe_allow_html=True)
     else:
         st.info("No tickets match the selected filters.")
 

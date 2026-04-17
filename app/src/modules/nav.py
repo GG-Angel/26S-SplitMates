@@ -98,6 +98,7 @@ def SideBarLinks(show_home=False):
         st.sidebar.header(f"*{highlight_color('red', 'SplitMates')}*")
         if st.session_state.get("role") == "roommate":
             user_navs()
+            st.sidebar.page_link("pages/11_Submit_Report.py", label="Submit Report", icon="🚩")
             st.sidebar.divider()
 
     if "group" in st.session_state and st.session_state["group"]:

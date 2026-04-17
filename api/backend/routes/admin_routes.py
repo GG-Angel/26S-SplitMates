@@ -265,6 +265,27 @@ def get_all_user_reports():
         return jsonify({"error": "Unexpected error"}), 500
 
 
+@admin_routes.route("/user_reports", methods=["POST"])
+def submit_user_report():
+    """Allow a regular user to submit a report against another user."""
+    payload = request.get_json(silent=True) or {}
+    reported_user = payload.get("reported_user")
+    reported_by = payload.get("reported_by")
+    reason = payload.get("reason", "")
+
+    if reported_user is None or reported_by is None:
+        return jsonify({"error": "Fields 'reported_user' and 'reported_by' are required"}), 400
+    if reported_user == reported_by:
+        return jsonify({"error": "Cannot report yourself"}), 400
+
+    try:
+        report_id = admin_repository.insert_user_report(reported_user, reported_by, reason)
+        return jsonify({"message": "Report submitted", "report_id": report_id}), 201
+    except Error as e:
+        current_app.logger.error(f"Database error in submit_user_report(): {e}")
+        return jsonify({"error": "Unexpected error"}), 500
+
+
 @admin_routes.route("/user_reports/by_user/<int:reported_by>", methods=["GET"])
 def get_user_reports_by_reporter(reported_by: int):
     """Return reports submitted by a specific user."""

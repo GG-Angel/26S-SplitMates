@@ -43,31 +43,33 @@ st.markdown(
         .page-title { font-size: 2.1rem; font-weight: 800; margin-bottom: 0.1rem; }
         .page-subtitle { color: #667085; font-size: 1rem; margin-bottom: 1rem; }
         .metric-card {
-            background: #F8FAFC;
-            border: 1px solid #EAECF0;
+            background: #1E293B !important;
+            border: 1px solid #334155;
             border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
             height: 100%;
+            color: #F1F5F9;
         }
-        .metric-label { color: #667085; font-size: 0.83rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-label { color: #94A3B8 !important; font-size: 0.83rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #F1F5F9 !important; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note { color: #CBD5E1 !important; font-size: 0.85rem; margin-top: 0.45rem; }
         .panel {
-            background: #F8FAFC;
-            border: 1px solid #EAECF0;
+            background: #1E293B !important;
+            border: 1px solid #334155;
             border-radius: 12px;
             padding: 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            color: #F1F5F9;
         }
-        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #101828; }
+        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #F1F5F9 !important; }
         .row {
             padding: 0.8rem 0;
-            border-bottom: 1px solid #EAECF0;
+            border-bottom: 1px solid #334155;
         }
         .row:last-child { border-bottom: none; }
-        .row-title { font-weight: 700; color: #101828; font-size: 0.98rem; }
-        .row-meta { color: #667085; font-size: 0.85rem; margin-top: 0.18rem; }
+        .row-title { font-weight: 700; color: #F1F5F9 !important; font-size: 0.98rem; }
+        .row-meta { color: #94A3B8 !important; font-size: 0.85rem; margin-top: 0.18rem; }
         .pill {
             display: inline-block;
             padding: 0.2rem 0.55rem;
@@ -76,15 +78,29 @@ st.markdown(
             font-weight: 700;
             margin-top: 0.3rem;
             margin-right: 0.35rem;
-            background: #F2F4F7;
-            color: #344054;
+            background: #334155;
+            color: #CBD5E1;
         }
-        .pill-admin { background: #ECFDF3; color: #027A48; }
-        .pill-analyst { background: #EFF8FF; color: #175CD3; }
-        .pill-active { background: #ECFDF3; color: #027A48; }
-        .pill-inactive { background: #FFFAEB; color: #B54708; }
-        .pill-suspended { background: #FEF3F2; color: #B42318; }
-        .pill-pending { background: #F2F4F7; color: #344054; }
+        .pill-admin { background: #064E3B; color: #6EE7B7; }
+        .pill-analyst { background: #1E3A5F; color: #93C5FD; }
+        .pill-active { background: #064E3B; color: #6EE7B7; }
+        .pill-inactive { background: #451A03; color: #FCD34D; }
+        .pill-suspended { background: #4C0519; color: #FCA5A5; }
+        .pill-pending { background: #334155; color: #CBD5E1; }
+        .user-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+            margin-top: 0.4rem;
+        }
+        .user-card {
+            background: #0F172A;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 0.5rem 0.6rem;
+        }
+        .user-card .row-title { font-size: 0.85rem; margin-bottom: 0.15rem; }
+        .user-card .row-meta { font-size: 0.75rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -126,11 +142,8 @@ with left_col:
     st.markdown('<div class="panel-title">Filters</div>', unsafe_allow_html=True)
     search_term = st.text_input("Search users", placeholder="Search name, email, or user id")
     status_options = sorted({_as_text(user.get("account_status")).lower() or "pending" for user in users}) or ["pending"]
-    flt_col1, flt_col2 = st.columns(2)
-    with flt_col1:
-        selected_statuses = st.multiselect("Account status", status_options, default=status_options)
-    with flt_col2:
-        role_filter = st.selectbox("Role filter", ["all", "admins", "analysts", "standard users"], index=0)
+    selected_statuses = st.multiselect("Account status", status_options, default=status_options)
+    role_filter = st.selectbox("Role filter", ["all", "admins", "analysts", "standard users"], index=0)
 
     if search_term:
         needle = search_term.lower()
@@ -168,6 +181,7 @@ with left_col:
         )
         st.divider()
         st.markdown('<div class="panel-title">Filtered List</div>', unsafe_allow_html=True)
+        cards_html = ""
         for user in filtered_users[:10]:
             full_name = (_as_text(user.get("first_name")) + " " + _as_text(user.get("last_name"))).strip() or "Unnamed User"
             status = _as_text(user.get("account_status")).lower() or "pending"
@@ -177,18 +191,17 @@ with left_col:
                 "suspended": "pill-suspended",
                 "pending": "pill-pending",
             }.get(status, "pill-pending")
-            st.markdown(
-                f"""
-                <div class="row">
-                    <div class="row-title">{full_name}</div>
-                    <div class="row-meta">User #{user.get('user_id')} • {_as_text(user.get('email'))}</div>
-                    <span class="pill {status_class}">{status.title()}</span>
-                    {('<span class="pill pill-admin">Admin</span>' if bool(user.get('is_admin')) else '')}
-                    {('<span class="pill pill-analyst">Analyst</span>' if bool(user.get('is_analyst')) else '')}
-                </div>
-                """,
-                unsafe_allow_html=True,
+            roles = (
+                ('<span class="pill pill-admin">Admin</span>' if bool(user.get("is_admin")) else "")
+                + ('<span class="pill pill-analyst">Analyst</span>' if bool(user.get("is_analyst")) else "")
             )
+            cards_html += f"""
+                <div class="user-card">
+                    <div class="row-title">{full_name}</div>
+                    <div class="row-meta">#{user.get('user_id')}</div>
+                    <span class="pill {status_class}">{status.title()}</span>{roles}
+                </div>"""
+        st.markdown(f'<div class="user-grid">{cards_html}</div>', unsafe_allow_html=True)
     else:
         st.info("No users match the selected filters.")
 
