@@ -10,14 +10,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 st.set_page_config(layout="wide")
+SideBarLinks(show_home=True)
 
 # Initialize session state before calling SideBarLinks
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 
-def login_as(user_id: int, persona_name: str, role: str):
-    """Fetch user data from API and store it in session state."""
+def login_as(user_id: int, persona_name: str, role: str = "roommate"):
+    """Fetch user data from API and store in session state"""
     try:
         api_base_url = "http://web-api:4000"
         response = requests.get(f"{api_base_url}/users/{user_id}", timeout=5)
@@ -31,9 +32,9 @@ def login_as(user_id: int, persona_name: str, role: str):
 
         logger.info(f"Logging in as {persona_name} (user_id={user_id}, role={role})")
         return True
-    except requests.exceptions.RequestException as exc:
-        logger.error(f"Failed to fetch user data for user_id={user_id}: {exc}")
-        st.error(f"Could not connect to the server. Please try again. ({exc})")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to fetch user data for user_id={user_id}: {e}")
+        st.error(f"Could not connect to the server. Please try again. ({e})")
         return False
 
 
@@ -44,7 +45,7 @@ st.title("Welcome to SplitMates!")
 st.write("#### Which user would you like to log in as?")
 
 if st.button(
-    "Act as Laurie, a Roommate Group Leader",
+    "Act as Victor, a Roommate Group Leader",
     type="primary",
     use_container_width=True,
     key="roommate_login"

@@ -2,11 +2,7 @@
 
 # This file has functions to add links to the left sidebar based on the user's role.
 
-import base64
-from pathlib import Path
-
 import streamlit as st
-
 from utils import highlight_color
 
 
