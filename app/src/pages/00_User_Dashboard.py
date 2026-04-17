@@ -21,9 +21,11 @@ if not user_groups:
 else:
     cols = st.columns(2)
     for index, group in enumerate(user_groups):
+        is_leader = group["group_leader"] == user_id
+        group_name = f"👑 {group['name']}" if is_leader else f"{group['name']}"
         with cols[index % 2]:
             with st.container(border=True):
-                st.subheader(group["name"])
+                st.subheader(group_name)
                 st.write(f"📍 {group['city']}, {group['state']}")
                 st.write(f"👥 {group['member_count']} members")
 

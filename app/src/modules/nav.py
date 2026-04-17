@@ -1,11 +1,7 @@
 # Idea borrowed from https://github.com/fsmosca/sample-streamlit-authenticator
 # This file has functions to add links to the left sidebar based on the user's role.
 
-import base64
-from pathlib import Path
-
 import streamlit as st
-
 from utils import highlight_color
 
 

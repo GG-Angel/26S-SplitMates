@@ -45,7 +45,15 @@ st.write("#### Which user would you like to log in as?")
 if st.button(
     "Act as Laurie, a Roommate Group Leader",
     type="primary",
-    use_container_width=True,
+    width="stretch",
 ):
     login_as(user_id=5, persona_name="Roommate Leader")
+    st.switch_page("pages/00_User_Dashboard.py")
+
+if st.button(
+    "Act as Bob, a Roommate",
+    type="primary",
+    width="stretch",
+):
+    login_as(user_id=1, persona_name="Roommate")
     st.switch_page("pages/00_User_Dashboard.py")
