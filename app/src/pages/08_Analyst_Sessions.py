@@ -47,6 +47,16 @@ st.markdown(
         .data-row:last-child { border-bottom: none; }
         .user-name     { color: #101828; font-weight: 500; font-size: 0.92rem; }
         .duration-badge{ color: #E31B1B; font-weight: 700; font-size: 0.92rem; }
+
+        /* Make the left column chart area look like a white panel */
+        [data-testid="stPlotlyChart"] {
+            background: white;
+            border-radius: 0 0 12px 12px;
+            padding: 0 0.5rem 0.5rem 0.5rem;
+        }
+        div.white-panel + div [data-testid="stPlotlyChart"] {
+            background: white;
+        }
     </style>
     """,
     unsafe_allow_html=True,
@@ -84,6 +94,8 @@ col_left, col_right = st.columns([1.1, 0.9])
 
 # LEFT — Activity by Hour of Day
 with col_left:
+    st.markdown('<div class="white-panel"><div class="panel-title">Activity by Hour of Day</div></div>', unsafe_allow_html=True)
+
     hour_users: dict[int, set] = {}
     for r in sessions:
         h   = r.get("hour_of_day")
@@ -106,7 +118,7 @@ with col_left:
             hovertemplate="%{x}<br>Users: %{y}<extra></extra>",
         ))
         fig.update_layout(
-            margin=dict(l=0, r=0, t=0, b=0),
+            margin=dict(l=10, r=10, t=10, b=10),
             height=320,
             plot_bgcolor="white",
             paper_bgcolor="white",
@@ -129,24 +141,9 @@ with col_left:
                 dtick=1,
             ),
         )
-        chart_html = fig.to_html(
-            full_html=False,
-            include_plotlyjs="cdn",
-            config={"displayModeBar": False},
-        )
-        st.markdown(
-            f'<div class="white-panel">'
-            f'<div class="panel-title">Activity by Hour of Day</div>'
-            f'{chart_html}'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+        st.plotly_chart(fig, use_container_width=True)
     else:
-        st.markdown(
-            '<div class="white-panel"><div class="panel-title">Activity by Hour of Day</div>'
-            '<p style="color:#667085">No hourly data available.</p></div>',
-            unsafe_allow_html=True,
-        )
+        st.info("No hourly data available.")
 
 # RIGHT — Avg Session Duration by User, sorted desc
 with col_right:
