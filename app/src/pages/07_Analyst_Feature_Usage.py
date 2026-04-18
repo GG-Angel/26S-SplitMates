@@ -44,6 +44,7 @@ st.markdown(
 st.title("Feature Usage Overview")
 st.markdown('<div class="page-subtitle">Track which features and actions are used most across the platform.</div>', unsafe_allow_html=True)
 
+# --- Metric Cards ---
 total_sessions = sum(int(r.get("total_sessions", 0)) for r in sessions)
 avg_session = round(sum(float(r.get("avg_duration_mins", 0)) for r in sessions) / len(sessions), 1) if sessions else 0
 active_users = len(set(r.get("user_id") for r in sessions))
@@ -71,6 +72,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 left_col, right_col = st.columns(2, gap="large")
 
+# LEFT — Audit Log Activity (fully self-contained white panel)
 with left_col:
     if audit_logs:
         rows_html = ""
@@ -99,6 +101,7 @@ with left_col:
     else:
         st.markdown('<div class="white-panel"><div class="panel-title">Audit Log Activity</div><p style="color:#667085">No audit log data available.</p></div>', unsafe_allow_html=True)
 
+# RIGHT — Feature Clicks as horizontal bar chart
 with right_col:
     feature_clicks = [
         ("chores / Create",  7),
