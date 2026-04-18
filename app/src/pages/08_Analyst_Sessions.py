@@ -1,5 +1,6 @@
 import logging
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.graph_objects as go
 from api.client import client
 from modules.nav import SideBarLinks
@@ -13,9 +14,6 @@ sessions: list[dict] = client.get("/analyst/sessions") or []
 st.markdown(
     """
     <style>
-        .page-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.1rem; color: #101828; }
-        .page-subtitle { color: #667085; font-size: 1rem; margin-top: 0; margin-bottom: 1.5rem; }
-
         .metric-card {
             background: white;
             border: 1px solid #EAECF0;
@@ -26,16 +24,6 @@ st.markdown(
         .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
         .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
         .metric-note  { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
-
-        .white-panel {
-            background: white;
-            border: 1px solid #EAECF0;
-            border-radius: 12px;
-            padding: 1.25rem 1.25rem 0.5rem 1.25rem;
-            box-shadow: 0 1px 2px rgba(16,24,40,0.04);
-            margin-bottom: 1rem;
-        }
-        .panel-title { font-size: 1.1rem; font-weight: 700; color: #101828; margin-bottom: 0.75rem; }
 
         .data-row {
             display: flex;
@@ -48,30 +36,22 @@ st.markdown(
         .user-name     { color: #101828; font-weight: 500; font-size: 0.92rem; }
         .duration-badge{ color: #E31B1B; font-weight: 700; font-size: 0.92rem; }
 
-        /* Force the plotly chart block and its wrapper to white */
-        [data-testid="stPlotlyChart"],
-        [data-testid="stPlotlyChart"] > div,
-        .js-plotly-plot,
-        .stPlotlyChart {
-            background: white !important;
-        }
-
-        /* White background for the entire left column block */
-        div[data-testid="column"]:first-child > div:nth-child(2) {
+        .white-panel {
             background: white;
             border: 1px solid #EAECF0;
-            border-top: none;
-            border-radius: 0 0 12px 12px;
-            padding: 0 0.5rem 0.75rem 0.5rem;
+            border-radius: 12px;
+            padding: 1.25rem 1.25rem 1rem 1.25rem;
             box-shadow: 0 1px 2px rgba(16,24,40,0.04);
         }
+        .panel-title { font-size: 1.1rem; font-weight: 700; color: #101828; margin-bottom: 0.75rem; }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-st.markdown('<p class="page-title">User Sessions &amp; Engagement</p>', unsafe_allow_html=True)
-st.markdown('<p class="page-subtitle">Analyze session trends and how engagement scales with household size.</p>', unsafe_allow_html=True)
+# ── Page title (native Streamlit so it always renders) ─────────────────────────
+st.title("User Sessions & Engagement")
+st.caption("Analyze session trends and how engagement scales with household size.")
 
 # ── Metrics ────────────────────────────────────────────────────────────────────
 total_sessions = len(sessions)
@@ -100,10 +80,8 @@ st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 # ── Two columns ────────────────────────────────────────────────────────────────
 col_left, col_right = st.columns([1.1, 0.9])
 
-# LEFT — Activity by Hour of Day
+# LEFT — Activity by Hour of Day embedded as self-contained HTML
 with col_left:
-    st.markdown('<div class="white-panel"><div class="panel-title">Activity by Hour of Day</div></div>', unsafe_allow_html=True)
-
     hour_users: dict[int, set] = {}
     for r in sessions:
         h   = r.get("hour_of_day")
@@ -126,10 +104,11 @@ with col_left:
             hovertemplate="%{x}<br>Users: %{y}<extra></extra>",
         ))
         fig.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=320,
+            margin=dict(l=40, r=10, t=10, b=60),
+            height=300,
             plot_bgcolor="white",
             paper_bgcolor="white",
+            font=dict(color="#101828"),
             xaxis=dict(
                 title=dict(text="Hour of Day", font=dict(color="#101828", size=12)),
                 tickfont=dict(size=10, color="#101828"),
@@ -148,13 +127,26 @@ with col_left:
                 linecolor="#EAECF0",
                 dtick=1,
             ),
-            font=dict(color="#101828"),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
+        full_html = f"""
+        <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
+                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+            <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;">
+                Activity by Hour of Day
+            </div>
+            {chart_html}
+        </div>
+        """
+        components.html(full_html, height=420, scrolling=False)
     else:
-        st.info("No hourly data available.")
+        st.markdown(
+            '<div class="white-panel"><div class="panel-title">Activity by Hour of Day</div>'
+            '<p style="color:#667085">No hourly data available.</p></div>',
+            unsafe_allow_html=True,
+        )
 
-# RIGHT — Avg Session Duration by User, sorted desc
+# RIGHT — Avg Session Duration by User
 with col_right:
     user_dur: dict[str, list[float]] = {}
     for r in sessions:
