@@ -49,9 +49,15 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Page title (native Streamlit so it always renders) ─────────────────────────
-st.title("User Sessions & Engagement")
-st.caption("Analyze session trends and how engagement scales with household size.")
+# ── Page title ─────────────────────────────────────────────────────────────────
+st.markdown(
+    '<p style="font-size:2.2rem;font-weight:700;margin-bottom:0.1rem;color:#101828;">User Sessions &amp; Engagement</p>',
+    unsafe_allow_html=True,
+)
+st.markdown(
+    '<p style="color:#667085;font-size:1rem;margin-top:0;margin-bottom:1.5rem;">Analyze session trends and how engagement scales with household size.</p>',
+    unsafe_allow_html=True,
+)
 
 # ── Metrics ────────────────────────────────────────────────────────────────────
 total_sessions = len(sessions)
