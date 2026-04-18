@@ -14,18 +14,18 @@ sessions: list[dict] = client.get("/analyst/sessions") or []
 st.markdown(
     """
     <style>
-        .page-title {
-            font-size: 2.2rem !important;
-            font-weight: 700 !important;
-            margin-bottom: 0.1rem !important;
-            color: #101828 !important;
-            font-family: "Source Sans Pro", sans-serif !important;
-        }
         .page-subtitle {
             color: #667085 !important;
             font-size: 1rem !important;
             margin-top: 0 !important;
             margin-bottom: 1.5rem !important;
+        }
+
+        /* Match h1 size/weight to Feature Usage page title */
+        h1 {
+            font-size: 2.2rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 0.1rem !important;
         }
         .metric-card {
             background: white;
@@ -63,7 +63,7 @@ st.markdown(
 )
 
 # ── Page title ─────────────────────────────────────────────────────────────────
-st.markdown('<p class="page-title">User Sessions &amp; Engagement</p>', unsafe_allow_html=True)
+st.title("User Sessions & Engagement")
 st.markdown('<p class="page-subtitle">Analyze session trends and how engagement scales with household size.</p>', unsafe_allow_html=True)
 
 # ── Metrics ────────────────────────────────────────────────────────────────────
