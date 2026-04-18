@@ -100,3 +100,24 @@ def handle_user_invites(user_id: int):
     pending_only = "pending" in request.args
     invites = repository.get_user_invitations(user_id, pending_only)
     return jsonify(invites), 200
+
+@user_routes.route("/<user_id>/invitations/<invitation_id>/accept", methods=["PUT"])
+@handle_db_errors
+def handle_accept_invitation(user_id: int, invitation_id: int):
+    repository = UserRepository()
+    current_app.logger.info(f"PUT /users/{user_id}/invitations/{invitation_id}/accept")
+    data = request.get_json()
+    group_id = data.get("group_id")
+    if not group_id:
+        return jsonify({"error": "group_id required"}), 400
+    repository.accept_invitation(user_id, invitation_id, group_id)
+    return jsonify({"message": "Invitation accepted"}), 200
+
+
+@user_routes.route("/<user_id>/invitations/<invitation_id>", methods=["DELETE"])
+@handle_db_errors
+def handle_delete_invitation(user_id: int, invitation_id: int):
+    repository = UserRepository()
+    current_app.logger.info(f"DELETE /users/{user_id}/invitations/{invitation_id}")
+    repository.delete_invitation(invitation_id)
+    return jsonify({"message": "Invitation declined"}), 200
