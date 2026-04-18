@@ -48,14 +48,22 @@ st.markdown(
         .user-name     { color: #101828; font-weight: 500; font-size: 0.92rem; }
         .duration-badge{ color: #E31B1B; font-weight: 700; font-size: 0.92rem; }
 
-        /* Make the left column chart area look like a white panel */
-        [data-testid="stPlotlyChart"] {
-            background: white;
-            border-radius: 0 0 12px 12px;
-            padding: 0 0.5rem 0.5rem 0.5rem;
+        /* Force the plotly chart block and its wrapper to white */
+        [data-testid="stPlotlyChart"],
+        [data-testid="stPlotlyChart"] > div,
+        .js-plotly-plot,
+        .stPlotlyChart {
+            background: white !important;
         }
-        div.white-panel + div [data-testid="stPlotlyChart"] {
+
+        /* White background for the entire left column block */
+        div[data-testid="column"]:first-child > div:nth-child(2) {
             background: white;
+            border: 1px solid #EAECF0;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            padding: 0 0.5rem 0.75rem 0.5rem;
+            box-shadow: 0 1px 2px rgba(16,24,40,0.04);
         }
     </style>
     """,
@@ -123,7 +131,7 @@ with col_left:
             plot_bgcolor="white",
             paper_bgcolor="white",
             xaxis=dict(
-                title="Hour of Day",
+                title=dict(text="Hour of Day", font=dict(color="#101828", size=12)),
                 tickfont=dict(size=10, color="#101828"),
                 tickangle=-45,
                 showgrid=False,
@@ -133,13 +141,14 @@ with col_left:
                 ticktext=hour_labels,
             ),
             yaxis=dict(
-                title="Active Users",
+                title=dict(text="Active Users", font=dict(color="#101828", size=12)),
                 tickfont=dict(size=11, color="#101828"),
                 showgrid=True,
                 gridcolor="#F2F4F7",
                 linecolor="#EAECF0",
                 dtick=1,
             ),
+            font=dict(color="#101828"),
         )
         st.plotly_chart(fig, use_container_width=True)
     else:
