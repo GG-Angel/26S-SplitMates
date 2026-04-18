@@ -100,3 +100,18 @@ def handle_user_invites(user_id: int):
     pending_only = "pending" in request.args
     invites = repository.get_user_invitations(user_id, pending_only)
     return jsonify(invites), 200
+
+
+@user_routes.route("/<user_id>/invites/<invitation_id>", methods=["PUT", "DELETE"])
+@handle_db_errors
+def handle_user_invite(user_id: int, invitation_id: int):
+    repository = UserRepository()
+
+    if request.method == "PUT":
+        current_app.logger.info(f"PUT /users/{user_id}/invites/{invitation_id}")
+        repository.accept_invitation(invitation_id, user_id)
+        return jsonify({"message": "Invitation accepted"}), 200
+    else:
+        current_app.logger.info(f"DELETE /users/{user_id}/invites/{invitation_id}")
+        repository.delete_invitation(invitation_id)
+        return jsonify({"message": "Invitation declined"}), 200

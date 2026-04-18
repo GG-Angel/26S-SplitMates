@@ -33,6 +33,18 @@ class UserRepository(BaseRepository):
             {"user_id": user_id, "pending_only": pending_only},
         )
 
+    def accept_invitation(self, invitation_id: int, user_id: int):
+        self.execute_script(
+            load_query("invitations/accept_invitation.sql"),
+            {"invitation_id": invitation_id, "user_id": user_id},
+        )
+
+    def delete_invitation(self, invitation_id: int):
+        self.execute(
+            load_query("invitations/delete_invitation.sql"),
+            {"invitation_id": invitation_id},
+        )
+
     def pay_bill(self, user_id: int, bill_id: int):
         self.execute(
             load_query("bills/pay_bill.sql"),
