@@ -15,8 +15,8 @@ inactive_users: list[dict] = client.get("/analyst/users/inactive") or []
 st.markdown(
     """
     <style>
-        .page-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.1rem; }
         .page-subtitle { color: #667085; font-size: 1rem; margin-top: 0; margin-bottom: 1.5rem; }
+        h1 { font-size: 2.2rem !important; font-weight: 700 !important; margin-bottom: 0.1rem !important; }
         .metric-card {
             background: white;
             border: 1px solid #EAECF0;
@@ -41,7 +41,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown('<div class="page-title">Feature Usage Overview</div>', unsafe_allow_html=True)
+st.title("Feature Usage Overview")
 st.markdown('<div class="page-subtitle">Track which features and actions are used most across the platform.</div>', unsafe_allow_html=True)
 
 # --- Metric Cards ---
