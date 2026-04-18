@@ -91,7 +91,7 @@ with left_col:
             </div>"""
         panel_html = f"""
         <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
-                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
             <div style="font-size:1.15rem;font-weight:700;color:#101828;margin-bottom:0.75rem;">
                 Audit Log Activity
             </div>
@@ -128,7 +128,7 @@ with right_col:
         </div>"""
     panel_html = f"""
     <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
-                padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+                padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
         <div style="font-size:1.15rem;font-weight:700;color:#101828;margin-bottom:1rem;">
             Feature Clicks
         </div>
