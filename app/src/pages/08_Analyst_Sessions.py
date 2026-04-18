@@ -2,7 +2,6 @@ import logging
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from collections import Counter
 from api.client import client
 from modules.nav import SideBarLinks
 
@@ -62,7 +61,7 @@ st.markdown(
         }
         .data-row:last-child { border-bottom: none; }
         .user-name {
-            color: #ffffff;
+            color: #101828;
             font-weight: 500;
             font-size: 0.92rem;
         }
@@ -128,91 +127,88 @@ st.markdown("<div style='margin-top:1.5rem;'></div>", unsafe_allow_html=True)
 # ── Charts ────────────────────────────────────────────────────────────────────
 col_left, col_right = st.columns([1.1, 0.9])
 
-# Activity by Hour of Day — clean bar chart
+# Activity by Hour of Day
 with col_left:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
-    st.markdown('<div class="panel-title">Activity by Hour of Day</div>', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown('<div class="panel-title">Activity by Hour of Day</div>', unsafe_allow_html=True)
 
-    hour_counts: Counter = Counter()
-    for r in sessions:
-        raw_hour = r.get("hour_of_day")
-        if raw_hour is not None:
-            try:
-                hour_counts[int(raw_hour)] += 1
-            except (ValueError, TypeError):
-                pass
+        # Count users active per hour
+        hour_user_counts: dict[int, set] = {}
+        for r in sessions:
+            raw_hour = r.get("hour_of_day")
+            uid = r.get("user_id")
+            if raw_hour is not None and uid is not None:
+                try:
+                    h = int(raw_hour)
+                    hour_user_counts.setdefault(h, set()).add(uid)
+                except (ValueError, TypeError):
+                    pass
 
-    if hour_counts:
-        hours_sorted = sorted(hour_counts.keys())
-        counts = [hour_counts[h] for h in hours_sorted]
-        hour_labels = [f"{h:02d}:00" for h in hours_sorted]
+        if hour_user_counts:
+            hours_sorted = sorted(hour_user_counts.keys())
+            user_counts = [len(hour_user_counts[h]) for h in hours_sorted]
+            hour_labels = [f"{h:02d}:00" for h in hours_sorted]
 
-        fig_bar = go.Figure(
-            go.Bar(
-                x=hour_labels,
-                y=counts,
-                marker_color="#E31B1B",
-                hovertemplate="%{x}<br>Sessions: %{y}<extra></extra>",
+            fig_bar = go.Figure(
+                go.Bar(
+                    x=hour_labels,
+                    y=user_counts,
+                    marker_color="#E31B1B",
+                    hovertemplate="%{x}<br>Users: %{y}<extra></extra>",
+                )
             )
-        )
-        fig_bar.update_layout(
-            margin=dict(l=0, r=0, t=10, b=40),
-            height=280,
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            xaxis=dict(
-                title="Hour of Day",
-                tickfont=dict(size=11),
-                tickangle=-45,
-                showgrid=False,
-                linecolor="#EAECF0",
-            ),
-            yaxis=dict(
-                title="Sessions",
-                tickfont=dict(size=11),
-                showgrid=True,
-                gridcolor="#F2F4F7",
-                linecolor="#EAECF0",
-            ),
-        )
-        st.plotly_chart(fig_bar, use_container_width=True)
-    else:
-        st.info("No hourly data available.")
+            fig_bar.update_layout(
+                margin=dict(l=0, r=0, t=10, b=40),
+                height=300,
+                plot_bgcolor="white",
+                paper_bgcolor="white",
+                xaxis=dict(
+                    title="Hour of Day",
+                    tickfont=dict(size=11, color="#101828"),
+                    tickangle=-45,
+                    showgrid=False,
+                    linecolor="#EAECF0",
+                ),
+                yaxis=dict(
+                    title="Active Users",
+                    tickfont=dict(size=11, color="#101828"),
+                    showgrid=True,
+                    gridcolor="#F2F4F7",
+                    linecolor="#EAECF0",
+                    dtick=1,
+                ),
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+        else:
+            st.info("No hourly data available.")
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Avg Session Duration by User — sorted largest to smallest, white user names
+# Avg Session Duration by User — sorted largest to smallest, black user names
 with col_right:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
-    st.markdown('<div class="panel-title">Avg Session Duration by User</div>', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown('<div class="panel-title">Avg Session Duration by User</div>', unsafe_allow_html=True)
 
-    # Build per-user avg duration
-    user_durations: dict[str, list[float]] = {}
-    for r in sessions:
-        uid = r.get("user_id")
-        first = r.get("first_name", "")
-        last = r.get("last_name", "")
-        dur = r.get("avg_duration_mins")
-        if uid and dur is not None:
-            name = f"{first} {last}".strip() or f"User {uid}"
-            user_durations.setdefault(name, []).append(float(dur))
+        user_durations: dict[str, list[float]] = {}
+        for r in sessions:
+            uid = r.get("user_id")
+            first = r.get("first_name", "")
+            last = r.get("last_name", "")
+            dur = r.get("avg_duration_mins")
+            if uid and dur is not None:
+                name = f"{first} {last}".strip() or f"User {uid}"
+                user_durations.setdefault(name, []).append(float(dur))
 
-    user_avg = {name: round(sum(vals) / len(vals), 1) for name, vals in user_durations.items()}
+        user_avg = {name: round(sum(vals) / len(vals), 1) for name, vals in user_durations.items()}
+        sorted_users = sorted(user_avg.items(), key=lambda x: x[1], reverse=True)
 
-    # Sort largest to smallest
-    sorted_users = sorted(user_avg.items(), key=lambda x: x[1], reverse=True)
-
-    if sorted_users:
-        rows_html = ""
-        for name, avg in sorted_users:
-            rows_html += f"""
-            <div class="data-row">
-                <span class="user-name">{name}</span>
-                <span class="duration-badge">{avg} min</span>
-            </div>
-            """
-        st.markdown(rows_html, unsafe_allow_html=True)
-    else:
-        st.info("No session duration data available.")
-
-    st.markdown("</div>", unsafe_allow_html=True)
+        if sorted_users:
+            rows_html = ""
+            for name, avg in sorted_users:
+                rows_html += f"""
+                <div class="data-row">
+                    <span class="user-name">{name}</span>
+                    <span class="duration-badge">{avg} min</span>
+                </div>
+                """
+            st.markdown(rows_html, unsafe_allow_html=True)
+        else:
+            st.info("No session duration data available.")
