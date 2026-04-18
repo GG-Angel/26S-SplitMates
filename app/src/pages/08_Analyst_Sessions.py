@@ -144,7 +144,7 @@ with col_left:
         chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
         full_html = f"""
         <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
-                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
             <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;">
                 Activity by Hour of Day
             </div>
