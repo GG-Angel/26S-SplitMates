@@ -101,34 +101,37 @@ with left_col:
     else:
         st.markdown('<div class="white-panel"><div class="panel-title">Audit Log Activity</div><p style="color:#667085">No audit log data available.</p></div>', unsafe_allow_html=True)
 
-# RIGHT — Feature Clicks (hardcoded from your data)
+# RIGHT — Feature Clicks as horizontal bar chart
 with right_col:
     feature_clicks = [
-        ("chores",      "Create",  7),
-        ("groups",      "Create",  6),
-        ("chores",      "Delete",  5),
-        ("events",      "Create",  5),
-        ("bills",       "Update",  5),
-        ("users",       "Create",  3),
-        ("items",       "Delete",  3),
+        ("chores / Create",  7),
+        ("groups / Create",  6),
+        ("chores / Delete",  5),
+        ("events / Create",  5),
+        ("bills / Update",   5),
+        ("users / Create",   3),
+        ("items / Delete",   3),
     ]
-    rows_html = ""
-    for table, action, count in feature_clicks:
-        rows_html += f"""
-        <div style="display:flex;justify-content:space-between;align-items:center;
-                    padding:0.65rem 0;border-bottom:1px solid #EAECF0;">
-            <div>
-                <div style="font-weight:600;font-size:0.95rem;color:#101828;">{table}</div>
-                <div style="color:#667085;font-size:0.82rem;margin-top:0.1rem;">{action}</div>
+    max_val = max(c for _, c in feature_clicks)
+    bars_html = ""
+    for label, count in feature_clicks:
+        pct = round((count / max_val) * 100)
+        bars_html += f"""
+        <div style="margin-bottom:0.85rem;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;">
+                <span style="font-weight:600;font-size:0.9rem;color:#101828;">{label}</span>
+                <span style="font-weight:700;font-size:0.9rem;color:#bd0b0b;">{count}</span>
             </div>
-            <div style="font-size:1.4rem;font-weight:800;color:#bd0b0b;">{count}</div>
+            <div style="background:#F2F4F7;border-radius:4px;height:10px;width:100%;">
+                <div style="background:#E31B1B;border-radius:4px;height:10px;width:{pct}%;"></div>
+            </div>
         </div>"""
     panel_html = f"""
     <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
                 padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
-        <div style="font-size:1.15rem;font-weight:700;color:#101828;margin-bottom:0.75rem;">
+        <div style="font-size:1.15rem;font-weight:700;color:#101828;margin-bottom:1rem;">
             Feature Clicks
         </div>
-        {rows_html}
+        {bars_html}
     </div>"""
-    components.html(panel_html, height=60 + len(feature_clicks) * 62, scrolling=False)
+    components.html(panel_html, height=60 + len(feature_clicks) * 58, scrolling=False)
