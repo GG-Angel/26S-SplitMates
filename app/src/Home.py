@@ -78,4 +78,4 @@ if st.button(
     key="data_analyst_login",
 ):
     if login_as(user_id=4, persona_name="Data Analyst", role="analyst"):
-        st.switch_page("pages/07_Analyst_Feature_Usage.py")
+        st.switch_page("pages/06_Analyst_Dashboard.py")

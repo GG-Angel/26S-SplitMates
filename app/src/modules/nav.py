@@ -46,6 +46,7 @@ def group_navs():
 
 
 def analyst_navs():
+    st.sidebar.page_link("pages/06_Analyst_Dashboard.py", label="Dashboard Overview", icon="📈")
     st.sidebar.page_link(
         "pages/07_Analyst_Feature_Usage.py", label="Feature Usage", icon="📊"
     )

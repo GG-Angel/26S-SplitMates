@@ -70,3 +70,19 @@ class UserRepository(BaseRepository):
                 "last_name": new_last_name,
             },
         )
+
+    def accept_invitation(self, user_id: int, invitation_id: int, group_id: int) -> None:
+        self.execute(
+            load_query("invitations/accept_invitation.sql"),
+            {"invitation_id": invitation_id},
+        )
+        self.execute(
+            load_query("groups/add_group_member.sql"),
+            {"group_id": group_id, "user_id": user_id},
+        )
+
+    def delete_invitation(self, invitation_id: int) -> None:
+        self.execute(
+            load_query("invitations/delete_invitation.sql"),
+            {"invitation_id": invitation_id},
+        )

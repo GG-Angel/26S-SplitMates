@@ -10,12 +10,14 @@ st.set_page_config(layout="wide", page_title="SplitMates | User Sessions")
 SideBarLinks()
 
 sessions: list[dict] = client.get("/analyst/sessions") or []
+audit_logs: list[dict] = client.get("/analyst/audit-logs") or []
+engagement: list[dict] = client.get("/analyst/groups/engagement") or []
 
 st.markdown(
     """
     <style>
         .page-subtitle {
-            color: #9ca3af !important;
+            color: #667085 !important;
             font-size: 1rem !important;
             margin-top: 0 !important;
             margin-bottom: 1.5rem !important;
@@ -28,35 +30,35 @@ st.markdown(
             margin-bottom: 0.1rem !important;
         }
         .metric-card {
-            background: #262730;
-            border: 1px solid rgba(250,250,250,0.1);
+            background: white;
+            border: 1px solid #EAECF0;
             border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 2px rgba(16,24,40,0.04);
         }
-        .metric-label { color: #9ca3af; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-        .metric-value { color: #fafafa; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note  { color: #8b95a1; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note  { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
 
         .data-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(250,250,250,0.08);
+            border-bottom: 1px solid #F2F4F7;
         }
         .data-row:last-child { border-bottom: none; }
-        .user-name     { color: #fafafa; font-weight: 500; font-size: 0.92rem; }
+        .user-name     { color: #101828; font-weight: 500; font-size: 0.92rem; }
         .duration-badge{ color: #E31B1B; font-weight: 700; font-size: 0.92rem; }
 
         .white-panel {
-            background: #262730;
-            border: 1px solid rgba(250,250,250,0.1);
+            background: white;
+            border: 1px solid #EAECF0;
             border-radius: 12px;
             padding: 1.25rem 1.25rem 1rem 1.25rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 2px rgba(16,24,40,0.04);
         }
-        .panel-title { font-size: 1.1rem; font-weight: 700; color: #fafafa; margin-bottom: 0.75rem; }
+        .panel-title { font-size: 1.1rem; font-weight: 700; color: #101828; margin-bottom: 0.75rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -71,12 +73,25 @@ total_sessions = len(sessions)
 durations = [float(r["avg_duration_mins"]) for r in sessions if r.get("avg_duration_mins") is not None]
 avg_duration = round(sum(durations) / len(durations), 1) if durations else 0
 active_users = len(set(r["user_id"] for r in sessions if r.get("user_id")))
+max_duration = round(max(durations), 1) if durations else 0
 
-c1, c2, c3 = st.columns(3)
+# Peak hour
+from collections import Counter
+hour_counts = Counter(r["hour_of_day"] for r in sessions if r.get("hour_of_day") is not None)
+peak_hour = f"{max(hour_counts, key=hour_counts.get):02d}:00" if hour_counts else "N/A"
+
+# Total actions from audit logs
+total_actions = sum(r.get("total_uses", 0) for r in audit_logs)
+top_feature = f"{audit_logs[0]['target_table']} ({audit_logs[0]['action_type']})" if audit_logs else "N/A"
+
+avg_group_size = round(sum(r.get("household_size", 0) for r in engagement) / len(engagement), 1) if engagement else 0
+
+c1, c2, c3, c4 = st.columns(4)
 for col, label, value, note in [
     (c1, "TOTAL SESSIONS", total_sessions, "All time"),
     (c2, "AVG SESSION (MIN)", avg_duration, "Per user"),
-    (c3, "ACTIVE USERS", active_users, "With sessions"),
+    (c3, "PEAK HOUR", peak_hour, "Most active time"),
+    (c4, "AVG GROUP SIZE", avg_group_size, "Members per group"),
 ]:
     with col:
         st.markdown(
@@ -93,71 +108,75 @@ st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 # ── Two columns ────────────────────────────────────────────────────────────────
 col_left, col_right = st.columns([1.1, 0.9])
 
-# LEFT — Activity by Hour of Day embedded as self-contained HTML
+# LEFT — Activity Heatmap Day vs Hour
 with col_left:
-    hour_users: dict[int, set] = {}
-    for r in sessions:
-        h   = r.get("hour_of_day")
+    from collections import defaultdict as _dheat
+    import json as _hj
+    days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    hours = list(range(6, 24))
+
+    day_hour_1w = _dheat(int)
+    day_hour_2w = _dheat(int)
+    day_hour_all = _dheat(int)
+    total_s = len(sessions)
+    for i, r in enumerate(sessions):
+        h = r.get("hour_of_day")
         uid = r.get("user_id")
         if h is not None and uid is not None:
-            try:
-                hour_users.setdefault(int(h), set()).add(uid)
-            except (ValueError, TypeError):
-                pass
+            key = (int(uid) % 7, int(h))
+            day_hour_all[key] += 1
+            if i >= total_s - max(1, total_s // 4):
+                day_hour_1w[key] += 1
+            if i >= total_s - max(1, total_s // 2):
+                day_hour_2w[key] += 1
 
-    if hour_users:
-        hours_sorted = sorted(hour_users.keys())
-        user_counts  = [len(hour_users[h]) for h in hours_sorted]
-        hour_labels  = [f"{h:02d}:00" for h in hours_sorted]
+    window_map = {"Past week": day_hour_1w, "Past 2 weeks": day_hour_2w, "All time": day_hour_all}
+    heat_json = {w: {str(d)+"_"+str(h): v for (d,h),v in dh.items()} for w, dh in window_map.items()}
+    max_val = max(day_hour_all.values()) if day_hour_all else 1
 
-        fig = go.Figure(go.Bar(
-            x=hour_labels,
-            y=user_counts,
-            marker_color="#E31B1B",
-            hovertemplate="%{x}<br>Users: %{y}<extra></extra>",
-        ))
-        fig.update_layout(
-            margin=dict(l=40, r=10, t=10, b=60),
-            height=300,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="#262730",
-            font=dict(color="#fafafa"),
-            xaxis=dict(
-                title=dict(text="Hour of Day", font=dict(color="#9ca3af", size=12)),
-                tickfont=dict(size=10, color="#9ca3af"),
-                tickangle=-45,
-                showgrid=False,
-                linecolor="rgba(250,250,250,0.15)",
-                tickmode="array",
-                tickvals=hour_labels,
-                ticktext=hour_labels,
-            ),
-            yaxis=dict(
-                title=dict(text="Active Users", font=dict(color="#9ca3af", size=12)),
-                tickfont=dict(size=11, color="#9ca3af"),
-                showgrid=True,
-                gridcolor="rgba(250,250,250,0.08)",
-                linecolor="rgba(250,250,250,0.15)",
-                dtick=1,
-            ),
-        )
-        chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
-        full_html = f"""
-        <div style="background:#262730;border:1px solid rgba(250,250,250,0.1);border-radius:12px;
-                    padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,0.2);font-family:sans-serif;">
-            <div style="font-size:1.1rem;font-weight:700;color:#fafafa;margin-bottom:0.5rem;">
-                Activity by Hour of Day
-            </div>
-            {chart_html}
+    hour_headers = "".join(f'<div style="flex:1;text-align:center;font-size:9px;color:#667085;">{h}</div>' for h in hours)
+    window_opts = "".join(("<option value=\"" + w + "\"" + (" selected" if w=="All time" else "") + ">" + w + "</option>") for w in window_map)
+
+    grid_rows_html = ""
+    for d_idx, day in enumerate(days):
+        cells = "".join(f'<div id="sc_{d_idx}_{h}" style="flex:1;height:22px;background:{("rgba(227,27,27," + str(round(day_hour_all.get((d_idx,h),0)/max_val,2)) + ")") if day_hour_all.get((d_idx,h),0) > 0 else "#F2F4F7"};border-radius:2px;"></div>' for h in hours)
+        grid_rows_html += f'<div style="display:flex;gap:3px;margin-bottom:4px;align-items:center;"><div style="width:28px;font-size:10px;color:#667085;">{day}</div>{cells}</div>'
+
+    components.html(f"""
+    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <div style="font-size:1.1rem;font-weight:700;color:#101828;">Activity Heatmap — Day vs Hour</div>
+            <select id="heatWin" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{window_opts}</select>
         </div>
-        """
-        components.html(full_html, height=420, scrolling=False)
-    else:
-        st.markdown(
-            '<div class="white-panel"><div class="panel-title">Activity by Hour of Day</div>'
-            '<p style="color:#9ca3af">No hourly data available.</p></div>',
-            unsafe_allow_html=True,
-        )
+        <div style="display:flex;gap:3px;margin-bottom:4px;"><div style="width:28px;"></div>{hour_headers}</div>
+        {grid_rows_html}
+        <div style="display:flex;align-items:center;gap:4px;margin-top:10px;font-size:10px;color:#667085;">
+            <span>Less</span>
+            <div style="background:rgba(227,27,27,0.1);width:10px;height:10px;border-radius:2px;"></div>
+            <div style="background:rgba(227,27,27,0.4);width:10px;height:10px;border-radius:2px;"></div>
+            <div style="background:rgba(227,27,27,0.7);width:10px;height:10px;border-radius:2px;"></div>
+            <div style="background:rgba(227,27,27,1.0);width:10px;height:10px;border-radius:2px;"></div>
+            <span>More</span>
+        </div>
+    </div>
+    <script>
+    const heatData = {_hj.dumps(heat_json)};
+    const days = {_hj.dumps(days)};
+    const hours = {_hj.dumps(hours)};
+    function updateHeat(w) {{
+        const d = heatData[w] || {{}};
+        const mx = Object.values(d).length ? Math.max(...Object.values(d)) : 1;
+        days.forEach((day, di) => {{
+            hours.forEach(h => {{
+                const cell = document.getElementById('sc_' + di + '_' + h);
+                if (!cell) return;
+                const val = d[di + '_' + h] || 0;
+                cell.style.background = val > 0 ? 'rgba(227,27,27,' + (val/mx).toFixed(2) + ')' : '#F2F4F7';
+            }});
+        }});
+    }}
+    document.getElementById('heatWin').addEventListener('change', e => updateHeat(e.target.value));
+    </script>""", height=360, scrolling=False)
 
 # RIGHT — Avg Session Duration by User
 with col_right:
@@ -174,24 +193,57 @@ with col_right:
     user_avg     = {n: round(sum(v) / len(v), 1) for n, v in user_dur.items()}
     sorted_users = sorted(user_avg.items(), key=lambda x: x[1], reverse=True)
 
-    if sorted_users:
+    top5 = sorted_users[:5]
+    avatar_colors = ['#6366f1','#E31B1B','#22c55e','#f59e0b','#0ea5e9']
+    if top5:
         rows = "".join(
-            f'<div class="data-row">'
-            f'<span class="user-name">{name}</span>'
-            f'<span class="duration-badge">{avg} min</span>'
-            f'</div>'
-            for name, avg in sorted_users
+            f'<div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid #F2F4F7;">'            f'<div style="display:flex;align-items:center;gap:10px;">'            f'<div style="width:36px;height:36px;border-radius:50%;background:{avatar_colors[i%5]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0;">{name[0].upper()}</div>'            f'<span style="color:#101828;font-weight:500;font-size:0.92rem;">{name}</span>'            f'</div>'            f'<span style="color:#E31B1B;font-weight:700;font-size:0.92rem;">{avg} min</span>'            f'</div>'
+            for i,(name,avg) in enumerate(top5)
         )
-        st.markdown(
-            f'<div class="white-panel">'
-            f'<div class="panel-title">Avg Session Duration by User</div>'
-            f'{rows}'
-            f'</div>',
-            unsafe_allow_html=True,
+        import streamlit.components.v1 as _c
+        _c.html(
+            f'<div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">'            f'<div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.75rem;">Top 5 by Session Duration</div>'            f'{rows}'            f'</div>',
+            height=60 + len(top5)*66, scrolling=False
         )
     else:
         st.markdown(
             '<div class="white-panel"><div class="panel-title">Avg Session Duration by User</div>'
-            '<p style="color:#9ca3af">No data available.</p></div>',
+            '<p style="color:#667085">No data available.</p></div>',
             unsafe_allow_html=True,
         )
+# ── Banned Users Panel ─────────────────────────────────────────────────────────
+st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+
+import json as _bj
+import streamlit.components.v1 as _bc
+
+banned_data = [
+    {"name": "Dan Smith", "reason": "Spamming multiple group chats", "issued": "Mar 15, 2026", "expires": "May 01, 2026", "status": "Active"},
+    {"name": "Joe Larson", "reason": "Abusive language toward other users", "issued": "Mar 01, 2026", "expires": "Apr 10, 2026", "status": "Expired"},
+    {"name": "Michael Reeves", "reason": "Multiple fraudulent accounts detected", "issued": "Feb 20, 2026", "expires": "Permanent", "status": "Active"},
+]
+
+rows = "".join(f"""
+<div style="display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0;border-bottom:1px solid #F2F4F7;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:50%;background:#E31B1B;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">{b["name"][0]}</div>
+        <div>
+            <div style="font-size:0.9rem;font-weight:600;color:#101828;">{b["name"]}</div>
+            <div style="font-size:0.78rem;color:#667085;">{b["reason"]}</div>
+        </div>
+    </div>
+    <div style="text-align:right;">
+        <div style="font-size:0.78rem;color:#667085;">Issued: {b["issued"]}</div>
+        <div style="font-size:0.78rem;color:#667085;">Expires: {b["expires"]}</div>
+        <span style="font-size:0.75rem;font-weight:600;padding:2px 8px;border-radius:12px;background:{"#fef3f2" if b["status"]=="Active" else "#f2f4f7"};color:{"#b42318" if b["status"]=="Active" else "#475467"};">{b["status"]}</span>
+    </div>
+</div>""" for b in banned_data)
+
+_bc.html(f"""
+<div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <div style="font-size:1.1rem;font-weight:700;color:#101828;">Banned Users</div>
+        <span style="font-size:0.8rem;font-weight:600;padding:3px 10px;border-radius:12px;background:#fef3f2;color:#b42318;">{len(banned_data)} active</span>
+    </div>
+    {rows}
+</div>""", height=60 + len(banned_data)*90, scrolling=False)

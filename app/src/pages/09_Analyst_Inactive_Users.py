@@ -14,28 +14,28 @@ inactive_users: list[dict] = client.get("/analyst/users/inactive") or []
 st.markdown(
     """
     <style>
-        .page-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.1rem; color: #fafafa; }
-        .page-subtitle { color: #9ca3af; font-size: 1rem; margin-top: 0; margin-bottom: 1.5rem; }
+        .page-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.1rem; }
+        .page-subtitle { color: #667085; font-size: 1rem; margin-top: 0; margin-bottom: 1.5rem; }
         .metric-card {
-            background: #262730;
-            border: 1px solid rgba(250,250,250,0.1);
+            background: white;
+            border: 1px solid #EAECF0;
             border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
             height: 100%;
         }
-        .metric-label { color: #9ca3af; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-        .metric-value { color: #fafafa; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
         .metric-value-red { color: #bd0b0b; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note { color: #8b95a1; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
         .panel {
-            background: #262730;
-            border: 1px solid rgba(250,250,250,0.1);
+            background: white;
+            border: 1px solid #EAECF0;
             border-radius: 12px;
             padding: 1.25rem;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
         }
-        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: #fafafa; }
+        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: #101828; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -70,16 +70,19 @@ with col2:
 with col3:
     st.markdown(
         f"""<div class="metric-card">
-            <div class="metric-label">AT RISK (30+ DAYS)</div>
+            <div class="metric-label">AT RISK (14+ DAYS)</div>
             <div class="metric-value">{at_risk}</div>
-            <div class="metric-note">Active but not seen recently</div>
+            <div class="metric-note">No session in 14+ days</div>
         </div>""",
         unsafe_allow_html=True,
     )
 
+st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
+if st.button("🔄 Refresh Data"):
+    st.rerun()
 st.markdown("<br>", unsafe_allow_html=True)
 
-st.markdown("<div class='panel'><div class='panel-title'>User Engagement Table</div>", unsafe_allow_html=True)
+st.markdown("<div class='panel-title' style='font-size:1.15rem;font-weight:700;color:white;margin-bottom:0.75rem;'>User Engagement Table</div>", unsafe_allow_html=True)
 
 if inactive_users:
     status_filter = st.selectbox("Filter by Status", ["All", "inactive", "active"])
@@ -113,4 +116,4 @@ if inactive_users:
 else:
     st.caption("No inactive users found.")
 
-st.markdown("</div>", unsafe_allow_html=True)
+
