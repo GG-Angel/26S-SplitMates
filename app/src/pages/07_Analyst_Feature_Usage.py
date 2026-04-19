@@ -49,13 +49,17 @@ total_sessions = sum(int(r.get("total_sessions", 0)) for r in sessions)
 avg_session = round(sum(float(r.get("avg_duration_mins", 0)) for r in sessions) / len(sessions), 1) if sessions else 0
 active_users = len(set(r.get("user_id") for r in sessions))
 inactive_count = len(inactive_users)
+most_used = f"{audit_logs[0]["target_table"]} / {audit_logs[0]["action_type"]}" if audit_logs else "N/A"
+most_used_count = audit_logs[0]["total_uses"] if audit_logs else 0
+least_used = f"{audit_logs[-1]["target_table"]} / {audit_logs[-1]["action_type"]}" if audit_logs else "N/A"
+least_used_count = audit_logs[-1]["total_uses"] if audit_logs else 0
 
 col1, col2, col3, col4 = st.columns(4)
 cards = [
     ("TOTAL SESSIONS", total_sessions, "All time"),
     ("AVG SESSION (MIN)", avg_session, "Per user"),
-    ("ACTIVE USERS", active_users, "With sessions"),
-    ("INACTIVE USERS", inactive_count, "30+ days"),
+    ("MOST USED", most_used, f"{most_used_count} clicks"),
+    ("LEAST USED", least_used, f"{least_used_count} clicks"),
 ]
 for col, (label, value, note) in zip((col1, col2, col3, col4), cards):
     with col:
