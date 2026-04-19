@@ -8,3 +8,12 @@ INSERT INTO group_members (user_id, group_id) VALUES
 (1, 1), (5, 1), (10, 1),
 (2, 2), (6, 2), (11, 2),
 (3, 3), (7, 3), (12, 3);
+INSERT INTO `groups` (group_leader, `name`, `address`, city, `state`, zip_code) VALUES
+(4, 'The Squad', '321 Comm Ave', 'Boston', 'MA', 02215),
+(5, 'East Wing', '555 Beacon St', 'Boston', 'MA', 02116),
+(6, 'Apt 4B', '88 Marlborough St', 'Boston', 'MA', 02116);
+
+INSERT INTO group_members (user_id, group_id) VALUES
+(4, 4),(8, 4),(13, 4),(18, 4),(22, 4),
+(5, 5),(9, 5),
+(6, 6),(10, 6),(14, 6),(19, 6);
