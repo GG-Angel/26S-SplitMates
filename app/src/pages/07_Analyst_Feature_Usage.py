@@ -161,7 +161,7 @@ with col_clicks:
     <script>
     new Chart(document.getElementById('hbarChart'), {{
         type: 'bar',
-        data: {{ labels: {_fj2.dumps(fc_labels)}, datasets: [{{ data: {_fj2.dumps(fc_values)}, backgroundColor: '#E31B1B', borderRadius: 4 }}] }},
+        data: {{ labels: {_fj2.dumps(fc_labels)}, datasets: [{{ data: {_fj2.dumps(fc_values)}, backgroundColor: '#E31B1B' }}] }},
         options: {{ indexAxis: 'y', responsive: true, maintainAspectRatio: false,
             plugins: {{ legend: {{ display: false }} }},
             scales: {{ x: {{ ticks: {{ stepSize: 1, font: {{ size: 10 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }}, y: {{ ticks: {{ font: {{ size: 10 }}, color: '#101828' }}, grid: {{ display: false }} }} }} }}
