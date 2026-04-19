@@ -17,3 +17,6 @@ INSERT INTO group_members (user_id, group_id) VALUES
 (4, 4),(8, 4),(13, 4),(18, 4),(22, 4),
 (5, 5),(9, 5),
 (6, 6),(10, 6),(14, 6),(19, 6);
+INSERT INTO group_members (user_id, group_id) VALUES (15, 1),(20, 1);
+INSERT INTO group_members (user_id, group_id) VALUES (16, 2),(21, 2),(25, 2),(30, 2);
+INSERT INTO group_members (user_id, group_id) VALUES (17, 3);
