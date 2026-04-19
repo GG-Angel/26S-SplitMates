@@ -143,7 +143,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 import json as _fj
 from collections import defaultdict as _dd
 
-col_clicks, col_top5 = st.columns(2, gap="large")
+col_clicks = st.container()
 
 with col_clicks:
     import json as _fj2
@@ -180,41 +180,6 @@ with col_clicks:
         hbar.data.labels = fcData[e.target.value].labels;
         hbar.data.datasets[0].data = fcData[e.target.value].values;
         hbar.update();
-    }});
-    </script>""", height=460, scrolling=False)
-
-with col_top5:
-    t5_monthly = {
-        "All": [("chores",12),("groups",10),("events",9),("bills",9),("sessions",8)],
-        "Jan": [("chores",4),("groups",3),("bills",3),("events",2),("items",2)],
-        "Feb": [("groups",3),("chores",3),("events",3),("sessions",2),("bills",2)],
-        "Mar": [("chores",3),("events",2),("bills",2),("sessions",2),("users",2)],
-        "Apr": [("chores",2),("groups",2),("bills",2),("events",2),("sessions",2)],
-    }
-    import json as _fj
-    t5_json = {m: {"labels": [t for t,_ in v], "values": [c for _,c in v]} for m,v in t5_monthly.items()}
-    t5_month_opts = "".join(("<option value=\"" + m + "\"" + (" selected" if m=="All" else "") + ">" + m + "</option>") for m in t5_json)
-    components.html(f"""
-    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-            <div style="font-size:1.1rem;font-weight:700;color:#101828;font-family:sans-serif;">Top 5 Most Active Tables</div>
-            <select id="t5Month" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{t5_month_opts}</select>
-        </div>
-        <div style="position:relative;height:355px;"><canvas id="top5Chart" role="img" aria-label="Top 5 most active tables">Table activity</canvas></div>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-    <script>
-    const t5Data = {_fj.dumps(t5_json)};
-    const t5bar = new Chart(document.getElementById('top5Chart'), {{
-        type: 'bar',
-        data: {{ labels: t5Data['All'].labels, datasets: [{{ data: t5Data['All'].values, backgroundColor: '#E31B1B', borderRadius: 4 }}] }},
-        options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ display: false }} }},
-            scales: {{ x: {{ ticks: {{ font: {{ size: 11 }}, color: '#101828' }}, grid: {{ display: false }} }}, y: {{ ticks: {{ stepSize: 1, font: {{ size: 11 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }} }} }}
-    }});
-    document.getElementById('t5Month').addEventListener('change', e => {{
-        t5bar.data.labels = t5Data[e.target.value].labels;
-        t5bar.data.datasets[0].data = t5Data[e.target.value].values;
-        t5bar.update();
     }});
     </script>""", height=460, scrolling=False)
 
