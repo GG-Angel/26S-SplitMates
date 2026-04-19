@@ -90,9 +90,9 @@ with col_stack:
         data: {{
             labels: {_cj.dumps(tables)},
             datasets: [
-                {{ label: 'Create', data: {_cj.dumps(creates)}, backgroundColor: '#fecaca' }},
-                {{ label: 'Update', data: {_cj.dumps(updates)}, backgroundColor: '#f87171' }},
-                {{ label: 'Delete', data: {_cj.dumps(deletes)}, backgroundColor: '#fecaca' }}
+                {{ label: 'Create', data: {_cj.dumps(creates)}, backgroundColor: '#E31B1B' }},
+                {{ label: 'Update', data: {_cj.dumps(updates)}, backgroundColor: '#f59e0b' }},
+                {{ label: 'Delete', data: {_cj.dumps(deletes)}, backgroundColor: '#E31B1B' }}
             ]
         }},
         options: {{
@@ -171,7 +171,7 @@ with col_clicks:
     const fcData = {_fj2.dumps(fc_json)};
     const hbar = new Chart(document.getElementById('hbarChart'), {{
         type: 'bar',
-        data: {{ labels: fcData['All'].labels, datasets: [{{ data: fcData['All'].values, backgroundColor: '#fecaca' }}] }},
+        data: {{ labels: fcData['All'].labels, datasets: [{{ data: fcData['All'].values, backgroundColor: '#E31B1B' }}] }},
         options: {{ indexAxis: 'y', responsive: true, maintainAspectRatio: false,
             plugins: {{ legend: {{ display: false }} }},
             scales: {{ x: {{ ticks: {{ stepSize: 1, font: {{ size: 10 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }}, y: {{ ticks: {{ font: {{ size: 10 }}, color: '#101828' }}, grid: {{ display: false }} }} }} }}
