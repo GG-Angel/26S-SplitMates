@@ -81,7 +81,7 @@ with col3:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-st.markdown("<div class='panel'><div class='panel-title'>User Engagement Table</div>", unsafe_allow_html=True)
+st.markdown("<div class='panel-title' style='font-size:1.15rem;font-weight:700;color:white;margin-bottom:0.75rem;'>User Engagement Table</div>", unsafe_allow_html=True)
 
 if inactive_users:
     status_filter = st.selectbox("Filter by Status", ["All", "inactive", "active"])
@@ -115,4 +115,4 @@ if inactive_users:
 else:
     st.caption("No inactive users found.")
 
-st.markdown("</div>", unsafe_allow_html=True)
+
