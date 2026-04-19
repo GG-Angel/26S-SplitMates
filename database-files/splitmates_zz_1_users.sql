@@ -34,3 +34,6 @@ INSERT INTO users (is_admin, is_analyst, first_name, last_name, email) VALUES (0
 INSERT INTO users (is_admin, is_analyst, first_name, last_name, email) VALUES (0, 0, 'Thomasa', 'Pavinese', 'tpavinesew@xinhuanet.com');
 INSERT INTO users (is_admin, is_analyst, first_name, last_name, email) VALUES (0, 0, 'Moreen', 'Rodgerson', 'mrodgersonx@vimeo.com');
 INSERT INTO users (is_admin, is_analyst, first_name, last_name, email) VALUES (0, 0, 'Clarance', 'Oswick', 'coswicky@wikia.com');
+
+UPDATE users SET account_status = 'inactive' WHERE user_id IN (1, 2, 3, 4, 5);
+UPDATE users SET account_status = 'active' WHERE user_id NOT IN (1, 2, 3, 4, 5);

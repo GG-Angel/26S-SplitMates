@@ -12,6 +12,7 @@ CREATE TABLE users (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     is_analyst BOOLEAN NOT NULL DEFAULT FALSE,
+    account_status ENUM('active', 'inactive', 'suspended', 'pending') NOT NULL DEFAULT 'active',
     INDEX idx_users_email (email)
 );
 
