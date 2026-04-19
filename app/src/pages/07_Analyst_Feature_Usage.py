@@ -140,49 +140,54 @@ st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-left_col, right_col = st.columns(2, gap="large")
+import json as _fj
+from collections import defaultdict as _dd
 
-with left_col:
-    if audit_logs:
-        labels = [f"{r['target_table']} / {r['action_type']}" for r in audit_logs[:10]]
-        values = [r["total_uses"] for r in audit_logs[:10]]
-        max_v = max(values) if values else 1
-        bars = "".join(f"""
-        <div style="margin-bottom:0.7rem;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-                <span style="font-size:0.88rem;color:#101828;font-weight:500;">{lbl}</span>
-                <span style="font-size:0.88rem;font-weight:700;color:#bd0b0b;">{val}</span>
-            </div>
-            <div style="background:#F2F4F7;border-radius:4px;height:9px;">
-                <div style="background:#E31B1B;border-radius:4px;height:9px;width:{round((val/max_v)*100)}%;"></div>
-            </div>
-        </div>""" for lbl, val in zip(labels, values))
-        components.html(f"""
-        <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:'Source Sans Pro',sans-serif;">
-            <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:1rem;">Audit Log Activity</div>
-            {bars}
-        </div>""", height=80 + len(audit_logs[:10]) * 52, scrolling=False)
+col_donut, col_top5 = st.columns(2, gap="large")
 
-with right_col:
-    feature_clicks = [("chores / Create",7),("groups / Create",6),("chores / Delete",5),("events / Create",5),("bills / Update",5),("users / Create",3),("items / Delete",3)]
-    max_val = max(c for _,c in feature_clicks)
-    bars_html = "".join(f"""
-    <div style="margin-bottom:0.85rem;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;">
-            <span style="font-weight:600;font-size:0.9rem;color:#101828;">{lbl}</span>
-            <span style="font-weight:700;font-size:0.9rem;color:#bd0b0b;">{cnt}</span>
-        </div>
-        <div style="background:#F2F4F7;border-radius:4px;height:10px;">
-            <div style="background:#E31B1B;border-radius:4px;height:10px;width:{round((cnt/max_val)*100)}%;"></div>
-        </div>
-    </div>""" for lbl,cnt in feature_clicks)
+with col_donut:
+    action_totals = {"create": 0, "update": 0, "delete": 0}
+    for r in audit_logs:
+        action_totals[r["action_type"]] += r.get("total_uses", 0)
+    donut_labels = [a.title() for a in action_totals.keys()]
+    donut_values = list(action_totals.values())
     components.html(f"""
-    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:'Source Sans Pro',sans-serif;">
-        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:1rem;">Feature Clicks</div>
-        {bars_html}
-    </div>""", height=60 + len(feature_clicks)*58, scrolling=False)
+    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Action Type Split</div>
+        <div style="position:relative;height:260px;"><canvas id="actionDonut" role="img" aria-label="Donut of action type split">Action types</canvas></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+    new Chart(document.getElementById('actionDonut'), {{
+        type: 'doughnut',
+        data: {{ labels: {_fj.dumps(donut_labels)}, datasets: [{{ data: {_fj.dumps(donut_values)}, backgroundColor: ['#6366f1','#f59e0b','#E31B1B'], borderWidth: 2, borderColor: '#fff' }}] }},
+        options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 11 }}, color: '#101828', padding: 16 }} }} }} }}
+    }});
+    </script>""", height=360, scrolling=False)
 
-st.markdown("<br>", unsafe_allow_html=True)
+with col_top5:
+    table_totals = _dd(int)
+    for r in audit_logs:
+        table_totals[r["target_table"]] += r.get("total_uses", 0)
+    top5_tables = sorted(table_totals.items(), key=lambda x: x[1], reverse=True)[:5]
+    t_labels = [t for t,_ in top5_tables]
+    t_values = [v for _,v in top5_tables]
+    t_colors = ['#6366f1','#E31B1B','#22c55e','#f59e0b','#0ea5e9']
+    components.html(f"""
+    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Top 5 Most Active Tables</div>
+        <div style="position:relative;height:260px;"><canvas id="top5Chart" role="img" aria-label="Top 5 most active tables">Table activity</canvas></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+    new Chart(document.getElementById('top5Chart'), {{
+        type: 'bar',
+        data: {{ labels: {_fj.dumps(t_labels)}, datasets: [{{ data: {_fj.dumps(t_values)}, backgroundColor: {_fj.dumps(t_colors)}, borderRadius: 4 }}] }},
+        options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ display: false }} }},
+            scales: {{ x: {{ ticks: {{ font: {{ size: 11 }}, color: '#101828' }}, grid: {{ display: false }} }}, y: {{ ticks: {{ stepSize: 1, font: {{ size: 11 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }} }} }}
+    }});
+    </script>""", height=360, scrolling=False)
+
 
 col_line, col_traffic = st.columns(2, gap="large")
 
