@@ -79,6 +79,8 @@ with col3:
         unsafe_allow_html=True,
     )
 
+if st.button("🔄 Refresh Data"):
+    st.rerun()
 st.markdown("<br>", unsafe_allow_html=True)
 
 st.markdown("<div class='panel-title' style='font-size:1.15rem;font-weight:700;color:white;margin-bottom:0.75rem;'>User Engagement Table</div>", unsafe_allow_html=True)
