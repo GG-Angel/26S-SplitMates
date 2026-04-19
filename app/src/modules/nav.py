@@ -46,6 +46,7 @@ def group_navs():
 
 
 def analyst_navs():
+    st.sidebar.markdown("""<div style="padding:0.5rem 0 0.75rem;border-bottom:1px solid #333;margin-bottom:0.5rem;"><span style="font-size:0.8rem;color:#667085;">Logged in as</span><br><span style="font-size:0.95rem;font-weight:600;color:white;">Nicole Parks</span><br><span style="font-size:0.75rem;color:#667085;">Data Analyst</span></div>""", unsafe_allow_html=True)
     st.sidebar.page_link("pages/06_Analyst_Dashboard.py", label="Dashboard Overview", icon="📈")
     st.sidebar.page_link(
         "pages/07_Analyst_Feature_Usage.py", label="Feature Usage", icon="📊"
