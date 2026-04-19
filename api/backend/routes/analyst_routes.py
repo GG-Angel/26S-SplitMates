@@ -49,3 +49,11 @@ def handle_group_engagement():
     current_app.logger.info("GET /analyst/groups/engagement")
     engagement = repository.get_group_engagement()
     return jsonify(engagement), 200
+
+@analyst_routes.route("/audit-logs/activity", methods=["GET"])
+@handle_db_errors
+def handle_audit_log_activity():
+    current_app.logger.info("GET /analyst/audit-logs/activity")
+    repository = AnalystRepository()
+    data = repository.get_audit_log_activity()
+    return jsonify(data), 200
