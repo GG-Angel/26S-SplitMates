@@ -52,6 +52,83 @@ for col, (label, value, note, trend, is_up) in zip([c1,c2,c3,c4], trends):
 st.markdown("<div style='height:0.1rem'></div>", unsafe_allow_html=True)
 
 # Row 1: Donut + Leaderboard
+col_heat = st.container()
+
+with col_heat:
+    days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    hours = list(range(6, 24))
+
+    # Build two week windows using session index as proxy for recency
+    day_hour_1w = defaultdict(int)
+    day_hour_2w = defaultdict(int)
+    day_hour_all = defaultdict(int)
+    total = len(sessions)
+    for i, r in enumerate(sessions):
+        h = r.get("hour_of_day")
+        uid = r.get("user_id")
+        if h is not None and uid is not None:
+            key = (int(uid) % 7, int(h))
+            day_hour_all[key] += 1
+            if i >= total - (total // 4):
+                day_hour_1w[key] += 1
+            if i >= total - (total // 2):
+                day_hour_2w[key] += 1
+
+    window_map = {"Past week": day_hour_1w, "Past 2 weeks": day_hour_2w, "All time": day_hour_all}
+    import json as _hj
+    heat_json = {w: {f"{d}_{h}": v for (d,h),v in dh.items()} for w, dh in window_map.items()}
+    max_val = max(day_hour_all.values()) if day_hour_all else 1
+    day_hour = day_hour_all
+
+    hour_headers = "".join(f'<div style="flex:1;text-align:center;font-size:9px;color:#667085;">{h}</div>' for h in hours)
+    window_opts = "".join(("<option value=\"" + w + "\"" + (" selected" if w=="All time" else "") + ">" + w + "</option>") for w in window_map)
+
+    grid_rows_html = ""
+    for d_idx, day in enumerate(days):
+        cells = "".join(f'<div id="cell_{d_idx}_{h}" style="flex:1;height:18px;background:{("rgba(227,27,27," + str(round(day_hour_all.get((d_idx,h),0)/max_val,2)) + ")") if day_hour_all.get((d_idx,h),0) > 0 else "#F2F4F7"};border-radius:2px;"></div>' for h in hours)
+        grid_rows_html += f'<div style="display:flex;gap:3px;margin-bottom:3px;align-items:center;"><div style="width:26px;font-size:10px;color:#667085;">{day}</div>{cells}</div>'
+
+    components.html(f"""
+    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <div style="font-size:1.1rem;font-weight:700;color:#101828;">Activity Heatmap — Day vs Hour</div>
+            <select id="heatWindow" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{window_opts}</select>
+        </div>
+        <div style="display:flex;gap:3px;margin-bottom:4px;"><div style="width:26px;"></div>{hour_headers}</div>
+        {grid_rows_html}
+        <div style="display:flex;align-items:center;gap:4px;margin-top:8px;font-size:10px;color:#667085;">
+            <span>Less</span>
+            <div style="background:rgba(227,27,27,0.1);width:10px;height:10px;border-radius:2px;"></div>
+            <div style="background:rgba(227,27,27,0.4);width:10px;height:10px;border-radius:2px;"></div>
+            <div style="background:rgba(227,27,27,0.7);width:10px;height:10px;border-radius:2px;"></div>
+            <div style="background:rgba(227,27,27,1.0);width:10px;height:10px;border-radius:2px;"></div>
+            <span>More</span>
+        </div>
+    </div>
+    <script>
+    const heatData = {_hj.dumps(heat_json)};
+    const maxVal = {max_val};
+    const days = {_hj.dumps(days)};
+    const hours = {_hj.dumps(hours)};
+    function updateHeat(window) {{
+        const d = heatData[window] || {{}};
+        const allVals = Object.values(d);
+        const mx = allVals.length ? Math.max(...allVals) : 1;
+        days.forEach((day, di) => {{
+            hours.forEach(h => {{
+                const cell = document.getElementById('cell_' + di + '_' + h);
+                if (!cell) return;
+                const val = d[di + '_' + h] || 0;
+                cell.style.background = val > 0 ? 'rgba(227,27,27,' + (val/mx).toFixed(2) + ')' : '#F2F4F7';
+            }});
+        }});
+    }}
+    document.getElementById('heatWindow').addEventListener('change', e => updateHeat(e.target.value));
+    </script>""", height=320, scrolling=False)
+
+
+st.markdown("<div style='height:0.1rem'></div>", unsafe_allow_html=True)
+
 col_donut, col_leader = st.columns(2, gap="large")
 
 with col_donut:
@@ -130,80 +207,6 @@ with col_leader:
 st.markdown("<div style='height:0.1rem'></div>", unsafe_allow_html=True)
 
 # Row 2: Heatmap + Group Size
-col_heat = st.container()
-
-with col_heat:
-    days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-    hours = list(range(6, 24))
-
-    # Build two week windows using session index as proxy for recency
-    day_hour_1w = defaultdict(int)
-    day_hour_2w = defaultdict(int)
-    day_hour_all = defaultdict(int)
-    total = len(sessions)
-    for i, r in enumerate(sessions):
-        h = r.get("hour_of_day")
-        uid = r.get("user_id")
-        if h is not None and uid is not None:
-            key = (int(uid) % 7, int(h))
-            day_hour_all[key] += 1
-            if i >= total - (total // 4):
-                day_hour_1w[key] += 1
-            if i >= total - (total // 2):
-                day_hour_2w[key] += 1
-
-    window_map = {"Past week": day_hour_1w, "Past 2 weeks": day_hour_2w, "All time": day_hour_all}
-    import json as _hj
-    heat_json = {w: {f"{d}_{h}": v for (d,h),v in dh.items()} for w, dh in window_map.items()}
-    max_val = max(day_hour_all.values()) if day_hour_all else 1
-    day_hour = day_hour_all
-
-    hour_headers = "".join(f'<div style="flex:1;text-align:center;font-size:9px;color:#667085;">{h}</div>' for h in hours)
-    window_opts = "".join(("<option value=\"" + w + "\"" + (" selected" if w=="All time" else "") + ">" + w + "</option>") for w in window_map)
-
-    grid_rows_html = ""
-    for d_idx, day in enumerate(days):
-        cells = "".join(f'<div id="cell_{d_idx}_{h}" style="flex:1;height:18px;background:{("rgba(227,27,27," + str(round(day_hour_all.get((d_idx,h),0)/max_val,2)) + ")") if day_hour_all.get((d_idx,h),0) > 0 else "#F2F4F7"};border-radius:2px;"></div>' for h in hours)
-        grid_rows_html += f'<div style="display:flex;gap:3px;margin-bottom:3px;align-items:center;"><div style="width:26px;font-size:10px;color:#667085;">{day}</div>{cells}</div>'
-
-    components.html(f"""
-    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-            <div style="font-size:1.1rem;font-weight:700;color:#101828;">Activity Heatmap — Day vs Hour</div>
-            <select id="heatWindow" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{window_opts}</select>
-        </div>
-        <div style="display:flex;gap:3px;margin-bottom:4px;"><div style="width:26px;"></div>{hour_headers}</div>
-        {grid_rows_html}
-        <div style="display:flex;align-items:center;gap:4px;margin-top:8px;font-size:10px;color:#667085;">
-            <span>Less</span>
-            <div style="background:rgba(227,27,27,0.1);width:10px;height:10px;border-radius:2px;"></div>
-            <div style="background:rgba(227,27,27,0.4);width:10px;height:10px;border-radius:2px;"></div>
-            <div style="background:rgba(227,27,27,0.7);width:10px;height:10px;border-radius:2px;"></div>
-            <div style="background:rgba(227,27,27,1.0);width:10px;height:10px;border-radius:2px;"></div>
-            <span>More</span>
-        </div>
-    </div>
-    <script>
-    const heatData = {_hj.dumps(heat_json)};
-    const maxVal = {max_val};
-    const days = {_hj.dumps(days)};
-    const hours = {_hj.dumps(hours)};
-    function updateHeat(window) {{
-        const d = heatData[window] || {{}};
-        const allVals = Object.values(d);
-        const mx = allVals.length ? Math.max(...allVals) : 1;
-        days.forEach((day, di) => {{
-            hours.forEach(h => {{
-                const cell = document.getElementById('cell_' + di + '_' + h);
-                if (!cell) return;
-                const val = d[di + '_' + h] || 0;
-                cell.style.background = val > 0 ? 'rgba(227,27,27,' + (val/mx).toFixed(2) + ')' : '#F2F4F7';
-            }});
-        }});
-    }}
-    document.getElementById('heatWindow').addEventListener('change', e => updateHeat(e.target.value));
-    </script>""", height=320, scrolling=False)
-
 st.markdown("<div style='height:0.1rem'></div>", unsafe_allow_html=True)
 
 import streamlit.components.v1 as components
