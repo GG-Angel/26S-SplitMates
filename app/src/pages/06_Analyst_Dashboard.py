@@ -130,7 +130,7 @@ with col_leader:
 st.markdown("<div style='height:0.1rem'></div>", unsafe_allow_html=True)
 
 # Row 2: Heatmap + Group Size
-col_heat, col_group = st.columns([1.3, 0.7], gap="large")
+col_heat = st.container()
 
 with col_heat:
     days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
