@@ -6,67 +6,111 @@ from modules.nav import SideBarLinks
 from utils import parse_mysql_datetime
 
 logger = logging.getLogger(__name__)
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="SplitMates | Inactive Users")
 SideBarLinks()
 
-inactive_users: list[dict] = client.get("/analyst/users/inactive")
+inactive_users: list[dict] = client.get("/analyst/users/inactive") or []
 
-# --- Content ---
+st.markdown(
+    """
+    <style>
+        .page-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.1rem; }
+        .page-subtitle { color: #667085; font-size: 1rem; margin-top: 0; margin-bottom: 1.5rem; }
+        .metric-card {
+            background: white;
+            border: 1px solid #EAECF0;
+            border-radius: 12px;
+            padding: 1rem 1rem 0.85rem 1rem;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            height: 100%;
+        }
+        .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-value-red { color: #bd0b0b; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+        .panel {
+            background: white;
+            border: 1px solid #EAECF0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+        }
+        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: #101828; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-st.title("Inactive Users")
-st.write("Monitor user dropoff and identify accounts that have gone inactive.")
+st.markdown('<div class="page-title">Inactive Users</div>', unsafe_allow_html=True)
+st.markdown('<div class="page-subtitle">Monitor user dropoff and identify accounts that have gone inactive.</div>', unsafe_allow_html=True)
 
-st.divider()
+total = len(inactive_users)
+truly_inactive = len([u for u in inactive_users if u.get("account_status") == "inactive"])
+at_risk = len([u for u in inactive_users if u.get("account_status") == "active"])
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.markdown(
+        f"""<div class="metric-card">
+            <div class="metric-label">TOTAL FLAGGED</div>
+            <div class="metric-value">{total}</div>
+            <div class="metric-note">Users flagged for inactivity</div>
+        </div>""",
+        unsafe_allow_html=True,
+    )
+with col2:
+    st.markdown(
+        f"""<div class="metric-card">
+            <div class="metric-label">INACTIVE ACCOUNTS</div>
+            <div class="metric-value-red">{truly_inactive}</div>
+            <div class="metric-note">Account status: inactive</div>
+        </div>""",
+        unsafe_allow_html=True,
+    )
+with col3:
+    st.markdown(
+        f"""<div class="metric-card">
+            <div class="metric-label">AT RISK (30+ DAYS)</div>
+            <div class="metric-value">{at_risk}</div>
+            <div class="metric-note">Active but not seen recently</div>
+        </div>""",
+        unsafe_allow_html=True,
+    )
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+st.markdown("<div class='panel'><div class='panel-title'>User Engagement Table</div>", unsafe_allow_html=True)
 
 if inactive_users:
-    df = pd.DataFrame(inactive_users)
+    status_filter = st.selectbox("Filter by Status", ["All", "inactive", "active"])
+    display = [u for u in inactive_users if status_filter == "All" or u.get("account_status") == status_filter]
 
-    total = len(df)
-    truly_inactive = len(df[df["account_status"] == "inactive"])
-    at_risk = len(df[df["account_status"] == "active"])
+    rows = []
+    for u in display:
+        last = u.get("last_session")
+        try:
+            last_fmt = parse_mysql_datetime(last).strftime("%b %d, %Y") if last else "Never"
+        except Exception:
+            last_fmt = "Never"
+        rows.append({
+            "First Name": u.get("first_name", ""),
+            "Last Name": u.get("last_name", ""),
+            "Email": u.get("email", ""),
+            "Status": u.get("account_status", ""),
+            "Last Session": last_fmt,
+        })
 
-    metric_col1, metric_col2, metric_col3 = st.columns(3)
-    with metric_col1:
-        st.metric("Total Flagged Users", total)
-    with metric_col2:
-        st.metric("Inactive Accounts", truly_inactive)
-    with metric_col3:
-        st.metric("At Risk (30+ days)", at_risk)
+    df = pd.DataFrame(rows)
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
-    st.divider()
-
-    left_col, right_col = st.columns([2, 1], gap="medium")
-
-    with left_col:
-        st.subheader("User Table")
-
-        status_filter = st.selectbox("Filter by Status", ["All", "inactive", "active"])
-
-        display_df = df.copy()
-        if status_filter != "All":
-            display_df = display_df[display_df["account_status"] == status_filter]
-
-        display_df["last_session"] = display_df["last_session"].apply(
-            lambda x: parse_mysql_datetime(x).strftime("%b %d, %Y") if x else "Never"
-        )
-        display_df = display_df[["first_name", "last_name", "email", "account_status", "last_session"]]
-        display_df.columns = ["First Name", "Last Name", "Email", "Status", "Last Session"]
-
-        st.dataframe(display_df, use_container_width=True, hide_index=True)
-
-        csv = display_df.to_csv(index=False)
-        st.download_button(
-            label="Export CSV",
-            data=csv,
-            file_name="inactive_users.csv",
-            mime="text/csv",
-        )
-
-    with right_col:
-        st.subheader("Status Breakdown")
-        status_counts = df["account_status"].value_counts().reset_index()
-        status_counts.columns = ["Status", "Count"]
-        st.dataframe(status_counts, use_container_width=True, hide_index=True)
-
+    csv = df.to_csv(index=False)
+    st.download_button(
+        label="Export CSV",
+        data=csv,
+        file_name="inactive_users.csv",
+        mime="text/csv",
+    )
 else:
-    st.write("No inactive users found.")
+    st.caption("No inactive users found.")
+
+st.markdown("</div>", unsafe_allow_html=True)
