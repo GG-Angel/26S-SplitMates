@@ -201,11 +201,11 @@ with col_right:
             f'<div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">'            f'<div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.75rem;">Top 5 by Session Duration</div>'            f'{rows}'            f'</div>',
             height=60 + len(top5)*66, scrolling=False
         )
+    else:
+        st.markdown(
             '<div class="white-panel"><div class="panel-title">Avg Session Duration by User</div>'
             '<p style="color:#667085">No data available.</p></div>',
             unsafe_allow_html=True,
-        )
-
 # ── Avg Days Between Visits chart ─────────────────────────────────────────────
 st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
