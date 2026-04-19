@@ -72,9 +72,9 @@ with col2:
 with col3:
     st.markdown(
         f"""<div class="metric-card">
-            <div class="metric-label">AT RISK (30+ DAYS)</div>
+            <div class="metric-label">AT RISK (14+ DAYS)</div>
             <div class="metric-value">{at_risk}</div>
-            <div class="metric-note">Active but not seen recently</div>
+            <div class="metric-note">No session in 14+ days</div>
         </div>""",
         unsafe_allow_html=True,
     )
