@@ -106,6 +106,43 @@ for col, label, value, note in [
 st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
 # ── Two columns ────────────────────────────────────────────────────────────────
+# ── Banned Users Panel ─────────────────────────────────────────────────────────
+st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+
+import json as _bj
+import streamlit.components.v1 as _bc
+
+banned_data = [
+    {"name": "Dan Smith", "reason": "Spamming multiple group chats", "issued": "Mar 15, 2026", "expires": "May 01, 2026", "status": "Active"},
+    {"name": "Joe Larson", "reason": "Abusive language toward other users", "issued": "Mar 01, 2026", "expires": "Apr 10, 2026", "status": "Expired"},
+    {"name": "Michael Reeves", "reason": "Multiple fraudulent accounts detected", "issued": "Feb 20, 2026", "expires": "Permanent", "status": "Active"},
+]
+
+rows = "".join(f"""
+<div style="display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0;border-bottom:1px solid #F2F4F7;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:50%;background:#E31B1B;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">{b["name"][0]}</div>
+        <div>
+            <div style="font-size:0.9rem;font-weight:600;color:#101828;">{b["name"]}</div>
+            <div style="font-size:0.78rem;color:#667085;">{b["reason"]}</div>
+        </div>
+    </div>
+    <div style="text-align:right;">
+        <div style="font-size:0.78rem;color:#667085;">Issued: {b["issued"]}</div>
+        <div style="font-size:0.78rem;color:#667085;">Expires: {b["expires"]}</div>
+        <span style="font-size:0.75rem;font-weight:600;padding:2px 8px;border-radius:12px;background:{"#fef3f2" if b["status"]=="Active" else "#f2f4f7"};color:{"#b42318" if b["status"]=="Active" else "#475467"};">{b["status"]}</span>
+    </div>
+</div>""" for b in banned_data)
+
+_bc.html(f"""
+<div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <div style="font-size:1.1rem;font-weight:700;color:#101828;">Banned Users</div>
+        <span style="font-size:0.8rem;font-weight:600;padding:3px 10px;border-radius:12px;background:#fef3f2;color:#b42318;">{len(banned_data)} active</span>
+    </div>
+    {rows}
+</div>""", height=60 + len(banned_data)*90, scrolling=False)
+
 col_left, col_right = st.columns([1.1, 0.9])
 
 # LEFT — Activity Heatmap Day vs Hour
@@ -211,39 +248,3 @@ with col_right:
             '<p style="color:#667085">No data available.</p></div>',
             unsafe_allow_html=True,
         )
-# ── Banned Users Panel ─────────────────────────────────────────────────────────
-st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
-
-import json as _bj
-import streamlit.components.v1 as _bc
-
-banned_data = [
-    {"name": "Dan Smith", "reason": "Spamming multiple group chats", "issued": "Mar 15, 2026", "expires": "May 01, 2026", "status": "Active"},
-    {"name": "Joe Larson", "reason": "Abusive language toward other users", "issued": "Mar 01, 2026", "expires": "Apr 10, 2026", "status": "Expired"},
-    {"name": "Michael Reeves", "reason": "Multiple fraudulent accounts detected", "issued": "Feb 20, 2026", "expires": "Permanent", "status": "Active"},
-]
-
-rows = "".join(f"""
-<div style="display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0;border-bottom:1px solid #F2F4F7;">
-    <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;border-radius:50%;background:#E31B1B;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">{b["name"][0]}</div>
-        <div>
-            <div style="font-size:0.9rem;font-weight:600;color:#101828;">{b["name"]}</div>
-            <div style="font-size:0.78rem;color:#667085;">{b["reason"]}</div>
-        </div>
-    </div>
-    <div style="text-align:right;">
-        <div style="font-size:0.78rem;color:#667085;">Issued: {b["issued"]}</div>
-        <div style="font-size:0.78rem;color:#667085;">Expires: {b["expires"]}</div>
-        <span style="font-size:0.75rem;font-weight:600;padding:2px 8px;border-radius:12px;background:{"#fef3f2" if b["status"]=="Active" else "#f2f4f7"};color:{"#b42318" if b["status"]=="Active" else "#475467"};">{b["status"]}</span>
-    </div>
-</div>""" for b in banned_data)
-
-_bc.html(f"""
-<div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
-        <div style="font-size:1.1rem;font-weight:700;color:#101828;">Banned Users</div>
-        <span style="font-size:0.8rem;font-weight:600;padding:3px 10px;border-radius:12px;background:#fef3f2;color:#b42318;">{len(banned_data)} active</span>
-    </div>
-    {rows}
-</div>""", height=60 + len(banned_data)*90, scrolling=False)
