@@ -159,7 +159,7 @@ with col_heat:
     day_hour = day_hour_all
 
     hour_headers = "".join(f'<div style="flex:1;text-align:center;font-size:9px;color:#667085;">{h}</div>' for h in hours)
-    window_opts = "".join(f'<option value="{w}"{"selected" if w==\'All time\' else ""}>{w}</option>' for w in window_map)
+    window_opts = "".join(("<option value=\"" + w + "\"" + (" selected" if w=="All time" else "") + ">" + w + "</option>") for w in window_map)
 
     grid_rows_html = ""
     for d_idx, day in enumerate(days):
