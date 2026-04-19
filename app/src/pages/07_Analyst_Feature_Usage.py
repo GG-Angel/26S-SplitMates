@@ -90,8 +90,8 @@ with col_stack:
         data: {{
             labels: {_cj.dumps(tables)},
             datasets: [
-                {{ label: 'Create', data: {_cj.dumps(creates)}, backgroundColor: '#E31B1B' }},
-                {{ label: 'Update', data: {_cj.dumps(updates)}, backgroundColor: '#c0392b' }},
+                {{ label: 'Create', data: {_cj.dumps(creates)}, backgroundColor: '#6366f1' }},
+                {{ label: 'Update', data: {_cj.dumps(updates)}, backgroundColor: '#f59e0b' }},
                 {{ label: 'Delete', data: {_cj.dumps(deletes)}, backgroundColor: '#E31B1B' }}
             ]
         }},
@@ -123,7 +123,7 @@ with col_action:
         type: 'bar',
         data: {{
             labels: {_cj.dumps([a.title() for a in action_labels])},
-            datasets: [{{ data: {_cj.dumps(action_values)}, backgroundColor: {_cj.dumps(action_colors)}, borderRadius: 4 }}]
+            datasets: [{{ data: {_cj.dumps(action_values)}, backgroundColor: ['#E31B1B','#E31B1B','#E31B1B'], borderRadius: 4 }}]
         }},
         options: {{
             responsive: true, maintainAspectRatio: false,
@@ -186,7 +186,7 @@ with col_top5:
     <script>
     new Chart(document.getElementById('top5Chart'), {{
         type: 'bar',
-        data: {{ labels: {_fj.dumps(t_labels)}, datasets: [{{ data: {_fj.dumps(t_values)}, backgroundColor: {_fj.dumps(t_colors)}, borderRadius: 4 }}] }},
+        data: {{ labels: {_fj.dumps(t_labels)}, datasets: [{{ data: {_fj.dumps(t_values)}, backgroundColor: '#E31B1B', borderRadius: 4 }}] }},
         options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ display: false }} }},
             scales: {{ x: {{ ticks: {{ font: {{ size: 11 }}, color: '#101828' }}, grid: {{ display: false }} }}, y: {{ ticks: {{ stepSize: 1, font: {{ size: 11 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }} }} }}
     }});
