@@ -99,7 +99,7 @@ if chores:
     import streamlit.components.v1 as _cc
     chore_labels = [r["title"] for r in chores]
     chore_values = [r["times_completed"] for r in chores]
-    effort_colors = {"low": "#22c55e", "medium": "#f59e0b", "high": "#E31B1B"}
+    effort_colors = {"low": "#E31B1B", "medium": "#E31B1B", "high": "#E31B1B"}
     chore_colors = [effort_colors.get(r["effort"], "#6366f1") for r in chores]
 
     _cc.html(f"""
