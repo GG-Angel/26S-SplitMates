@@ -1,72 +1,197 @@
 import logging
 import streamlit as st
-import pandas as pd
+import streamlit.components.v1 as components
+import plotly.graph_objects as go
 from api.client import client
 from modules.nav import SideBarLinks
 
 logger = logging.getLogger(__name__)
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="SplitMates | User Sessions")
 SideBarLinks()
 
-sessions: list[dict] = client.get("/analyst/sessions")
-engagement: list[dict] = client.get("/analyst/groups/engagement")
+sessions: list[dict] = client.get("/analyst/sessions") or []
 
-# --- Content ---
+st.markdown(
+    """
+    <style>
+        .page-subtitle {
+            color: #667085 !important;
+            font-size: 1rem !important;
+            margin-top: 0 !important;
+            margin-bottom: 1.5rem !important;
+        }
 
+        /* Match h1 size/weight to Feature Usage page title */
+        h1 {
+            font-size: 2.2rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 0.1rem !important;
+        }
+        .metric-card {
+            background: white;
+            border: 1px solid #EAECF0;
+            border-radius: 12px;
+            padding: 1rem 1rem 0.85rem 1rem;
+            box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+        }
+        .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note  { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #F2F4F7;
+        }
+        .data-row:last-child { border-bottom: none; }
+        .user-name     { color: #101828; font-weight: 500; font-size: 0.92rem; }
+        .duration-badge{ color: #E31B1B; font-weight: 700; font-size: 0.92rem; }
+
+        .white-panel {
+            background: white;
+            border: 1px solid #EAECF0;
+            border-radius: 12px;
+            padding: 1.25rem 1.25rem 1rem 1.25rem;
+            box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+        }
+        .panel-title { font-size: 1.1rem; font-weight: 700; color: #101828; margin-bottom: 0.75rem; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ── Page title ─────────────────────────────────────────────────────────────────
 st.title("User Sessions & Engagement")
-st.write("Analyze session trends and how engagement scales with household size.")
+st.markdown('<p class="page-subtitle">Analyze session trends and how engagement scales with household size.</p>', unsafe_allow_html=True)
 
-st.divider()
+# ── Metrics ────────────────────────────────────────────────────────────────────
+total_sessions = len(sessions)
+durations = [float(r["avg_duration_mins"]) for r in sessions if r.get("avg_duration_mins") is not None]
+avg_duration = round(sum(durations) / len(durations), 1) if durations else 0
+active_users = len(set(r["user_id"] for r in sessions if r.get("user_id")))
 
-if sessions:
-    df = pd.DataFrame(sessions)
-
-    total_sessions = int(df["total_sessions"].sum())
-    avg_duration = round(float(df["avg_duration_mins"].mean()), 1)
-    unique_users = int(df["user_id"].nunique())
-
-    metric_col1, metric_col2, metric_col3 = st.columns(3)
-    with metric_col1:
-        st.metric("Total Sessions", total_sessions)
-    with metric_col2:
-        st.metric("Avg Session (min)", avg_duration)
-    with metric_col3:
-        st.metric("Active Users", unique_users)
-
-    st.divider()
-
-    left_col, right_col = st.columns(2, gap="medium")
-
-    with left_col:
-        st.subheader("Activity by Hour of Day")
-        hourly = df.groupby("hour_of_day")["total_sessions"].sum().reset_index()
-        hourly.columns = ["Hour", "Sessions"]
-        st.bar_chart(hourly.set_index("Hour"))
-
-    with right_col:
-        st.subheader("Avg Session Duration by User")
-        user_avg = df.groupby(["first_name", "last_name"])["avg_duration_mins"].mean().reset_index()
-        user_avg["Name"] = user_avg["first_name"] + " " + user_avg["last_name"]
-        user_avg = user_avg[["Name", "avg_duration_mins"]].rename(
-            columns={"avg_duration_mins": "Avg Duration (min)"}
+c1, c2, c3 = st.columns(3)
+for col, label, value, note in [
+    (c1, "TOTAL SESSIONS", total_sessions, "All time"),
+    (c2, "AVG SESSION (MIN)", avg_duration, "Per user"),
+    (c3, "ACTIVE USERS", active_users, "With sessions"),
+]:
+    with col:
+        st.markdown(
+            f'<div class="metric-card">'
+            f'<div class="metric-label">{label}</div>'
+            f'<div class="metric-value">{value}</div>'
+            f'<div class="metric-note">{note}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
         )
-        st.dataframe(user_avg, use_container_width=True, hide_index=True)
 
-else:
-    st.write("No session data available.")
+st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-st.divider()
+# ── Two columns ────────────────────────────────────────────────────────────────
+col_left, col_right = st.columns([1.1, 0.9])
 
-st.subheader("Engagement by Household Size")
-if engagement:
-    df_eng = pd.DataFrame(engagement)
-    df_eng.columns = [
-        "Household Size", "Total Groups", "Avg Chores",
-        "Avg Completed Chores", "Avg Bills", "Avg Events"
-    ]
-    st.dataframe(df_eng, use_container_width=True, hide_index=True)
+# LEFT — Activity by Hour of Day embedded as self-contained HTML
+with col_left:
+    hour_users: dict[int, set] = {}
+    for r in sessions:
+        h   = r.get("hour_of_day")
+        uid = r.get("user_id")
+        if h is not None and uid is not None:
+            try:
+                hour_users.setdefault(int(h), set()).add(uid)
+            except (ValueError, TypeError):
+                pass
 
-    st.write("**Avg Chores vs Household Size**")
-    st.line_chart(df_eng.set_index("Household Size")[["Avg Chores", "Avg Completed Chores"]])
-else:
-    st.write("No engagement data available.")
+    if hour_users:
+        hours_sorted = sorted(hour_users.keys())
+        user_counts  = [len(hour_users[h]) for h in hours_sorted]
+        hour_labels  = [f"{h:02d}:00" for h in hours_sorted]
+
+        fig = go.Figure(go.Bar(
+            x=hour_labels,
+            y=user_counts,
+            marker_color="#E31B1B",
+            hovertemplate="%{x}<br>Users: %{y}<extra></extra>",
+        ))
+        fig.update_layout(
+            margin=dict(l=40, r=10, t=10, b=60),
+            height=300,
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            font=dict(color="#101828"),
+            xaxis=dict(
+                title=dict(text="Hour of Day", font=dict(color="#101828", size=12)),
+                tickfont=dict(size=10, color="#101828"),
+                tickangle=-45,
+                showgrid=False,
+                linecolor="#EAECF0",
+                tickmode="array",
+                tickvals=hour_labels,
+                ticktext=hour_labels,
+            ),
+            yaxis=dict(
+                title=dict(text="Active Users", font=dict(color="#101828", size=12)),
+                tickfont=dict(size=11, color="#101828"),
+                showgrid=True,
+                gridcolor="#F2F4F7",
+                linecolor="#EAECF0",
+                dtick=1,
+            ),
+        )
+        chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
+        full_html = f"""
+        <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
+                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
+            <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;">
+                Activity by Hour of Day
+            </div>
+            {chart_html}
+        </div>
+        """
+        components.html(full_html, height=420, scrolling=False)
+    else:
+        st.markdown(
+            '<div class="white-panel"><div class="panel-title">Activity by Hour of Day</div>'
+            '<p style="color:#667085">No hourly data available.</p></div>',
+            unsafe_allow_html=True,
+        )
+
+# RIGHT — Avg Session Duration by User
+with col_right:
+    user_dur: dict[str, list[float]] = {}
+    for r in sessions:
+        uid   = r.get("user_id")
+        first = r.get("first_name", "")
+        last  = r.get("last_name", "")
+        dur   = r.get("avg_duration_mins")
+        if uid and dur is not None:
+            name = f"{first} {last}".strip() or f"User {uid}"
+            user_dur.setdefault(name, []).append(float(dur))
+
+    user_avg     = {n: round(sum(v) / len(v), 1) for n, v in user_dur.items()}
+    sorted_users = sorted(user_avg.items(), key=lambda x: x[1], reverse=True)
+
+    if sorted_users:
+        rows = "".join(
+            f'<div class="data-row">'
+            f'<span class="user-name">{name}</span>'
+            f'<span class="duration-badge">{avg} min</span>'
+            f'</div>'
+            for name, avg in sorted_users
+        )
+        st.markdown(
+            f'<div class="white-panel">'
+            f'<div class="panel-title">Avg Session Duration by User</div>'
+            f'{rows}'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            '<div class="white-panel"><div class="panel-title">Avg Session Duration by User</div>'
+            '<p style="color:#667085">No data available.</p></div>',
+            unsafe_allow_html=True,
+        )

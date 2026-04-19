@@ -43,6 +43,10 @@ def group_navs():
         st.sidebar.page_link(
             "pages/07_Group_Management.py", label="Management", icon="🛠️"
         )
+def analyst_navs():
+    st.sidebar.page_link("pages/07_Analyst_Feature_Usage.py", label="Feature Usage", icon="📊")
+    st.sidebar.page_link("pages/08_Analyst_Sessions.py", label="User Sessions", icon="⏱️")
+    st.sidebar.page_link("pages/09_Analyst_Inactive_Users.py", label="Inactive Users", icon="👤")
 
 
 def admin_home_nav():
@@ -92,10 +96,14 @@ def SideBarLinks(show_home=False):
     # Roommate navigation
     if st.session_state["authenticated"]:
         st.sidebar.header(f"*{highlight_color('red', 'SplitMates')}*")
-        if st.session_state.get("role") == "roommate":
+        role = st.session_state.get("role", "roommate")
+        if role == "analyst":
+            analyst_navs()
+        else:
             user_navs()
             st.sidebar.page_link("pages/11_Submit_Report.py", label="Submit Report", icon="🚩")
             st.sidebar.divider()
+        st.sidebar.divider()
 
     if "group" in st.session_state and st.session_state["group"]:
         group_navs()

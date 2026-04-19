@@ -30,6 +30,7 @@ USER_REPORTS_COUNT = 20
 BANS_COUNT = 12
 APP_VERSIONS_COUNT = 8
 AUDIT_LOGS_COUNT = 40
+SESSION_ROWS = 100
 
 
 def generate_picture_url():
@@ -555,6 +556,16 @@ def generate_mock_audit_logs(user_ids: list[int], count: int = AUDIT_LOGS_COUNT)
     return rows
 
 
+def generate_mock_sessions(user_ids: list[int], count: int = SESSION_ROWS):
+    rows = []
+    for _ in range(count):
+        start_time = fake.date_time_between(start_date="-90d", end_date="now")
+        duration = random.randint(60, 7200)  # 1 minute to 2 hours in seconds
+        end_time = start_time + timedelta(seconds=duration)
+        rows.append((random.choice(user_ids), start_time, end_time, duration))
+    return rows
+
+
 def generate_mock_item(group_id: int, group_members: list[int]):
     name = random.choice(HOUSEHOLD_ITEMS)
     picture_url = generate_picture_url() if random.random() < 0.8 else None
@@ -624,6 +635,7 @@ def seed_db():
         "events",
         "group_members",
         "`groups`",
+        "sessions",
         "users",
     ]:
         cursor.execute(f"TRUNCATE TABLE {table}")
@@ -645,6 +657,18 @@ def seed_db():
     if not admin_ids:
         admin_ids = user_ids[:1]
     print(f"  ✔ Seeded {len(user_ids)} users")
+
+    # --- Sessions ---
+    sessions = generate_mock_sessions(user_ids, count=SESSION_ROWS)
+    cursor.executemany(
+        """
+        INSERT INTO sessions (user_id, start_time, end_time, duration)
+        VALUES (%s, %s, %s, %s)
+    """,
+        sessions,
+    )
+    conn.commit()
+    print(f"  ✔ Seeded {len(sessions)} sessions")
 
     # --- Groups ---
     groups = generate_mock_groups(user_ids, count=10)

@@ -45,19 +45,37 @@ st.title("Welcome to SplitMates!")
 st.write("#### Which user would you like to log in as?")
 
 if st.button(
-    "Act as Victor, a Roommate Group Leader",
+    "Act as Joanna Miller, Roommate",
     type="primary",
     use_container_width=True,
-    key="roommate_login"
+    key="roommate_login",
 ):
-    if login_as(user_id=7, persona_name="Roommate Leader", role="roommate"):
+    if login_as(user_id=9, persona_name="Roommate Leader", role="roommate"):
+        st.switch_page("pages/00_User_Dashboard.py")
+
+if st.button(
+    "Act as Michele Collins, Roommate Leader",
+    type="primary",
+    use_container_width=True,
+    key="roommate_leader_login",
+):
+    if login_as(user_id=23, persona_name="Roommate Leader", role="roommate"):
         st.switch_page("pages/00_User_Dashboard.py")
 
 if st.button(
     "Act as Bob McDonald, System Administrator",
     type="primary",
     use_container_width=True,
-    key="admin_login"
+    key="admin_login",
 ):
     if login_as(user_id=1, persona_name="System Administrator", role="administrator"):
         st.switch_page("pages/20_Admin_Home.py")
+
+if st.button(
+    "Act as Nicole Parks, Data Analyst",
+    type="primary",
+    use_container_width=True,
+    key="data_analyst_login",
+):
+    if login_as(user_id=4, persona_name="Data Analyst", role="analyst"):
+        st.switch_page("pages/07_Analyst_Feature_Usage.py")
