@@ -77,6 +77,7 @@ with col3:
         unsafe_allow_html=True,
     )
 
+st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
 if st.button("🔄 Refresh Data"):
     st.rerun()
 st.markdown("<br>", unsafe_allow_html=True)
