@@ -28,7 +28,7 @@ st.markdown("""
 </style>""", unsafe_allow_html=True)
 
 st.title("Welcome back, Nicole 👋")
-st.markdown('<div class="page-subtitle">Here's what's happening across SplitMates today.</div>', unsafe_allow_html=True)
+st.markdown('<div class="page-subtitle">Here\'s what\'s happening across SplitMates today.</div>', unsafe_allow_html=True)
 
 total_sessions = len(sessions)
 active_users = len(set(r.get("user_id") for r in sessions if r.get("user_id")))
