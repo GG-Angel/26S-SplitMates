@@ -107,10 +107,12 @@ with left_col:
     st.dataframe(versions, use_container_width=True, hide_index=True)
 
     st.markdown('<div class="panel-title" style="margin-top:0.9rem;">Add Version / Push Summary</div>', unsafe_allow_html=True)
+    next_version = (max(v["version_number"] for v in versions) + 1) if versions else 1
+
     with st.form("create_version_form"):
         vcol1, vcol2 = st.columns(2)
         with vcol1:
-            version_number = st.number_input("Version number", min_value=1, step=1, value=1)
+            version_number = st.number_input("Version number", min_value=1, step=1, value=next_version)
             deployed_by = st.number_input("Deployed by (user id)", min_value=1, step=1, value=1)
         with vcol2:
             status = st.selectbox("Status", ["staged", "deployed", "rolled_back", "deprecated"], index=1)
