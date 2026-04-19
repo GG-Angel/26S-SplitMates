@@ -45,6 +45,99 @@ with col3:
 with col4:
     st.markdown(f'<div class="metric-card"><div class="metric-label">LEAST USED</div><div class="metric-value-sm">{least_used}</div><div class="metric-note">{least_used_count} click</div></div>', unsafe_allow_html=True)
 
+
+st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+
+# Build stacked bar data from audit logs
+from collections import defaultdict
+import json as _cj
+
+table_actions = defaultdict(lambda: {"create": 0, "update": 0, "delete": 0})
+for r in audit_logs:
+    table_actions[r["target_table"]][r["action_type"]] += r.get("total_uses", 0)
+
+# Sort by total
+sorted_tables = sorted(table_actions.items(), key=lambda x: sum(x[1].values()), reverse=True)
+tables = [t for t,_ in sorted_tables]
+creates = [table_actions[t]["create"] for t in tables]
+updates = [table_actions[t]["update"] for t in tables]
+deletes = [table_actions[t]["delete"] for t in tables]
+
+# Action type totals for simple bar
+action_totals = {"create": 0, "update": 0, "delete": 0}
+for r in audit_logs:
+    action_totals[r["action_type"]] += r.get("total_uses", 0)
+
+col_stack, col_action = st.columns(2, gap="large")
+
+with col_stack:
+    components.html(f"""
+    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Feature Activity by Action Type</div>
+        <div style="position:relative;height:280px;">
+            <canvas id="stackChart" role="img" aria-label="Stacked bar chart of feature activity by action type">Feature breakdown</canvas>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;font-family:sans-serif;">
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#6366f1;display:inline-block;"></span>Create</span>
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#f59e0b;display:inline-block;"></span>Update</span>
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#E31B1B;display:inline-block;"></span>Delete</span>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+    new Chart(document.getElementById('stackChart'), {{
+        type: 'bar',
+        data: {{
+            labels: {_cj.dumps(tables)},
+            datasets: [
+                {{ label: 'Create', data: {_cj.dumps(creates)}, backgroundColor: '#6366f1', borderRadius: 2 }},
+                {{ label: 'Update', data: {_cj.dumps(updates)}, backgroundColor: '#f59e0b', borderRadius: 2 }},
+                {{ label: 'Delete', data: {_cj.dumps(deletes)}, backgroundColor: '#E31B1B', borderRadius: 2 }}
+            ]
+        }},
+        options: {{
+            responsive: true, maintainAspectRatio: false,
+            plugins: {{ legend: {{ display: false }} }},
+            scales: {{
+                x: {{ stacked: true, ticks: {{ font: {{ size: 10 }}, color: '#101828' }}, grid: {{ display: false }} }},
+                y: {{ stacked: true, ticks: {{ stepSize: 1, font: {{ size: 10 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }}
+            }}
+        }}
+    }});
+    </script>""", height=360, scrolling=False)
+
+with col_action:
+    action_labels = list(action_totals.keys())
+    action_values = list(action_totals.values())
+    action_colors = ['#6366f1', '#f59e0b', '#E31B1B']
+    components.html(f"""
+    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Actions by Type</div>
+        <div style="position:relative;height:280px;">
+            <canvas id="actionChart" role="img" aria-label="Bar chart of total actions by type">Action totals</canvas>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+    new Chart(document.getElementById('actionChart'), {{
+        type: 'bar',
+        data: {{
+            labels: {_cj.dumps([a.title() for a in action_labels])},
+            datasets: [{{ data: {_cj.dumps(action_values)}, backgroundColor: {_cj.dumps(action_colors)}, borderRadius: 4 }}]
+        }},
+        options: {{
+            responsive: true, maintainAspectRatio: false,
+            plugins: {{ legend: {{ display: false }} }},
+            scales: {{
+                x: {{ ticks: {{ font: {{ size: 12 }}, color: '#101828' }}, grid: {{ display: false }} }},
+                y: {{ ticks: {{ stepSize: 2, font: {{ size: 11 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }}
+            }}
+        }}
+    }});
+    </script>""", height=360, scrolling=False)
+
+st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+
 st.markdown("<br>", unsafe_allow_html=True)
 
 left_col, right_col = st.columns(2, gap="large")
