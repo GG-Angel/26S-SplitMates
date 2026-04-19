@@ -205,13 +205,6 @@ with col_heat:
     </script>""", height=320, scrolling=False)
 import streamlit.components.v1 as components
 from collections import Counter, defaultdict
-from api.client import client
-from modules.nav import SideBarLinks
-
-logger = logging.getLogger(__name__)
-st.set_page_config(layout="wide", page_title="SplitMates | Dashboard Overview")
-SideBarLinks()
-
 audit_activity: list[dict] = client.get("/analyst/audit-logs/activity") or []
 sessions: list[dict] = client.get("/analyst/sessions") or []
 inactive_users: list[dict] = client.get("/analyst/users/inactive") or []
