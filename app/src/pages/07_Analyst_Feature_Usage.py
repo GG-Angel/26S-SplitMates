@@ -143,9 +143,33 @@ st.markdown("<br>", unsafe_allow_html=True)
 import json as _fj
 from collections import defaultdict as _dd
 
-col_donut, col_top5 = st.columns(2, gap="large")
+col_clicks, col_top5 = st.columns(2, gap="large")
 
-with col_donut:
+with col_clicks:
+    import json as _fj2
+    feature_clicks = [("chores / Create",7),("groups / Create",6),("chores / Delete",5),("events / Create",5),("bills / Update",5),("users / Create",3),("items / Delete",3)]
+    fc_labels = [f for f,_ in feature_clicks]
+    fc_values = [v for _,v in feature_clicks]
+    components.html(f"""
+    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Feature Clicks</div>
+        <div style="position:relative;height:{len(feature_clicks)*45+40}px;">
+            <canvas id="hbarChart" role="img" aria-label="Horizontal bar chart of feature clicks">Feature clicks</canvas>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+    new Chart(document.getElementById('hbarChart'), {{
+        type: 'bar',
+        data: {{ labels: {_fj2.dumps(fc_labels)}, datasets: [{{ data: {_fj2.dumps(fc_values)}, backgroundColor: '#E31B1B', borderRadius: 4 }}] }},
+        options: {{ indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: {{ legend: {{ display: false }} }},
+            scales: {{ x: {{ ticks: {{ stepSize: 1, font: {{ size: 10 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }}, y: {{ ticks: {{ font: {{ size: 10 }}, color: '#101828' }}, grid: {{ display: false }} }} }} }}
+    }});
+    </script>""", height=len(feature_clicks)*45+80, scrolling=False)
+
+
+with col_top5:
     action_totals = {"create": 0, "update": 0, "delete": 0}
     for r in audit_logs:
         action_totals[r["action_type"]] += r.get("total_uses", 0)
@@ -189,77 +213,3 @@ with col_top5:
     </script>""", height=360, scrolling=False)
 
 
-col_line, col_traffic = st.columns(2, gap="large")
-
-with col_line:
-    if audit_activity:
-        dates = [r["date"][:16] for r in audit_activity]
-        acts = [r["actions"] for r in audit_activity]
-        components.html(f"""
-        <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
-            <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:1rem;font-family:'Source Sans Pro',sans-serif;">Platform Activity Over Time</div>
-            <div style="position:relative;height:240px;">
-                <canvas id="lineChart" role="img" aria-label="Platform activity over time line chart">Activity trend Jan-Apr 2026</canvas>
-            </div>
-        </div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-        <script>
-        new Chart(document.getElementById('lineChart'), {{
-            type: 'line',
-            data: {{
-                labels: {json.dumps(dates)},
-                datasets: [{{
-                    data: {json.dumps(acts)},
-                    borderColor: '#E31B1B',
-                    backgroundColor: 'rgba(227,27,27,0.08)',
-                    borderWidth: 2, pointRadius: 2, tension: 0.3, fill: true
-                }}]
-            }},
-            options: {{
-                responsive: true, maintainAspectRatio: false,
-                plugins: {{ legend: {{ display: false }} }},
-                scales: {{
-                    x: {{ ticks: {{ maxRotation: 45, autoSkip: true, maxTicksLimit: 8, font: {{ size: 10 }}, color: '#101828' }}, grid: {{ display: false }} }},
-                    y: {{ ticks: {{ stepSize: 1, font: {{ size: 10 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }}
-                }}
-            }}
-        }});
-        </script>""", height=340, scrolling=False)
-
-with col_traffic:
-    traffic_data = {
-        "Jan": [["Northeastern",4821],["Google",3102],["Social Media",1850]],
-        "Feb": [["Google",5200],["Northeastern",3800],["Social Media",2100]],
-        "Mar": [["Google",6100],["Northeastern",4200],["Social Media",2800]],
-        "Apr": [["Google",7300],["Northeastern",4900],["Social Media",3200]],
-    }
-    month_opts = "".join(f'<option value="{m}"{"selected" if m=="Apr" else ""}>{m}</option>' for m in traffic_data)
-    components.html(f"""
-    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:'Source Sans Pro',sans-serif;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
-            <div style="font-size:1.1rem;font-weight:700;color:#101828;">Traffic Sources</div>
-            <select id="ms" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{month_opts}</select>
-        </div>
-        <div id="tb"></div>
-    </div>
-    <script>
-    const d = {json.dumps(traffic_data)};
-    const clr = {{"Northeastern":"#6366f1","Google":"#8b5cf6","Social Media":"#22c55e"}};
-    function render(m) {{
-        const rows = d[m];
-        const mx = Math.max(...rows.map(r=>r[1]));
-        document.getElementById('tb').innerHTML = rows.map(([lbl,val]) =>
-            `<div style="margin-bottom:1.1rem;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                    <span style="font-size:0.92rem;font-weight:600;color:#101828;">${{lbl}}</span>
-                    <span style="font-size:0.92rem;color:#667085;">${{val.toLocaleString()}}</span>
-                </div>
-                <div style="background:#F2F4F7;border-radius:4px;height:10px;">
-                    <div style="background:${{clr[lbl]||'#E31B1B'}};border-radius:4px;height:10px;width:${{Math.round(val/mx*100)}}%;"></div>
-                </div>
-            </div>`
-        ).join('');
-    }}
-    render('Apr');
-    document.getElementById('ms').addEventListener('change',e=>render(e.target.value));
-    </script>""", height=280, scrolling=False)
