@@ -15,7 +15,7 @@ st.markdown(
     """
     <style>
         .page-subtitle {
-            color: #667085 !important;
+            color: #9ca3af !important;
             font-size: 1rem !important;
             margin-top: 0 !important;
             margin-bottom: 1.5rem !important;
@@ -28,35 +28,35 @@ st.markdown(
             margin-bottom: 0.1rem !important;
         }
         .metric-card {
-            background: white;
-            border: 1px solid #EAECF0;
+            background: #262730;
+            border: 1px solid rgba(250,250,250,0.1);
             border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note  { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-label { color: #9ca3af; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #fafafa; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note  { color: #8b95a1; font-size: 0.85rem; margin-top: 0.45rem; }
 
         .data-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem 0;
-            border-bottom: 1px solid #F2F4F7;
+            border-bottom: 1px solid rgba(250,250,250,0.08);
         }
         .data-row:last-child { border-bottom: none; }
-        .user-name     { color: #101828; font-weight: 500; font-size: 0.92rem; }
+        .user-name     { color: #fafafa; font-weight: 500; font-size: 0.92rem; }
         .duration-badge{ color: #E31B1B; font-weight: 700; font-size: 0.92rem; }
 
         .white-panel {
-            background: white;
-            border: 1px solid #EAECF0;
+            background: #262730;
+            border: 1px solid rgba(250,250,250,0.1);
             border-radius: 12px;
             padding: 1.25rem 1.25rem 1rem 1.25rem;
-            box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .panel-title { font-size: 1.1rem; font-weight: 700; color: #101828; margin-bottom: 0.75rem; }
+        .panel-title { font-size: 1.1rem; font-weight: 700; color: #fafafa; margin-bottom: 0.75rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -119,33 +119,33 @@ with col_left:
         fig.update_layout(
             margin=dict(l=40, r=10, t=10, b=60),
             height=300,
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            font=dict(color="#101828"),
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="#262730",
+            font=dict(color="#fafafa"),
             xaxis=dict(
-                title=dict(text="Hour of Day", font=dict(color="#101828", size=12)),
-                tickfont=dict(size=10, color="#101828"),
+                title=dict(text="Hour of Day", font=dict(color="#9ca3af", size=12)),
+                tickfont=dict(size=10, color="#9ca3af"),
                 tickangle=-45,
                 showgrid=False,
-                linecolor="#EAECF0",
+                linecolor="rgba(250,250,250,0.15)",
                 tickmode="array",
                 tickvals=hour_labels,
                 ticktext=hour_labels,
             ),
             yaxis=dict(
-                title=dict(text="Active Users", font=dict(color="#101828", size=12)),
-                tickfont=dict(size=11, color="#101828"),
+                title=dict(text="Active Users", font=dict(color="#9ca3af", size=12)),
+                tickfont=dict(size=11, color="#9ca3af"),
                 showgrid=True,
-                gridcolor="#F2F4F7",
-                linecolor="#EAECF0",
+                gridcolor="rgba(250,250,250,0.08)",
+                linecolor="rgba(250,250,250,0.15)",
                 dtick=1,
             ),
         )
         chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
         full_html = f"""
-        <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
-                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
-            <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;">
+        <div style="background:#262730;border:1px solid rgba(250,250,250,0.1);border-radius:12px;
+                    padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,0.2);font-family:sans-serif;">
+            <div style="font-size:1.1rem;font-weight:700;color:#fafafa;margin-bottom:0.5rem;">
                 Activity by Hour of Day
             </div>
             {chart_html}
@@ -155,7 +155,7 @@ with col_left:
     else:
         st.markdown(
             '<div class="white-panel"><div class="panel-title">Activity by Hour of Day</div>'
-            '<p style="color:#667085">No hourly data available.</p></div>',
+            '<p style="color:#9ca3af">No hourly data available.</p></div>',
             unsafe_allow_html=True,
         )
 
@@ -192,6 +192,6 @@ with col_right:
     else:
         st.markdown(
             '<div class="white-panel"><div class="panel-title">Avg Session Duration by User</div>'
-            '<p style="color:#667085">No data available.</p></div>',
+            '<p style="color:#9ca3af">No data available.</p></div>',
             unsafe_allow_html=True,
         )

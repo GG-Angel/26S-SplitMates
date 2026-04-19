@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from ..db_connection import get_db, load_query
 from .base_repository import BaseRepository
@@ -109,7 +109,7 @@ class AdminRepository(BaseRepository):
                 load_query("admin/count_active_bans_for_user.sql"),
                 {"user_id": user_id},
             )
-            row = cursor.fetchone()
+            row = cast(Optional[dict[str, Any]], cursor.fetchone())
             active_bans = row["active_bans"] if row else 0
             if active_bans == 0:
                 cursor.execute(
