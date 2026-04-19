@@ -49,7 +49,7 @@ for col, (label, value, note, trend, is_up) in zip([c1,c2,c3,c4], trends):
     with col:
         st.markdown(f'<div class="metric-card"><div class="metric-label">{label}</div><div class="metric-value">{value}</div><div class="metric-note">{note} &nbsp;<span style="color:{color};font-weight:600;">{arrow} {trend} vs last month</span></div></div>', unsafe_allow_html=True)
 
-st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
 
 # Row 1: Donut + Leaderboard
 col_donut, col_leader = st.columns(2, gap="large")
@@ -127,7 +127,7 @@ with col_leader:
         {rows}
     </div>""", height=60 + len(top10)*54, scrolling=False)
 
-st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
 
 # Row 2: Heatmap + Group Size
 col_heat, col_group = st.columns([1.3, 0.7], gap="large")
@@ -228,7 +228,7 @@ with col_group:
     }});
     </script>""", height=280, scrolling=False)
 
-st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
 
 import streamlit.components.v1 as components
 from collections import Counter, defaultdict
