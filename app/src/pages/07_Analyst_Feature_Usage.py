@@ -88,3 +88,38 @@ with col_clicks:
     }});
     </script>""", height=460, scrolling=False)
 
+
+# ── Chore Completion Trends ────────────────────────────────────────────────────
+st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+
+chores: list[dict] = client.get("/analyst/chores/completed") or []
+
+if chores:
+    import json as _cj2
+    import streamlit.components.v1 as _cc
+    chore_labels = [r["title"] for r in chores]
+    chore_values = [r["times_completed"] for r in chores]
+    effort_colors = {"low": "#22c55e", "medium": "#f59e0b", "high": "#E31B1B"}
+    chore_colors = [effort_colors.get(r["effort"], "#6366f1") for r in chores]
+
+    _cc.html(f"""
+    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
+        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Chore Completion Trends</div>
+        <div style="font-size:0.8rem;color:#667085;margin-bottom:1rem;font-family:sans-serif;">
+            <span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e;display:inline-block;"></span>Low effort</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;"><span style="width:10px;height:10px;border-radius:2px;background:#f59e0b;display:inline-block;"></span>Medium effort</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#E31B1B;display:inline-block;"></span>High effort</span>
+        </div>
+        <div style="position:relative;height:240px;">
+            <canvas id="choreChart" role="img" aria-label="Chore completion trends bar chart">Chore completions</canvas>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+    new Chart(document.getElementById('choreChart'), {{
+        type: 'bar',
+        data: {{ labels: {_cj2.dumps(chore_labels)}, datasets: [{{ data: {_cj2.dumps(chore_values)}, backgroundColor: {_cj2.dumps(chore_colors)}, borderRadius: 4 }}] }},
+        options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ display: false }} }},
+            scales: {{ x: {{ ticks: {{ font: {{ size: 11 }}, color: '#101828' }}, grid: {{ display: false }} }}, y: {{ ticks: {{ stepSize: 1, font: {{ size: 11 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }} }} }}
+    }});
+    </script>""", height=360, scrolling=False)

@@ -59,3 +59,15 @@ insert into audit_logs (user_id, details, target_table , target_id, action_type,
 insert into audit_logs (user_id, details, target_table , target_id, action_type, performed_at) values (27, 'Created event', 'chores', 15, 'delete', '2026-3-1');
 insert into audit_logs (user_id, details, target_table , target_id, action_type, performed_at) values (27, 'Deleted chore', 'groups', 39, 'create', '2026-1-3');
 insert into audit_logs (user_id, details, target_table , target_id, action_type, performed_at) values (26, 'Deleted chore', 'chores', 19, 'create', '2026-4-6');
+
+INSERT INTO chores (group_id, created_by, title, effort, due_at, completed_at) VALUES
+(1, 6, 'Take Out Trash', 'low', '2026-01-10 08:00', '2026-01-10 09:00'),
+(1, 6, 'Vacuum Living Room', 'medium', '2026-01-15 12:00', '2026-01-15 14:00'),
+(1, 6, 'Clean Bathroom', 'high', '2026-02-01 12:00', '2026-02-01 15:00'),
+(1, 6, 'Take Out Trash', 'low', '2026-02-10 08:00', '2026-02-10 09:00'),
+(1, 6, 'Wash Dishes', 'low', '2026-02-20 18:00', '2026-02-20 19:00'),
+(1, 6, 'Vacuum Living Room', 'medium', '2026-03-05 12:00', '2026-03-05 13:00'),
+(1, 6, 'Take Out Trash', 'low', '2026-03-15 08:00', '2026-03-15 09:00'),
+(1, 6, 'Clean Bathroom', 'high', '2026-03-25 12:00', '2026-03-25 16:00'),
+(1, 6, 'Mop Floors', 'medium', '2026-04-01 10:00', '2026-04-01 11:00'),
+(1, 6, 'Take Out Trash', 'low', '2026-04-10 08:00', '2026-04-10 09:00');
