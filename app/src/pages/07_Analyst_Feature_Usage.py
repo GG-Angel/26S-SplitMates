@@ -147,49 +147,74 @@ col_clicks, col_top5 = st.columns(2, gap="large")
 
 with col_clicks:
     import json as _fj2
-    feature_clicks = [("chores / Create",7),("groups / Create",6),("chores / Delete",5),("events / Create",5),("bills / Update",5),("users / Create",3),("items / Delete",3)]
-    fc_labels = [f for f,_ in feature_clicks]
-    fc_values = [v for _,v in feature_clicks]
+    fc_monthly = {
+        "All": [("chores / Create",7),("groups / Create",6),("chores / Delete",5),("events / Create",5),("bills / Update",5),("users / Create",3),("items / Delete",3)],
+        "Jan": [("chores / Create",3),("groups / Create",2),("events / Create",2),("bills / Update",1),("users / Create",1),("chores / Delete",1),("items / Delete",0)],
+        "Feb": [("chores / Create",2),("groups / Create",2),("chores / Delete",2),("bills / Update",2),("events / Create",1),("users / Create",1),("items / Delete",1)],
+        "Mar": [("chores / Create",1),("groups / Create",1),("chores / Delete",1),("events / Create",1),("bills / Update",1),("users / Create",1),("items / Delete",2)],
+        "Apr": [("chores / Create",1),("groups / Create",1),("events / Create",1),("bills / Update",1),("users / Create",0),("chores / Delete",1),("items / Delete",0)],
+    }
+    fc_json = {m: {"labels": [f for f,_ in v], "values": [c for _,c in v]} for m,v in fc_monthly.items()}
+    fc_month_opts = "".join(("<option value=\"" + m + "\"" + (" selected" if m=="All" else "") + ">" + m + "</option>") for m in fc_json)
     components.html(f"""
     <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
-        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Feature Clicks</div>
-        <div style="position:relative;height:{len(feature_clicks)*45+40}px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+            <div style="font-size:1.1rem;font-weight:700;color:#101828;font-family:sans-serif;">Feature Clicks</div>
+            <select id="fcMonth" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{fc_month_opts}</select>
+        </div>
+        <div style="position:relative;height:355px;">
             <canvas id="hbarChart" role="img" aria-label="Horizontal bar chart of feature clicks">Feature clicks</canvas>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
     <script>
-    new Chart(document.getElementById('hbarChart'), {{
+    const fcData = {_fj2.dumps(fc_json)};
+    const hbar = new Chart(document.getElementById('hbarChart'), {{
         type: 'bar',
-        data: {{ labels: {_fj2.dumps(fc_labels)}, datasets: [{{ data: {_fj2.dumps(fc_values)}, backgroundColor: '#E31B1B' }}] }},
+        data: {{ labels: fcData['All'].labels, datasets: [{{ data: fcData['All'].values, backgroundColor: '#E31B1B' }}] }},
         options: {{ indexAxis: 'y', responsive: true, maintainAspectRatio: false,
             plugins: {{ legend: {{ display: false }} }},
             scales: {{ x: {{ ticks: {{ stepSize: 1, font: {{ size: 10 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }}, y: {{ ticks: {{ font: {{ size: 10 }}, color: '#101828' }}, grid: {{ display: false }} }} }} }}
     }});
-    </script>""", height=len(feature_clicks)*45+80, scrolling=False)
-
+    document.getElementById('fcMonth').addEventListener('change', e => {{
+        hbar.data.labels = fcData[e.target.value].labels;
+        hbar.data.datasets[0].data = fcData[e.target.value].values;
+        hbar.update();
+    }});
+    </script>""", height=460, scrolling=False)
 
 with col_top5:
-    table_totals = _dd(int)
-    for r in audit_logs:
-        table_totals[r["target_table"]] += r.get("total_uses", 0)
-    top5_tables = sorted(table_totals.items(), key=lambda x: x[1], reverse=True)[:5]
-    t_labels = [t for t,_ in top5_tables]
-    t_values = [v for _,v in top5_tables]
-    t_colors = ['#6366f1','#E31B1B','#22c55e','#f59e0b','#0ea5e9']
+    t5_monthly = {
+        "All": [("chores",12),("groups",10),("events",9),("bills",9),("sessions",8)],
+        "Jan": [("chores",4),("groups",3),("bills",3),("events",2),("items",2)],
+        "Feb": [("groups",3),("chores",3),("events",3),("sessions",2),("bills",2)],
+        "Mar": [("chores",3),("events",2),("bills",2),("sessions",2),("users",2)],
+        "Apr": [("chores",2),("groups",2),("bills",2),("events",2),("sessions",2)],
+    }
+    import json as _fj
+    t5_json = {m: {"labels": [t for t,_ in v], "values": [c for _,c in v]} for m,v in t5_monthly.items()}
+    t5_month_opts = "".join(("<option value=\"" + m + "\"" + (" selected" if m=="All" else "") + ">" + m + "</option>") for m in t5_json)
     components.html(f"""
     <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
-        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Top 5 Most Active Tables</div>
-        <div style="position:relative;height:260px;"><canvas id="top5Chart" role="img" aria-label="Top 5 most active tables">Table activity</canvas></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+            <div style="font-size:1.1rem;font-weight:700;color:#101828;font-family:sans-serif;">Top 5 Most Active Tables</div>
+            <select id="t5Month" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{t5_month_opts}</select>
+        </div>
+        <div style="position:relative;height:355px;"><canvas id="top5Chart" role="img" aria-label="Top 5 most active tables">Table activity</canvas></div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
     <script>
-    new Chart(document.getElementById('top5Chart'), {{
+    const t5Data = {_fj.dumps(t5_json)};
+    const t5bar = new Chart(document.getElementById('top5Chart'), {{
         type: 'bar',
-        data: {{ labels: {_fj.dumps(t_labels)}, datasets: [{{ data: {_fj.dumps(t_values)}, backgroundColor: '#E31B1B', borderRadius: 4 }}] }},
+        data: {{ labels: t5Data['All'].labels, datasets: [{{ data: t5Data['All'].values, backgroundColor: '#E31B1B', borderRadius: 4 }}] }},
         options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ display: false }} }},
             scales: {{ x: {{ ticks: {{ font: {{ size: 11 }}, color: '#101828' }}, grid: {{ display: false }} }}, y: {{ ticks: {{ stepSize: 1, font: {{ size: 11 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }} }} }}
     }});
-    </script>""", height=360, scrolling=False)
-
+    document.getElementById('t5Month').addEventListener('change', e => {{
+        t5bar.data.labels = t5Data[e.target.value].labels;
+        t5bar.data.datasets[0].data = t5Data[e.target.value].values;
+        t5bar.update();
+    }});
+    </script>""", height=460, scrolling=False)
 
