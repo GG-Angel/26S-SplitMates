@@ -33,6 +33,7 @@ def group_navs():
             "pages/07_Group_Management.py", label="Management", icon="🛠️"
         )
 def analyst_navs():
+    st.sidebar.page_link("pages/06_Analyst_Dashboard.py", label="Dashboard", icon="📈")
     st.sidebar.page_link("pages/07_Analyst_Feature_Usage.py", label="Feature Usage", icon="📊")
     st.sidebar.page_link("pages/08_Analyst_Sessions.py", label="User Sessions", icon="⏱️")
     st.sidebar.page_link("pages/09_Analyst_Inactive_Users.py", label="Inactive Users", icon="👤")
