@@ -11,6 +11,7 @@ SideBarLinks()
 
 sessions: list[dict] = client.get("/analyst/sessions") or []
 audit_logs: list[dict] = client.get("/analyst/audit-logs") or []
+engagement: list[dict] = client.get("/analyst/groups/engagement") or []
 
 st.markdown(
     """
@@ -83,12 +84,14 @@ peak_hour = f"{max(hour_counts, key=hour_counts.get):02d}:00" if hour_counts els
 total_actions = sum(r.get("total_uses", 0) for r in audit_logs)
 top_feature = f"{audit_logs[0]['target_table']} ({audit_logs[0]['action_type']})" if audit_logs else "N/A"
 
+avg_group_size = round(sum(r.get("household_size", 0) for r in engagement) / len(engagement), 1) if engagement else 0
+
 c1, c2, c3, c4 = st.columns(4)
 for col, label, value, note in [
     (c1, "TOTAL SESSIONS", total_sessions, "All time"),
     (c2, "AVG SESSION (MIN)", avg_duration, "Per user"),
     (c3, "PEAK HOUR", peak_hour, "Most active time"),
-    (c4, "TOP FEATURE", top_feature, f"{total_actions} total actions"),
+    (c4, "AVG GROUP SIZE", avg_group_size, "Members per group"),
 ]:
     with col:
         st.markdown(
@@ -205,5 +208,67 @@ with col_right:
         st.markdown(
             '<div class="white-panel"><div class="panel-title">Avg Session Duration by User</div>'
             '<p style="color:#667085">No data available.</p></div>',
+            unsafe_allow_html=True,
+        )
+
+# ── Avg Days Between Visits chart ─────────────────────────────────────────────
+st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
+
+if sessions:
+    from collections import defaultdict
+    user_hours: dict = defaultdict(list)
+    for r in sessions:
+        uid = r.get("user_id")
+        h = r.get("hour_of_day")
+        first = r.get("first_name", "")
+        last = r.get("last_name", "")
+        if uid and h is not None:
+            name = f"{first} {last}".strip() or f"User {uid}"
+            user_hours[name].append(int(h))
+
+    # Use spread of hours as proxy for visit distribution across the day
+    user_spread = {
+        name: round((max(hours) - min(hours)), 1)
+        for name, hours in user_hours.items()
+        if len(hours) > 1
+    }
+    sorted_spread = sorted(user_spread.items(), key=lambda x: x[1], reverse=True)[:10]
+
+    if sorted_spread:
+        names = [s[0] for s in sorted_spread]
+        spreads = [s[1] for s in sorted_spread]
+
+        fig = go.Figure(go.Bar(
+            x=spreads,
+            y=names,
+            orientation="h",
+            marker_color="#E31B1B",
+            hovertemplate="%{y}<br>Hour spread: %{x}h<extra></extra>",
+        ))
+        fig.update_layout(
+            margin=dict(l=10, r=10, t=0, b=10),
+            height=300,
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            font=dict(color="#101828"),
+            xaxis=dict(
+                title=dict(text="Hour Spread (hrs)", font=dict(color="#101828", size=12)),
+                tickfont=dict(size=10, color="#101828"),
+                showgrid=True,
+                gridcolor="#F2F4F7",
+                linecolor="#EAECF0",
+            ),
+            yaxis=dict(
+                tickfont=dict(size=10, color="#101828"),
+                showgrid=False,
+                linecolor="#EAECF0",
+            ),
+        )
+        chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
+        st.markdown(
+            f'<div class="white-panel">'
+            f'<div class="panel-title">Session Spread by User (Hours Between First & Last Visit)</div>'
+            f'{chart_html}'
+            f'</div>',
             unsafe_allow_html=True,
         )
