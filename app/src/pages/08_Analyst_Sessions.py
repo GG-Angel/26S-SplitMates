@@ -189,23 +189,18 @@ with col_right:
     user_avg     = {n: round(sum(v) / len(v), 1) for n, v in user_dur.items()}
     sorted_users = sorted(user_avg.items(), key=lambda x: x[1], reverse=True)
 
-    if sorted_users:
+    top5 = sorted_users[:5]
+    avatar_colors = ['#6366f1','#E31B1B','#22c55e','#f59e0b','#0ea5e9']
+    if top5:
         rows = "".join(
-            f'<div class="data-row">'
-            f'<span class="user-name">{name}</span>'
-            f'<span class="duration-badge">{avg} min</span>'
-            f'</div>'
-            for name, avg in sorted_users
+            f'<div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid #F2F4F7;">'            f'<div style="display:flex;align-items:center;gap:10px;">'            f'<div style="width:36px;height:36px;border-radius:50%;background:{avatar_colors[i%5]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0;">{name[0].upper()}</div>'            f'<span style="color:#101828;font-weight:500;font-size:0.92rem;">{name}</span>'            f'</div>'            f'<span style="color:#E31B1B;font-weight:700;font-size:0.92rem;">{avg} min</span>'            f'</div>'
+            for i,(name,avg) in enumerate(top5)
         )
-        st.markdown(
-            f'<div class="white-panel">'
-            f'<div class="panel-title">Avg Session Duration by User</div>'
-            f'{rows}'
-            f'</div>',
-            unsafe_allow_html=True,
+        import streamlit.components.v1 as _c
+        _c.html(
+            f'<div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">'            f'<div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.75rem;">Top 5 by Session Duration</div>'            f'{rows}'            f'</div>',
+            height=60 + len(top5)*66, scrolling=False
         )
-    else:
-        st.markdown(
             '<div class="white-panel"><div class="panel-title">Avg Session Duration by User</div>'
             '<p style="color:#667085">No data available.</p></div>',
             unsafe_allow_html=True,
