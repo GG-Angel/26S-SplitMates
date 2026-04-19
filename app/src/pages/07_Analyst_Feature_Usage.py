@@ -27,6 +27,7 @@ st.markdown(
         }
         .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
         .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-value-sm { color: #101828; font-size: 1.2rem; font-weight: 800; line-height: 1.2; margin-top: 0.15rem; }
         .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
         .white-panel {
             background: white;
@@ -56,8 +57,8 @@ least_used_count = audit_logs[-1]["total_uses"] if audit_logs else 0
 
 col1, col2, col3, col4 = st.columns(4)
 cards = [
-    ("TOTAL SESSIONS", total_sessions, "All time"),
-    ("AVG SESSION (MIN)", avg_session, "Per user"),
+    ("TOTAL ACTIONS", sum(r.get("total_uses",0) for r in audit_logs), "Across all features"),
+    ("UNIQUE FEATURES", len(set(r["target_table"] for r in audit_logs)), "Tables interacted with"),
     ("MOST USED", most_used, f"{most_used_count} clicks"),
     ("LEAST USED", least_used, f"{least_used_count} clicks"),
 ]
