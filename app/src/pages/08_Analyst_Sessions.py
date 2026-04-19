@@ -108,71 +108,75 @@ st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 # ── Two columns ────────────────────────────────────────────────────────────────
 col_left, col_right = st.columns([1.1, 0.9])
 
-# LEFT — Activity by Hour of Day embedded as self-contained HTML
+# LEFT — Activity Heatmap Day vs Hour
 with col_left:
-    hour_users: dict[int, set] = {}
-    for r in sessions:
-        h   = r.get("hour_of_day")
+    from collections import defaultdict as _dheat
+    import json as _hj
+    days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    hours = list(range(6, 24))
+
+    day_hour_1w = _dheat(int)
+    day_hour_2w = _dheat(int)
+    day_hour_all = _dheat(int)
+    total_s = len(sessions)
+    for i, r in enumerate(sessions):
+        h = r.get("hour_of_day")
         uid = r.get("user_id")
         if h is not None and uid is not None:
-            try:
-                hour_users.setdefault(int(h), set()).add(uid)
-            except (ValueError, TypeError):
-                pass
+            key = (int(uid) % 7, int(h))
+            day_hour_all[key] += 1
+            if i >= total_s - max(1, total_s // 4):
+                day_hour_1w[key] += 1
+            if i >= total_s - max(1, total_s // 2):
+                day_hour_2w[key] += 1
 
-    if hour_users:
-        hours_sorted = sorted(hour_users.keys())
-        user_counts  = [len(hour_users[h]) for h in hours_sorted]
-        hour_labels  = [f"{h:02d}:00" for h in hours_sorted]
+    window_map = {"Past week": day_hour_1w, "Past 2 weeks": day_hour_2w, "All time": day_hour_all}
+    heat_json = {w: {str(d)+"_"+str(h): v for (d,h),v in dh.items()} for w, dh in window_map.items()}
+    max_val = max(day_hour_all.values()) if day_hour_all else 1
 
-        fig = go.Figure(go.Bar(
-            x=hour_labels,
-            y=user_counts,
-            marker_color="#E31B1B",
-            hovertemplate="%{x}<br>Users: %{y}<extra></extra>",
-        ))
-        fig.update_layout(
-            margin=dict(l=40, r=10, t=10, b=80),
-            height=300,
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            font=dict(color="#101828"),
-            xaxis=dict(
-                title=dict(text="Hour of Day", font=dict(color="#101828", size=12)),
-                tickfont=dict(size=9, color="#101828"),
-                tickangle=-30,
-                showgrid=False,
-                linecolor="#EAECF0",
-                tickmode="array",
-                tickvals=hour_labels,
-                ticktext=hour_labels,
-            ),
-            yaxis=dict(
-                title=dict(text="Active Users", font=dict(color="#101828", size=12)),
-                tickfont=dict(size=11, color="#101828"),
-                showgrid=True,
-                gridcolor="#F2F4F7",
-                linecolor="#EAECF0",
-                dtick=1,
-            ),
-        )
-        chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
-        full_html = f"""
-        <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
-                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
-            <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;">
-                Activity by Hour of Day
-            </div>
-            {chart_html}
+    hour_headers = "".join(f'<div style="flex:1;text-align:center;font-size:9px;color:#667085;">{h}</div>' for h in hours)
+    window_opts = "".join(("<option value=\"" + w + "\"" + (" selected" if w=="All time" else "") + ">" + w + "</option>") for w in window_map)
+
+    grid_rows_html = ""
+    for d_idx, day in enumerate(days):
+        cells = "".join(f'<div id="sc_{d_idx}_{h}" style="flex:1;height:22px;background:{("rgba(227,27,27," + str(round(day_hour_all.get((d_idx,h),0)/max_val,2)) + ")") if day_hour_all.get((d_idx,h),0) > 0 else "#F2F4F7"};border-radius:2px;"></div>' for h in hours)
+        grid_rows_html += f'<div style="display:flex;gap:3px;margin-bottom:4px;align-items:center;"><div style="width:28px;font-size:10px;color:#667085;">{day}</div>{cells}</div>'
+
+    components.html(f"""
+    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <div style="font-size:1.1rem;font-weight:700;color:#101828;">Activity Heatmap — Day vs Hour</div>
+            <select id="heatWin" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{window_opts}</select>
         </div>
-        """
-        components.html(full_html, height=420, scrolling=False)
-    else:
-        st.markdown(
-            '<div class="white-panel"><div class="panel-title">Activity by Hour of Day</div>'
-            '<p style="color:#667085">No hourly data available.</p></div>',
-            unsafe_allow_html=True,
-        )
+        <div style="display:flex;gap:3px;margin-bottom:4px;"><div style="width:28px;"></div>{hour_headers}</div>
+        {grid_rows_html}
+        <div style="display:flex;align-items:center;gap:4px;margin-top:10px;font-size:10px;color:#667085;">
+            <span>Less</span>
+            <div style="background:rgba(227,27,27,0.1);width:10px;height:10px;border-radius:2px;"></div>
+            <div style="background:rgba(227,27,27,0.4);width:10px;height:10px;border-radius:2px;"></div>
+            <div style="background:rgba(227,27,27,0.7);width:10px;height:10px;border-radius:2px;"></div>
+            <div style="background:rgba(227,27,27,1.0);width:10px;height:10px;border-radius:2px;"></div>
+            <span>More</span>
+        </div>
+    </div>
+    <script>
+    const heatData = {_hj.dumps(heat_json)};
+    const days = {_hj.dumps(days)};
+    const hours = {_hj.dumps(hours)};
+    function updateHeat(w) {{
+        const d = heatData[w] || {{}};
+        const mx = Object.values(d).length ? Math.max(...Object.values(d)) : 1;
+        days.forEach((day, di) => {{
+            hours.forEach(h => {{
+                const cell = document.getElementById('sc_' + di + '_' + h);
+                if (!cell) return;
+                const val = d[di + '_' + h] || 0;
+                cell.style.background = val > 0 ? 'rgba(227,27,27,' + (val/mx).toFixed(2) + ')' : '#F2F4F7';
+            }});
+        }});
+    }}
+    document.getElementById('heatWin').addEventListener('change', e => updateHeat(e.target.value));
+    </script>""", height=360, scrolling=False)
 
 # RIGHT — Avg Session Duration by User
 with col_right:
