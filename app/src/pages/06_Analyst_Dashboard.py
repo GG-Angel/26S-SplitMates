@@ -127,8 +127,6 @@ with col_heat:
     </script>""", height=320, scrolling=False)
 
 
-st.markdown("<div style='height:0.1rem'></div>", unsafe_allow_html=True)
-
 col_donut, col_leader = st.columns(2, gap="large")
 
 with col_donut:
