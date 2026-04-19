@@ -255,16 +255,14 @@ CREATE TABLE audit_logs (
 );
 
 CREATE TABLE `sessions` (
-    session_id INT NOT NULL,
+    session_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     start_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     end_time DATETIME NOT NULL,
     duration INT NOT NULL CHECK (duration > 0),
-    PRIMARY KEY (session_id),
-    CONSTRAINT session_fk01
-        FOREIGN KEY (user_id) REFERENCES users (user_id)
-            ON UPDATE CASCADE
-            ON DELETE RESTRICT,
+    FOREIGN KEY (user_id) REFERENCES users (user_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
     INDEX idx_session_user_id (user_id)
 );
 
