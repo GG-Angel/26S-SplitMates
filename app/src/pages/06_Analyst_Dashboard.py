@@ -204,30 +204,6 @@ with col_heat:
     document.getElementById('heatWindow').addEventListener('change', e => updateHeat(e.target.value));
     </script>""", height=320, scrolling=False)
 
-with col_group:
-    if engagement:
-        size_counts = Counter(r.get("household_size", 0) for r in engagement)
-        size_labels = [f"{s} members" for s in sorted(size_counts.keys())]
-        size_values = [size_counts[s] for s in sorted(size_counts.keys())]
-    else:
-        size_labels = ["2 members","3 members","4 members","5+ members"]
-        size_values = [3, 8, 5, 2]
-    import json as _gj
-    components.html(f"""
-    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
-        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Group Size Distribution</div>
-        <div style="position:relative;height:200px;"><canvas id="groupChart" role="img" aria-label="Group size bar chart">Group sizes</canvas></div>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-    <script>
-    new Chart(document.getElementById('groupChart'), {{
-        type: 'bar',
-        data: {{ labels: {_gj.dumps(size_labels)}, datasets: [{{ data: {_gj.dumps(size_values)}, backgroundColor: ['#6366f1','#E31B1B','#22c55e','#f59e0b','#0ea5e9','#8b5cf6'], borderRadius: 4 }}] }},
-        options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ display: false }} }},
-            scales: {{ x: {{ ticks: {{ font: {{ size: 10 }}, color: '#101828' }}, grid: {{ display: false }} }}, y: {{ ticks: {{ stepSize: 1, font: {{ size: 10 }}, color: '#101828' }}, grid: {{ color: '#F2F4F7' }}, beginAtZero: true }} }} }}
-    }});
-    </script>""", height=280, scrolling=False)
-
 st.markdown("<div style='height:0.1rem'></div>", unsafe_allow_html=True)
 
 import streamlit.components.v1 as components
