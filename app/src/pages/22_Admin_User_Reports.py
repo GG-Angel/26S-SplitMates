@@ -144,7 +144,6 @@ filtered_reports: list[dict[str, Any]] = reports
 selected_report_id = None
 
 with left_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">Filters</div>', unsafe_allow_html=True)
     search_term = st.text_input("Search reports", placeholder="Search reason, report id, or user id")
     selected_statuses = st.multiselect("Status", status_order, default=status_order)
@@ -200,7 +199,6 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with right_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">Report Details</div>', unsafe_allow_html=True)
 
     if selected_report_id is None:

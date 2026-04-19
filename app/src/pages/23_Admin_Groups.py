@@ -116,7 +116,6 @@ filtered_groups: list[dict[str, Any]] = groups
 selected_group_id = None
 
 with left_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">Filters</div>', unsafe_allow_html=True)
     search_term = st.text_input("Search groups", placeholder="Search by group name, id, or leader id")
     min_members = st.number_input("Minimum members", min_value=0, value=0)
@@ -160,7 +159,6 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with right_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">Group Details</div>', unsafe_allow_html=True)
 
     if selected_group_id is None:

@@ -101,7 +101,6 @@ with k3:
 left_col, right_col = st.columns([0.52, 0.48], gap="large")
 
 with left_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">Release Tracker</div>', unsafe_allow_html=True)
 
     st.dataframe(versions, use_container_width=True, hide_index=True)
@@ -141,7 +140,6 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with right_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">Audit Log Viewer</div>', unsafe_allow_html=True)
 
     ac1, ac2 = st.columns(2)

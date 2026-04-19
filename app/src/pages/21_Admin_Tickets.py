@@ -143,7 +143,6 @@ selected_ticket_id = None
 filtered_tickets: list[dict[str, Any]] = tickets
 
 with filter_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">Filters</div>', unsafe_allow_html=True)
 
     search_term = st.text_input("Search tickets", placeholder="Search title, description, or user id")
@@ -198,7 +197,6 @@ with filter_col:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with list_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">Ticket Details</div>', unsafe_allow_html=True)
 
     if selected_ticket_id is None:

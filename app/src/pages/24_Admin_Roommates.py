@@ -138,7 +138,6 @@ filtered_users: list[dict[str, Any]] = users
 selected_user_id = None
 
 with left_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">Filters</div>', unsafe_allow_html=True)
     search_term = st.text_input("Search users", placeholder="Search name, email, or user id")
     status_options = sorted({_as_text(user.get("account_status")).lower() or "pending" for user in users}) or ["pending"]
@@ -208,7 +207,6 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with right_col:
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-title">User Details</div>', unsafe_allow_html=True)
 
     if selected_user_id is None:

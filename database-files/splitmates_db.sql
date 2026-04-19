@@ -272,7 +272,7 @@ CREATE TABLE user_reports (
     reported_by INT NOT NULL,
     reason VARCHAR(255) NOT NULL,
     status ENUM('pending', 'resolved',  'under_review', 'dismissed'),
-    reviewed_by INT NOT NULL,
+    reviewed_by INT,
     reviewed_at DATETIME,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (report_id),
