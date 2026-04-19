@@ -111,7 +111,6 @@ class AdminRepository(BaseRepository):
             )
             row = cursor.fetchone()
             active_bans = row["active_bans"] if row else 0
-
             if active_bans == 0:
                 cursor.execute(
                     load_query("admin/set_user_status_active.sql"),

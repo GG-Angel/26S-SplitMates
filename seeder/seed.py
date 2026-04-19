@@ -584,6 +584,8 @@ def generate_mock_invitations(
         seen.add(key)
         created_at = fake.date_time_between(start_date="-30d", end_date="now")
         rows.append((group_id, sent_to, False, created_at))
+    return rows
+
 
 def generate_mock_sessions(user_ids: list[int], count: int = SESSION_ROWS):
     rows = []
@@ -730,7 +732,9 @@ def seed_db():
 
     # --- Invitations ---
     group_to_members = _build_group_to_members(group_memberships)
-    invitations = generate_mock_invitations(group_to_members, user_ids, count=INVITATION_ROWS)
+    invitations = generate_mock_invitations(
+        group_to_members, user_ids, count=INVITATION_ROWS
+    )
     cursor.executemany(
         """
         INSERT INTO invitations (group_id, sent_to, was_accepted, created_at)

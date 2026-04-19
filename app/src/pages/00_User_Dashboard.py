@@ -61,14 +61,21 @@ else:
                     st.write(highlight_color("gray", f"Invited {sent_at.lower()}"))
 
                 with st.container(horizontal=True, border=False):
-                    if st.button("Accept", key=f"accept-inv-{invite_id}", type="primary", width="content"):
+                    if st.button(
+                        "Accept",
+                        key=f"accept-inv-{invite_id}",
+                        type="primary",
+                        width="content",
+                    ):
                         try:
                             client.put(f"users/{user_id}/invites/{invite_id}")
                             st.rerun()
                         except HTTPError:
                             st.error("Failed to accept invitation.")
 
-                    if st.button("Decline", key=f"decline-inv-{invite_id}", width="content"):
+                    if st.button(
+                        "Decline", key=f"decline-inv-{invite_id}", width="content"
+                    ):
                         try:
                             client.delete(f"users/{user_id}/invites/{invite_id}")
                             st.rerun()

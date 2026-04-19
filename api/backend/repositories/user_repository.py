@@ -33,10 +33,20 @@ class UserRepository(BaseRepository):
             {"user_id": user_id, "pending_only": pending_only},
         )
 
-    def accept_invitation(self, invitation_id: int, user_id: int):
-        self.execute_script(
-            load_query("invitations/accept_invitation.sql"),
-            {"invitation_id": invitation_id, "user_id": user_id},
+    def accept_invitation(self, user_id: int, invitation_id: int):
+        self.execute(
+            load_query("invitations/update_invitation_accepted.sql"),
+            {"invitation_id": invitation_id},
+        )
+        row = self.fetch_one(
+            load_query("invitations/get_invitation_group.sql"),
+            {"invitation_id": invitation_id},
+        )
+        if row is None:
+            raise ValueError(f"Invitation {invitation_id} not found")
+        self.execute(
+            load_query("groups/add_group_member.sql"),
+            {"group_id": row["group_id"], "user_id": user_id},
         )
 
     def delete_invitation(self, invitation_id: int):
@@ -59,20 +69,4 @@ class UserRepository(BaseRepository):
                 "first_name": new_first_name,
                 "last_name": new_last_name,
             },
-        )
-
-    def accept_invitation(self, user_id: int, invitation_id: int, group_id: int) -> None:
-        self.execute(
-            load_query("invitations/accept_invitation.sql"),
-            {"invitation_id": invitation_id},
-        )
-        self.execute(
-            load_query("groups/add_group_member.sql"),
-            {"group_id": group_id, "user_id": user_id},
-        )
-
-    def delete_invitation(self, invitation_id: int) -> None:
-        self.execute(
-            load_query("invitations/delete_invitation.sql"),
-            {"invitation_id": invitation_id},
         )
