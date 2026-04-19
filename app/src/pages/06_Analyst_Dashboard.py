@@ -110,7 +110,7 @@ with col_leader:
         uid = r.get("user_id")
         if uid and uid not in user_names:
             user_names[uid] = f"{r.get('first_name','')} {r.get('last_name','')}".strip()
-    top10 = session_counts.most_common(10)
+    top10 = session_counts.most_common(5)
     avatar_colors = ['#6366f1','#E31B1B','#22c55e','#f59e0b','#0ea5e9','#8b5cf6','#f43f5e','#14b8a6','#f97316','#64748b']
     rows = "".join(f"""
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid #F2F4F7;">
@@ -123,9 +123,9 @@ with col_leader:
     </div>""" for i,(uid,cnt) in enumerate(top10))
     components.html(f"""
     <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
-        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.75rem;">Top 10 Most Active Users</div>
+        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.75rem;">Top 5 Most Active Users</div>
         {rows}
-    </div>""", height=60 + len(top10)*50, scrolling=False)
+    </div>""", height=60 + len(top10)*54, scrolling=False)
 
 st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
