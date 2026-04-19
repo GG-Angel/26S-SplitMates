@@ -43,6 +43,8 @@ st.markdown(
 
 st.markdown('<div class="page-title">Inactive Users</div>', unsafe_allow_html=True)
 st.markdown('<div class="page-subtitle">Monitor user dropoff and identify accounts that have gone inactive.</div>', unsafe_allow_html=True)
+if st.button("🔄 Refresh Data"):
+    st.rerun()
 
 total = len(inactive_users)
 truly_inactive = len([u for u in inactive_users if u.get("account_status") == "inactive"])
