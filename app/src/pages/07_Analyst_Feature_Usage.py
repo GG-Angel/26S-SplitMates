@@ -90,7 +90,7 @@ with col_stack:
         data: {{
             labels: {_cj.dumps(tables)},
             datasets: [
-                {{ label: 'Create', data: {_cj.dumps(creates)}, backgroundColor: '#E31B1B' }},
+                {{ label: 'Create', data: {_cj.dumps(creates)}, backgroundColor: '#6366f1' }},
                 {{ label: 'Update', data: {_cj.dumps(updates)}, backgroundColor: '#f59e0b' }},
                 {{ label: 'Delete', data: {_cj.dumps(deletes)}, backgroundColor: '#E31B1B' }}
             ]
