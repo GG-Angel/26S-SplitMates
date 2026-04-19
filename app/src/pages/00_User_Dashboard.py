@@ -1,7 +1,9 @@
 import logging
 import streamlit as st
+from requests import HTTPError
 from api.client import client
 from modules.nav import SideBarLinks
+from utils import highlight_color, parse_mysql_datetime, time_relative
 
 logger = logging.getLogger(__name__)
 st.set_page_config(layout="wide")
@@ -35,3 +37,47 @@ else:
 
 if st.button("Create a Group", key="create_group", type="primary"):
     st.switch_page("pages/01_Group_Creation.py")
+
+st.divider()
+st.write("### Incoming Invitations")
+
+pending_invites = client.get(f"users/{user_id}/invites", params={"pending": ""})
+
+if not pending_invites:
+    st.write(highlight_color("gray", "No pending invitations."))
+else:
+    with st.container(border=True):
+        for invite in pending_invites:
+            invite_id = invite["invitation_id"]
+            with st.container(
+                border=True,
+                horizontal=True,
+                horizontal_alignment="distribute",
+                vertical_alignment="center",
+            ):
+                sent_at = time_relative(parse_mysql_datetime(invite["created_at"]))
+                with st.container(border=False, gap="xxsmall"):
+                    st.write(f"**{invite['group_name']}**")
+                    st.write(highlight_color("gray", f"Invited {sent_at.lower()}"))
+
+                with st.container(horizontal=True, border=False):
+                    if st.button(
+                        "Accept",
+                        key=f"accept-inv-{invite_id}",
+                        type="primary",
+                        width="content",
+                    ):
+                        try:
+                            client.put(f"users/{user_id}/invites/{invite_id}")
+                            st.rerun()
+                        except HTTPError:
+                            st.error("Failed to accept invitation.")
+
+                    if st.button(
+                        "Decline", key=f"decline-inv-{invite_id}", width="content"
+                    ):
+                        try:
+                            client.delete(f"users/{user_id}/invites/{invite_id}")
+                            st.rerun()
+                        except HTTPError:
+                            st.error("Failed to decline invitation.")

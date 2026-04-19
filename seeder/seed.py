@@ -30,6 +30,7 @@ USER_REPORTS_COUNT = 20
 BANS_COUNT = 12
 APP_VERSIONS_COUNT = 8
 AUDIT_LOGS_COUNT = 40
+INVITATION_ROWS = 30
 SESSION_ROWS = 100
 
 
@@ -556,6 +557,36 @@ def generate_mock_audit_logs(user_ids: list[int], count: int = AUDIT_LOGS_COUNT)
     return rows
 
 
+def generate_mock_invitations(
+    group_to_members: dict[int, list[int]],
+    user_ids: list[int],
+    count: int = INVITATION_ROWS,
+):
+    seen: set[tuple[int, int]] = set()
+    rows = []
+    group_ids = list(group_to_members.keys())
+    attempts = 0
+
+    while len(rows) < count and attempts < 10000:
+        attempts += 1
+        group_id = random.choice(group_ids)
+        members = set(group_to_members[group_id])
+        non_members = [uid for uid in user_ids if uid not in members]
+
+        if not non_members:
+            continue
+
+        sent_to = random.choice(non_members)
+        key = (group_id, sent_to)
+        if key in seen:
+            continue
+
+        seen.add(key)
+        created_at = fake.date_time_between(start_date="-30d", end_date="now")
+        rows.append((group_id, sent_to, False, created_at))
+    return rows
+
+
 def generate_mock_sessions(user_ids: list[int], count: int = SESSION_ROWS):
     rows = []
     for _ in range(count):
@@ -633,6 +664,7 @@ def seed_db():
         "bill_assignments",
         "bills",
         "events",
+        "invitations",
         "group_members",
         "`groups`",
         "sessions",
@@ -698,8 +730,22 @@ def seed_db():
     conn.commit()
     print(f"  ✔ Seeded {len(group_memberships)} group memberships")
 
-    # --- Bills ---
+    # --- Invitations ---
     group_to_members = _build_group_to_members(group_memberships)
+    invitations = generate_mock_invitations(
+        group_to_members, user_ids, count=INVITATION_ROWS
+    )
+    cursor.executemany(
+        """
+        INSERT INTO invitations (group_id, sent_to, was_accepted, created_at)
+        VALUES (%s, %s, %s, %s)
+    """,
+        invitations,
+    )
+    conn.commit()
+    print(f"  ✔ Seeded {len(invitations)} invitations")
+
+    # --- Bills ---
     bills = generate_mock_bills(group_to_members, count=BILLS_COUNT)
     cursor.executemany(
         """
