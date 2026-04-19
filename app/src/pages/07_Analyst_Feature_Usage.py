@@ -15,27 +15,27 @@ inactive_users: list[dict] = client.get("/analyst/users/inactive") or []
 st.markdown(
     """
     <style>
-        .page-subtitle { color: #667085; font-size: 1rem; margin-top: 0; margin-bottom: 1.5rem; }
+        .page-subtitle { color: #9ca3af; font-size: 1rem; margin-top: 0; margin-bottom: 1.5rem; }
         h1 { font-size: 2.2rem !important; font-weight: 700 !important; margin-bottom: 0.1rem !important; }
         .metric-card {
-            background: white;
-            border: 1px solid #EAECF0;
+            background: #262730;
+            border: 1px solid rgba(250,250,250,0.1);
             border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             height: 100%;
         }
-        .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-label { color: #9ca3af; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #fafafa; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note { color: #8b95a1; font-size: 0.85rem; margin-top: 0.45rem; }
         .white-panel {
-            background: white;
-            border: 1px solid #EAECF0;
+            background: #262730;
+            border: 1px solid rgba(250,250,250,0.1);
             border-radius: 12px;
             padding: 1.25rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
-        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: #101828; }
+        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: #fafafa; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -82,24 +82,24 @@ with left_col:
             count  = row.get("total_uses", 0)
             rows_html += f"""
             <div style="display:flex;justify-content:space-between;align-items:center;
-                        padding:0.65rem 0;border-bottom:1px solid #EAECF0;">
+                        padding:0.65rem 0;border-bottom:1px solid rgba(250,250,250,0.08);">
                 <div>
-                    <div style="font-weight:600;font-size:0.95rem;color:#101828;">{table}</div>
-                    <div style="color:#667085;font-size:0.82rem;margin-top:0.1rem;">{action}</div>
+                    <div style="font-weight:600;font-size:0.95rem;color:#fafafa;">{table}</div>
+                    <div style="color:#9ca3af;font-size:0.82rem;margin-top:0.1rem;">{action}</div>
                 </div>
                 <div style="font-size:1.4rem;font-weight:800;color:#bd0b0b;">{count}</div>
             </div>"""
         panel_html = f"""
-        <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
-                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
-            <div style="font-size:1.15rem;font-weight:700;color:#101828;margin-bottom:0.75rem;">
+        <div style="background:#262730;border:1px solid rgba(250,250,250,0.1);border-radius:12px;
+                    padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,0.2);font-family:sans-serif;">
+            <div style="font-size:1.15rem;font-weight:700;color:#fafafa;margin-bottom:0.75rem;">
                 Audit Log Activity
             </div>
             {rows_html}
         </div>"""
         components.html(panel_html, height=60 + len(audit_logs[:10]) * 62, scrolling=False)
     else:
-        st.markdown('<div class="white-panel"><div class="panel-title">Audit Log Activity</div><p style="color:#667085">No audit log data available.</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="white-panel"><div class="panel-title">Audit Log Activity</div><p style="color:#9ca3af">No audit log data available.</p></div>', unsafe_allow_html=True)
 
 # RIGHT — Feature Clicks as horizontal bar chart
 with right_col:
@@ -119,17 +119,17 @@ with right_col:
         bars_html += f"""
         <div style="margin-bottom:0.85rem;">
             <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;">
-                <span style="font-weight:600;font-size:0.9rem;color:#101828;">{label}</span>
+                <span style="font-weight:600;font-size:0.9rem;color:#fafafa;">{label}</span>
                 <span style="font-weight:700;font-size:0.9rem;color:#bd0b0b;">{count}</span>
             </div>
-            <div style="background:#F2F4F7;border-radius:4px;height:10px;width:100%;">
+            <div style="background:rgba(250,250,250,0.1);border-radius:4px;height:10px;width:100%;">
                 <div style="background:#E31B1B;border-radius:4px;height:10px;width:{pct}%;"></div>
             </div>
         </div>"""
     panel_html = f"""
-    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
-                padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
-        <div style="font-size:1.15rem;font-weight:700;color:#101828;margin-bottom:1rem;">
+    <div style="background:#262730;border:1px solid rgba(250,250,250,0.1);border-radius:12px;
+                padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,0.2);font-family:sans-serif;">
+        <div style="font-size:1.15rem;font-weight:700;color:#fafafa;margin-bottom:1rem;">
             Feature Clicks
         </div>
         {bars_html}

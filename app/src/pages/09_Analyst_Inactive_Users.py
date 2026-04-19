@@ -14,28 +14,28 @@ inactive_users: list[dict] = client.get("/analyst/users/inactive") or []
 st.markdown(
     """
     <style>
-        .page-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.1rem; }
-        .page-subtitle { color: #667085; font-size: 1rem; margin-top: 0; margin-bottom: 1.5rem; }
+        .page-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.1rem; color: #fafafa; }
+        .page-subtitle { color: #9ca3af; font-size: 1rem; margin-top: 0; margin-bottom: 1.5rem; }
         .metric-card {
-            background: white;
-            border: 1px solid #EAECF0;
+            background: #262730;
+            border: 1px solid rgba(250,250,250,0.1);
             border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             height: 100%;
         }
-        .metric-label { color: #667085; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-        .metric-value { color: #101828; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-label { color: #9ca3af; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #fafafa; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
         .metric-value-red { color: #bd0b0b; font-size: 2.4rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-note { color: #8b95a1; font-size: 0.85rem; margin-top: 0.45rem; }
         .panel {
-            background: white;
-            border: 1px solid #EAECF0;
+            background: #262730;
+            border: 1px solid rgba(250,250,250,0.1);
             border-radius: 12px;
             padding: 1.25rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
-        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: #101828; }
+        .panel-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: #fafafa; }
     </style>
     """,
     unsafe_allow_html=True,
