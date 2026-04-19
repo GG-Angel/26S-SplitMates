@@ -1,6 +1,6 @@
 # SplitMates
 
-SplitMates is a roommate management app for CS 3200 (Spring 2026). It helps roommates track shared bills, chores, and group events, and provides a system administrator interface for managing users, support tickets, and app operations.
+SplitMates is a roommate management app for CS 3200 (Spring 2026). It helps roommates track shared bills, chores, and group events, and provides system administrator and data analyst interfaces for tracking user engagement, managing support tickets, and banning users.
 
 ## Prerequisites
 
