@@ -166,8 +166,8 @@ with col_group:
 
 st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
-# Row 3: Line chart + Traffic Sources
-col_line, col_traffic = st.columns(2, gap="large")
+# Row 3: Activity Over Time (full width)
+col_line = st.container()
 
 with col_line:
     if audit_activity:
@@ -188,39 +188,3 @@ with col_line:
         }});
         </script>""", height=340, scrolling=False)
 
-with col_traffic:
-    traffic_data = {
-        "Jan": [["Northeastern",4821],["Google",3102],["Social Media",1850]],
-        "Feb": [["Google",5200],["Northeastern",3800],["Social Media",2100]],
-        "Mar": [["Google",6100],["Northeastern",4200],["Social Media",2800]],
-        "Apr": [["Google",7300],["Northeastern",4900],["Social Media",3200]],
-    }
-    month_opts = "".join(f'<option value="{m}"{"selected" if m=="Apr" else ""}>{m}</option>' for m in traffic_data)
-    components.html(f"""
-    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
-            <div style="font-size:1.1rem;font-weight:700;color:#101828;">Traffic Sources</div>
-            <select id="ms" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{month_opts}</select>
-        </div>
-        <div id="tb"></div>
-    </div>
-    <script>
-    const d = {json.dumps(traffic_data)};
-    const clr = {{"Northeastern":"#6366f1","Google":"#8b5cf6","Social Media":"#22c55e"}};
-    function render(m) {{
-        const rows = d[m]; const mx = Math.max(...rows.map(r=>r[1]));
-        document.getElementById('tb').innerHTML = rows.map(([lbl,val]) =>
-            `<div style="margin-bottom:1.2rem;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                    <span style="font-size:0.92rem;font-weight:600;color:#101828;">${{lbl}}</span>
-                    <span style="font-size:0.92rem;color:#667085;">${{val.toLocaleString()}}</span>
-                </div>
-                <div style="background:#F2F4F7;border-radius:4px;height:12px;">
-                    <div style="background:${{clr[lbl]||'#E31B1B'}};border-radius:4px;height:12px;width:${{Math.round(val/mx*100)}}%;"></div>
-                </div>
-            </div>`
-        ).join('');
-    }}
-    render('Apr');
-    document.getElementById('ms').addEventListener('change',e=>render(e.target.value));
-    </script>""", height=300, scrolling=False)
