@@ -132,15 +132,15 @@ with col_left:
             hovertemplate="%{x}<br>Users: %{y}<extra></extra>",
         ))
         fig.update_layout(
-            margin=dict(l=40, r=10, t=10, b=60),
+            margin=dict(l=40, r=10, t=10, b=80),
             height=300,
             plot_bgcolor="white",
             paper_bgcolor="white",
             font=dict(color="#101828"),
             xaxis=dict(
                 title=dict(text="Hour of Day", font=dict(color="#101828", size=12)),
-                tickfont=dict(size=10, color="#101828"),
-                tickangle=-45,
+                tickfont=dict(size=9, color="#101828"),
+                tickangle=-30,
                 showgrid=False,
                 linecolor="#EAECF0",
                 tickmode="array",
