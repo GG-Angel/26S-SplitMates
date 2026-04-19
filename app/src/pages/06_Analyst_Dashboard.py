@@ -202,7 +202,7 @@ with col_heat:
         }});
     }}
     document.getElementById('heatWindow').addEventListener('change', e => updateHeat(e.target.value));
-    </script>""", height=320, scrolling=False)s st
+    </script>""", height=320, scrolling=False)
 import streamlit.components.v1 as components
 from collections import Counter, defaultdict
 from api.client import client
