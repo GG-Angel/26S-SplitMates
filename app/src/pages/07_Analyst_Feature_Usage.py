@@ -58,7 +58,7 @@ least_used_count = audit_logs[-1]["total_uses"] if audit_logs else 0
 col1, col2, col3, col4 = st.columns(4)
 cards = [
     ("TOTAL ACTIONS", sum(r.get("total_uses",0) for r in audit_logs), "Across all features"),
-    ("UNIQUE FEATURES", len(set(r["target_table"] for r in audit_logs)), "Tables interacted with"),
+    ("AVG ACTIONS/FEATURE", round(sum(r.get("total_uses",0) for r in audit_logs) / len(audit_logs), 1) if audit_logs else 0, "Avg clicks per feature"),
     ("MOST USED", most_used, f"{most_used_count} clicks"),
     ("LEAST USED", least_used, f"{least_used_count} clicks"),
 ]
