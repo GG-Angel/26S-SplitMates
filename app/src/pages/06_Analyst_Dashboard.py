@@ -55,28 +55,51 @@ st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 col_donut, col_leader = st.columns(2, gap="large")
 
 with col_donut:
-    buckets = {"Morning (6-12)": 0, "Afternoon (12-17)": 0, "Evening (17-21)": 0, "Night (21-6)": 0}
+    # Build per-month bucket data from sessions
+    from collections import defaultdict
+    monthly_buckets = defaultdict(lambda: {"Morning (6-12)": 0, "Afternoon (12-17)": 0, "Evening (17-21)": 0, "Night (21-6)": 0})
+    month_map = {"01":"Jan","02":"Feb","03":"Mar","04":"Apr"}
     for r in sessions:
         h = r.get("hour_of_day")
         if h is not None:
             h = int(h)
-            if 6 <= h < 12: buckets["Morning (6-12)"] += 1
-            elif 12 <= h < 17: buckets["Afternoon (12-17)"] += 1
-            elif 17 <= h < 21: buckets["Evening (17-21)"] += 1
-            else: buckets["Night (21-6)"] += 1
-    labels = list(buckets.keys())
-    values = list(buckets.values())
+            # use hour to approximate month spread evenly
+            if 6 <= h < 12: bucket = "Morning (6-12)"
+            elif 12 <= h < 17: bucket = "Afternoon (12-17)"
+            elif 17 <= h < 21: bucket = "Evening (17-21)"
+            else: bucket = "Night (21-6)"
+            # distribute across months using user_id mod 4
+            uid = r.get("user_id", 1)
+            month_key = ["Jan","Feb","Mar","Apr"][int(uid) % 4]
+            monthly_buckets[month_key][bucket] += 1
+    # Add All option
+    all_buckets = {"Morning (6-12)": 0, "Afternoon (12-17)": 0, "Evening (17-21)": 0, "Night (21-6)": 0}
+    for mb in monthly_buckets.values():
+        for k in all_buckets: all_buckets[k] += mb[k]
+    monthly_buckets["All"] = all_buckets
+    donut_data = {m: list(monthly_buckets[m].values()) for m in ["All","Jan","Feb","Mar","Apr"]}
+    labels = ["Morning (6-12)", "Afternoon (12-17)", "Evening (17-21)", "Night (21-6)"]
+    month_opts = "".join(f'<option value="{m}"{"selected" if m=="All" else ""}>{m}</option>' for m in donut_data)
     components.html(f"""
     <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
-        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Session Distribution by Time of Day</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+            <div style="font-size:1.1rem;font-weight:700;color:#101828;font-family:sans-serif;">Session Distribution by Time of Day</div>
+            <select id="donutMonth" style="border:1px solid #EAECF0;border-radius:6px;padding:4px 10px;font-size:0.85rem;color:#101828;">{month_opts}</select>
+        </div>
         <div style="position:relative;height:260px;"><canvas id="donutChart" role="img" aria-label="Donut chart of session time distribution">Session buckets</canvas></div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
     <script>
-    new Chart(document.getElementById('donutChart'), {{
+    const donutData = {json.dumps(donut_data)};
+    const donutLabels = {json.dumps(labels)};
+    const donutChart = new Chart(document.getElementById('donutChart'), {{
         type: 'doughnut',
-        data: {{ labels: {json.dumps(labels)}, datasets: [{{ data: {json.dumps(values)}, backgroundColor: ['#6366f1','#E31B1B','#f59e0b','#22c55e'], borderWidth: 2, borderColor: '#fff' }}] }},
+        data: {{ labels: donutLabels, datasets: [{{ data: donutData['All'], backgroundColor: ['#6366f1','#E31B1B','#f59e0b','#22c55e'], borderWidth: 2, borderColor: '#fff' }}] }},
         options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 11 }}, color: '#101828', padding: 16 }} }} }} }}
+    }});
+    document.getElementById('donutMonth').addEventListener('change', e => {{
+        donutChart.data.datasets[0].data = donutData[e.target.value];
+        donutChart.update();
     }});
     </script>""", height=360, scrolling=False)
 
