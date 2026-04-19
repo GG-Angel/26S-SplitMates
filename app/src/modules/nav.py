@@ -1,8 +1,19 @@
 # Idea borrowed from https://github.com/fsmosca/sample-streamlit-authenticator
+
 # This file has functions to add links to the left sidebar based on the user's role.
 
 import streamlit as st
 from utils import highlight_color
+
+
+# ---- General ----------------------------------------------------------------
+
+
+def home_nav():
+    st.sidebar.page_link("Home.py", label="Home", icon="🏠")
+
+
+# ---- Role: roommate ---------------------------------------------------------
 
 
 def user_navs():
@@ -68,26 +79,21 @@ def admin_ops_nav():
     )
 
 
-# TODO: wire up admin navs
-# admin_home_nav()
-# admin_tickets_nav()
-# admin_user_reports_nav()
-# admin_groups_nav()
-# admin_roommates_nav()
-# admin_ops_nav()
+# ---- Sidebar assembly -------------------------------------------------------
 
 
-def SideBarLinks():
+def SideBarLinks(show_home=False):
     """
     Renders sidebar navigation links based on the logged-in user's role.
     The role is stored in st.session_state when the user logs in on Home.py.
     """
 
-    # if no one is logged in, send them to the Home (login) page
+    # If no one is logged in, send them to the Home (login) page
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
         st.switch_page("Home.py")
 
+    # Roommate navigation
     if st.session_state["authenticated"]:
         st.sidebar.header(f"*{highlight_color('red', 'SplitMates')}*")
         role = st.session_state.get("role", "roommate")
@@ -95,18 +101,34 @@ def SideBarLinks():
             analyst_navs()
         else:
             user_navs()
+            st.sidebar.page_link("pages/11_Submit_Report.py", label="Submit Report", icon="🚩")
+            st.sidebar.divider()
         st.sidebar.divider()
 
     if "group" in st.session_state and st.session_state["group"]:
         group_navs()
         st.sidebar.divider()
 
+    # Admin navigation
+    if st.session_state.get("user", {}).get("is_admin"):
+        st.sidebar.markdown(f"**{st.session_state.get('first_name', 'Admin')}**")
+        admin_home_nav()
+        admin_tickets_nav()
+        admin_user_reports_nav()
+        admin_groups_nav()
+        admin_roommates_nav()
+        admin_ops_nav()
+        st.sidebar.divider()
+
+    # Add extra breathing room on root persona selector page.
+    if show_home:
+        st.sidebar.markdown(
+            "<div style='height: 1.25rem;'></div>", unsafe_allow_html=True
+        )
+
     if st.session_state["authenticated"]:
         if st.sidebar.button("Logout"):
-            if "user" in st.session_state:
-                del st.session_state["user"]
-            if "authenticated" in st.session_state:
-                del st.session_state["authenticated"]
-            if "group" in st.session_state:
-                del st.session_state["group"]
+            for key in ["user", "authenticated", "group", "role"]:
+                if key in st.session_state:
+                    del st.session_state[key]
             st.switch_page("Home.py")

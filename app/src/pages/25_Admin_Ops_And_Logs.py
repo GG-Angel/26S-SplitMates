@@ -51,24 +51,26 @@ st.markdown(
         .page-title { font-size: 2.1rem; font-weight: 800; margin-bottom: 0.1rem; }
         .page-subtitle { color: #667085; font-size: 1rem; margin-bottom: 1rem; }
         .metric-card {
-            background: white;
-            border: 1px solid #EAECF0;
-            border-radius: 20px;
+            background: #1E293B !important;
+            border: 1px solid #334155;
+            border-radius: 12px;
             padding: 1rem 1rem 0.85rem 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
             height: 100%;
+            color: #F1F5F9;
         }
-        .metric-label { color: #667085; font-size: 0.83rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-        .metric-value { color: #101828; font-size: 2.2rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
-        .metric-note { color: #475467; font-size: 0.85rem; margin-top: 0.45rem; }
+        .metric-label { color: #94A3B8 !important; font-size: 0.83rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+        .metric-value { color: #F1F5F9 !important; font-size: 2.2rem; font-weight: 800; line-height: 1; margin-top: 0.15rem; }
+        .metric-note { color: #CBD5E1 !important; font-size: 0.85rem; margin-top: 0.45rem; }
         .panel {
-            background: white;
-            border: 1px solid #EAECF0;
-            border-radius: 20px;
+            background: #1E293B !important;
+            border: 1px solid #334155;
+            border-radius: 8px;
             padding: 1rem;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            color: #F1F5F9;
         }
-        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; }
+        .panel-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 0.35rem; color: #F1F5F9 !important; }
     </style>
     """,
     unsafe_allow_html=True,

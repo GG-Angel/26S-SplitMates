@@ -1,8 +1,6 @@
-# Spring 2026 CS 3200 Project Template
+# SplitMates
 
-This is a template repo for Dr. Fontenot's Spring 2026 CS 3200 Course Project.
-
-It includes most of the infrastructure setup (containers), sample databases, and example UI pages. Explore it fully and ask questions!
+SplitMates is a roommate management app for CS 3200 (Spring 2026). It helps roommates track shared bills, chores, and group events, and provides a system administrator interface for managing users, support tickets, and app operations.
 
 ## Prerequisites
 
@@ -28,14 +26,14 @@ It includes most of the infrastructure setup (containers), sample databases, and
 
 ## Structure of the Repo
 
-- This repository is organized into five main directories:
-  - `./app` - the Streamlit app
-  - `./api` - the Flask REST API
-  - `./database-files` - SQL scripts to initialize the MySQL database
-  - `./datasets` - folder for storing datasets
-  - `./ml-src` - folder for ML model development (Jupyter notebooks, training scripts)
+- This repository is organized into the main project folders:
+   - `./app` - the Streamlit app
+   - `./api` - the Flask REST API
+   - `./database-files` - SQL scripts to initialize the MySQL database
+   - `./seeder` - Python seed script for mock data
+   - `./docs` - project documentation
 
-- The repo also contains a `docker-compose.yaml` file that is used to set up the Docker containers for the front end app, the REST API, and MySQL database. 
+- The repo also contains a `docker-compose.yaml` file that is used to set up the Docker containers for the front end app, the REST API, MySQL database, and the seeder.
 
 ## Suggestion for Learning the Project Code Base
 
@@ -103,33 +101,21 @@ If you are not familiar with web app development, this code base might be confus
 
 ## Handling User Role Access and Control
 
-In most applications, when a user logs in, they assume a particular role in the app. For instance, when one logs in to a stock price prediction app, they may be a single investor, a portfolio manager, or a corporate executive (of a publicly traded company). Each of those _roles_ will likely present some similar features as well as some different features when compared to the other roles. So, how do you accomplish this in Streamlit? This is sometimes called Role-based Access Control, or **RBAC** for short.
+SplitMates uses a simple role-based access control setup in Streamlit without full username/password authentication. The app is organized around three roles:
 
-The code in this project demonstrates how to implement a simple RBAC system in Streamlit but without actually using user authentication (usernames and passwords). The Streamlit pages from the original template repo are split up among 3 roles - Political Strategist, USAID Worker, and a System Administrator role (this is used for any sort of system tasks such as re-training ML model, etc.). It also demonstrates how to deploy an ML model.
-
-Wrapping your head around this will take a little time and exploration of this code base. Some highlights are below.
+- **roommate** - normal roommate workflow, including group creation and group dashboards
+- **analyst** - analyst views for usage, sessions, and inactive users
+- **administrator** - system admin dashboard and admin management pages
 
 ### Getting Started with the RBAC
 
-1. We need to turn off the standard panel of links on the left side of the Streamlit app. This is done through the `app/src/.streamlit/config.toml` file. So check that out. We are turning it off so we can control directly what links are shown.
-1. Then I created a new python module in `app/src/modules/nav.py`. When you look at the file, you will see that there are functions for basically each page of the application. The `st.sidebar.page_link(...)` adds a single link to the sidebar. We have a separate function for each page so that we can organize the links/pages by role.
-1. Next, check out the `app/src/Home.py` file. Notice that there are 3 buttons added to the page and when one is clicked, it redirects via `st.switch_page(...)` to that Roles Home page in `app/src/pages`. But before the redirect, I set a few different variables in the Streamlit `session_state` object to track role, first name of the user, and that the user is now authenticated.
-1. Notice near the top of `app/src/Home.py` and all other pages, there is a call to `SideBarLinks(...)` from the `app/src/modules/nav.py` module. This is the function that will use the role set in `session_state` to determine what links to show the user in the sidebar.
-1. The pages are organized by Role. Pages that start with a `0` are related to the _Political Strategist_ role. Pages that start with a `1` are related to the _USAID worker_ role. And, pages that start with a `2` are related to The _System Administrator_ role.
+1. The standard Streamlit sidebar navigation is disabled in `app/src/.streamlit/config.toml` so the project can control the links directly.
+2. `app/src/modules/nav.py` builds the sidebar dynamically based on the current role stored in `st.session_state`.
+3. `app/src/Home.py` provides mock login buttons that switch the user into the roommate or system administrator flows.
+4. Every page that needs navigation calls `SideBarLinks()` near the top so the correct links appear for that role.
+5. The page prefixes control ordering in the sidebar:
+   - `00`-`07` - roommate workflow pages
+   - `07`-`09` - analyst pages
+   - `20`-`25` - system admin pages
 
 
-## (Completely Optional) Incorporating ML Models into your Project
-
-_Note_: This project only contains the infrastructure for a hypothetical ML model.
-
-1. Collect and preprocess necessary datasets for your ML models.
-1. Build, train, and test your ML model in a Jupyter Notebook.
-   - You can store your datasets in the `datasets` folder. You can also store your Jupyter Notebook in the `ml-src` folder.
-1. Once your team is happy with the model's performance, convert your Jupyter Notebook code for the ML model to a pure Python script.
-   - You can include the `training` and `testing` functionality as well as the `prediction` functionality.
-   - Develop and test this pure Python script first in the `ml-src` folder.
-   - You may or may not need to include data cleaning, though.
-1. Review the `api/backend/ml_models` module. In this folder,
-   - We've put a sample (read _fake_) ML model in the `model01.py` file. The `predict` function will be called by the Flask REST API to perform '_real-time_' prediction based on model parameter values that are stored in the database. **Important**: you would never want to hard code the model parameter weights directly in the prediction function.
-1. The prediction route for the REST API is in `api/backend/simple/simple_routes.py`. Basically, it accepts two URL parameters and passes them to the `prediction` function in the `ml_models` module. The `prediction` route/function packages up the value(s) it receives from the model's `predict` function and sends it back to Streamlit as JSON.
-1. Back in Streamlit, check out `app/src/pages/11_Prediction.py`. Here, two numeric input fields are created. When the button is pressed, it makes a request to the REST API at `/prediction/{var_01}/{var_02}` and passes the values from the two inputs as URL path parameters. It gets back the results from the route and displays them.
