@@ -10,6 +10,7 @@ st.set_page_config(layout="wide", page_title="SplitMates | User Sessions")
 SideBarLinks()
 
 sessions: list[dict] = client.get("/analyst/sessions") or []
+audit_logs: list[dict] = client.get("/analyst/audit-logs") or []
 
 st.markdown(
     """
@@ -71,12 +72,23 @@ total_sessions = len(sessions)
 durations = [float(r["avg_duration_mins"]) for r in sessions if r.get("avg_duration_mins") is not None]
 avg_duration = round(sum(durations) / len(durations), 1) if durations else 0
 active_users = len(set(r["user_id"] for r in sessions if r.get("user_id")))
+max_duration = round(max(durations), 1) if durations else 0
 
-c1, c2, c3 = st.columns(3)
+# Peak hour
+from collections import Counter
+hour_counts = Counter(r["hour_of_day"] for r in sessions if r.get("hour_of_day") is not None)
+peak_hour = f"{max(hour_counts, key=hour_counts.get):02d}:00" if hour_counts else "N/A"
+
+# Total actions from audit logs
+total_actions = sum(r.get("total_uses", 0) for r in audit_logs)
+top_feature = f"{audit_logs[0]['target_table']} ({audit_logs[0]['action_type']})" if audit_logs else "N/A"
+
+c1, c2, c3, c4 = st.columns(4)
 for col, label, value, note in [
     (c1, "TOTAL SESSIONS", total_sessions, "All time"),
     (c2, "AVG SESSION (MIN)", avg_duration, "Per user"),
-    (c3, "ACTIVE USERS", active_users, "With sessions"),
+    (c3, "PEAK HOUR", peak_hour, "Most active time"),
+    (c4, "TOP FEATURE", top_feature, f"{total_actions} total actions"),
 ]:
     with col:
         st.markdown(
@@ -144,7 +156,7 @@ with col_left:
         chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
         full_html = f"""
         <div style="background:white;border:1px solid #EAECF0;border-radius:12px;
-                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);font-family:sans-serif;">
+                    padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
             <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;">
                 Activity by Hour of Day
             </div>
