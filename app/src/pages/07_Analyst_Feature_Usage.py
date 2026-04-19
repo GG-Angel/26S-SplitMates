@@ -170,26 +170,6 @@ with col_clicks:
 
 
 with col_top5:
-    action_totals = {"create": 0, "update": 0, "delete": 0}
-    for r in audit_logs:
-        action_totals[r["action_type"]] += r.get("total_uses", 0)
-    donut_labels = [a.title() for a in action_totals.keys()]
-    donut_values = list(action_totals.values())
-    components.html(f"""
-    <div style="background:white;border:1px solid #EAECF0;border-radius:12px;padding:1.25rem;box-shadow:0 1px 2px rgba(16,24,40,0.04);">
-        <div style="font-size:1.1rem;font-weight:700;color:#101828;margin-bottom:0.5rem;font-family:sans-serif;">Action Type Split</div>
-        <div style="position:relative;height:260px;"><canvas id="actionDonut" role="img" aria-label="Donut of action type split">Action types</canvas></div>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-    <script>
-    new Chart(document.getElementById('actionDonut'), {{
-        type: 'doughnut',
-        data: {{ labels: {_fj.dumps(donut_labels)}, datasets: [{{ data: {_fj.dumps(donut_values)}, backgroundColor: ['#6366f1','#f59e0b','#E31B1B'], borderWidth: 2, borderColor: '#fff' }}] }},
-        options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 11 }}, color: '#101828', padding: 16 }} }} }} }}
-    }});
-    </script>""", height=360, scrolling=False)
-
-with col_top5:
     table_totals = _dd(int)
     for r in audit_logs:
         table_totals[r["target_table"]] += r.get("total_uses", 0)
