@@ -169,7 +169,7 @@ with col_donut:
     const donutLabels = {json.dumps(labels)};
     const donutChart = new Chart(document.getElementById('donutChart'), {{
         type: 'doughnut',
-        data: {{ labels: donutLabels, datasets: [{{ data: donutData['All'], backgroundColor: ['#6366f1','#E31B1B','#f59e0b','#22c55e'], borderWidth: 2, borderColor: '#fff' }}] }},
+        data: {{ labels: donutLabels, datasets: [{{ data: donutData['All'], backgroundColor: ['#fca5a5','#E31B1B','#c0392b','#7f1d1d'], borderWidth: 2, borderColor: '#fff' }}] }},
         options: {{ responsive: true, maintainAspectRatio: false, plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 11 }}, color: '#101828', padding: 16 }} }} }} }}
     }});
     document.getElementById('donutMonth').addEventListener('change', e => {{
