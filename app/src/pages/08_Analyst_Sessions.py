@@ -206,6 +206,7 @@ with col_right:
             '<div class="white-panel"><div class="panel-title">Avg Session Duration by User</div>'
             '<p style="color:#667085">No data available.</p></div>',
             unsafe_allow_html=True,
+        )
 # ── Avg Days Between Visits chart ─────────────────────────────────────────────
 st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
