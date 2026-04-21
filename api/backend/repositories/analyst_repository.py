@@ -17,5 +17,3 @@ class AnalystRepository(BaseRepository):
 
     def get_group_engagement(self):
         return self.fetch_all(load_query("analyst/get_group_engagement.sql"))
-    def get_audit_log_activity(self):
-        return self.fetch_all(load_query("analyst/get_audit_log_activity.sql"), {})
